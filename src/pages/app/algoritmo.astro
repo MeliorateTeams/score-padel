@@ -29,7 +29,7 @@ if (user.role !== 'admin') return Astro.redirect('/app')
       </div>
     </div>
 
-    <!-- Resumen -->
+    <!-- Qué es Score Padel -->
     <div class="card p-6 space-y-3">
       <h2
         class="font-display text-sm font-bold text-navy uppercase tracking-wider flex items-center gap-2"
@@ -46,21 +46,26 @@ if (user.role !== 'admin') return Astro.redirect('/app')
             d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
           ></path></svg
         >
-        Resumen general
+        ¿Qué es Score Padel?
       </h2>
       <p class="text-sm text-navy/80 leading-relaxed">
-        Score Padel utiliza un sistema de valoración continua en escala <strong class="text-coral"
-          >1.0 – 7.0</strong
-        >. No es un ranking posicional (1°, 2°, 3°…), sino una valoración numérica que refleja el
-        nivel real del jugador basándose en sus resultados contra oponentes de nivel conocido.
+        Score Padel entrega una <strong>valoración</strong> (número), no un ranking posicional. Cada jugador
+        que juegue pádel en el mundo podrá tener una clasificación en escala <strong
+          class="text-coral">1.0 – 7.0</strong
+        > de acuerdo con su nivel de destreza, experiencia deportiva, años de práctica, estado actual
+        de competencia e historia competitiva en pádel y otros deportes de raqueta.
       </p>
       <p class="text-sm text-navy/80 leading-relaxed">
-        El sistema se inspira en conceptos de Elo/Glicko adaptados al pádel: el resultado esperado
-        se compara con el resultado real, y la diferencia ajusta la valoración.
+        Cualquier jugador podrá encontrar una valoración para sus habilidades. Cada partido contará
+        para Score Padel: nuestra plataforma seguirá los avances y también los retrocesos en los
+        torneos.
+      </p>
+      <p class="text-sm text-navy/80 leading-relaxed">
+        Nuestra misión es empoderar a los jugadores a disfrutar del juego y motivarlos a mejorar.
       </p>
     </div>
 
-    <!-- Parámetros -->
+    <!-- Cómo funciona el cálculo (punto 8) -->
     <div class="card p-6 space-y-4">
       <h2
         class="font-display text-sm font-bold text-navy uppercase tracking-wider flex items-center gap-2"
@@ -77,53 +82,65 @@ if (user.role !== 'admin') return Astro.redirect('/app')
             d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"
           ></path></svg
         >
-        Parámetros oficiales v1.0
+        Cómo funciona el cálculo
       </h2>
-      <div class="grid sm:grid-cols-2 gap-3">
-        <div class="bg-gray-50 rounded-xl p-3">
-          <div class="text-[10px] text-muted uppercase tracking-wider">Escala sigmoid</div>
-          <div class="font-display font-bold text-navy">1.5</div>
-          <div class="text-[11px] text-muted">±3 pts diff → 95%/5% esperado</div>
+      <div class="space-y-4">
+        <div class="bg-gray-50 rounded-xl p-4">
+          <h3 class="text-sm font-semibold text-navy mb-2">8a. Base del algoritmo</h3>
+          <p class="text-xs text-muted leading-relaxed">
+            El algoritmo de jerarquía se basa en el <strong class="text-navy"
+              >resultado de cada equipo en cada partido</strong
+            > basado en los juegos ganados.
+          </p>
         </div>
-        <div class="bg-gray-50 rounded-xl p-3">
-          <div class="text-[10px] text-muted uppercase tracking-wider">Factor rendimiento</div>
-          <div class="font-display font-bold text-navy">3.0</div>
-          <div class="text-[11px] text-muted">Delta 0.5 → ±1.5 pts ajuste</div>
+        <div class="bg-gray-50 rounded-xl p-4 space-y-3">
+          <h3 class="text-sm font-semibold text-navy">8b. 3 principales factores</h3>
+          <ul class="space-y-2">
+            <li class="flex items-start gap-2 text-xs text-muted leading-relaxed">
+              <span
+                class="w-5 h-5 rounded-full bg-coral text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5"
+                >i</span
+              >
+              <span
+                >La <strong class="text-navy">diferencia entre las clasificaciones</strong> de los jugadores
+                que se enfrentan entre sí.</span
+              >
+            </li>
+            <li class="flex items-start gap-2 text-xs text-muted leading-relaxed">
+              <span
+                class="w-5 h-5 rounded-full bg-coral text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5"
+                >ii</span
+              >
+              <span
+                >El <strong class="text-navy">porcentaje de juegos ganados</strong> comparados con el
+                resultado esperado.</span
+              >
+            </li>
+            <li class="flex items-start gap-2 text-xs text-muted leading-relaxed">
+              <span
+                class="w-5 h-5 rounded-full bg-coral text-white text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5"
+                >iii</span
+              >
+              <span
+                >Los <strong class="text-navy">resultados de partidos recientes</strong> comparados con
+                el mejor resultado reciente.</span
+              >
+            </li>
+          </ul>
         </div>
-        <div class="bg-gray-50 rounded-xl p-3">
-          <div class="text-[10px] text-muted uppercase tracking-wider">Cap formato</div>
-          <div class="font-display font-bold text-navy">24 juegos</div>
-          <div class="text-[11px] text-muted">24+ juegos = peso completo</div>
-        </div>
-        <div class="bg-gray-50 rounded-xl p-3">
-          <div class="text-[10px] text-muted uppercase tracking-wider">Halfpoint competitiv.</div>
-          <div class="font-display font-bold text-navy">1.5 pts</div>
-          <div class="text-[11px] text-muted">Diff 1.5 → peso 50%</div>
-        </div>
-        <div class="bg-gray-50 rounded-xl p-3">
-          <div class="text-[10px] text-muted uppercase tracking-wider">Fiabilidad rival</div>
-          <div class="font-display font-bold text-navy">5 partidos</div>
-          <div class="text-[11px] text-muted">5+ partidos = fiable</div>
-        </div>
-        <div class="bg-gray-50 rounded-xl p-3">
-          <div class="text-[10px] text-muted uppercase tracking-wider">Decay temporal</div>
-          <div class="font-display font-bold text-navy">180 días</div>
-          <div class="text-[11px] text-muted">Half-life hasta peso 50%</div>
-        </div>
-        <div class="bg-gray-50 rounded-xl p-3">
-          <div class="text-[10px] text-muted uppercase tracking-wider">Peak blend</div>
-          <div class="font-display font-bold text-navy">80% / 20%</div>
-          <div class="text-[11px] text-muted">Promedio 80% + mejor 20%</div>
-        </div>
-        <div class="bg-gray-50 rounded-xl p-3">
-          <div class="text-[10px] text-muted uppercase tracking-wider">Ventana partidos</div>
-          <div class="font-display font-bold text-navy">30 últimos / 12 meses</div>
-          <div class="text-[11px] text-muted">Máximo considerado</div>
+        <div class="bg-gray-50 rounded-xl p-4">
+          <h3 class="text-sm font-semibold text-navy mb-2">8c. Factores adicionales</h3>
+          <p class="text-xs text-muted leading-relaxed">
+            Score Padel contabiliza todos los <strong class="text-navy">formatos de juego</strong>,
+            la <strong class="text-navy">competitividad</strong> y la <strong class="text-navy"
+              >fiabilidad de la clasificación</strong
+            > de los rivales.
+          </p>
         </div>
       </div>
     </div>
 
-    <!-- Flujo paso a paso -->
+    <!-- Calcular la valoración del partido -->
     <div class="card p-6 space-y-5">
       <h2
         class="font-display text-sm font-bold text-navy uppercase tracking-wider flex items-center gap-2"
@@ -139,8 +156,14 @@ if (user.role !== 'admin') return Astro.redirect('/app')
             stroke-linejoin="round"
             d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12"></path></svg
         >
-        Flujo por partido (paso a paso)
+        Calcular la valoración del partido
       </h2>
+      <p class="text-sm text-navy/80 leading-relaxed">
+        Para cada partido, el algoritmo calcula una <strong>valoración de partido</strong> y un <strong
+          >peso de partido</strong
+        > para cada jugador. La valoración Score Padel es el promedio ponderado de hasta 30 de sus valoraciones
+        de partido más recientes. Solo los partidos de los <strong>últimos 12 meses</strong> cuentan.
+      </p>
 
       <div class="space-y-4">
         <div class="flex gap-4">
@@ -153,15 +176,15 @@ if (user.role !== 'admin') return Astro.redirect('/app')
             <div class="w-0.5 flex-1 bg-gray-200 mt-1"></div>
           </div>
           <div class="pb-4">
-            <h3 class="text-sm font-semibold text-navy">Resultado esperado (Sigmoid)</h3>
+            <h3 class="text-sm font-semibold text-navy">Resultado esperado</h3>
             <p class="text-xs text-muted mt-1 leading-relaxed">
-              Se calcula el porcentaje de juegos que se espera que gane cada equipo según la
-              diferencia de ratings. Fórmula: <code
-                class="bg-gray-100 px-1.5 py-0.5 rounded text-[11px]"
-                >1 / (1 + 10^(-diff / 1.5))</code>
+              Dada la diferencia de clasificación entre oponentes, el algoritmo espera un cierto
+              porcentaje del total de juegos ganados.
             </p>
-            <p class="text-xs text-muted mt-1">
-              Ejemplo: si tú tienes 4.0 y el rival 3.0 → se espera que ganes ~75% de los juegos.
+            <p class="text-xs text-muted mt-1 leading-relaxed">
+              El jugador que se desempeñe <strong class="text-navy"
+                >mejor que las expectativas</strong
+              > verá aumentar su valoración, mientras que la del otro jugador disminuirá.
             </p>
           </div>
         </div>
@@ -176,14 +199,32 @@ if (user.role !== 'admin') return Astro.redirect('/app')
             <div class="w-0.5 flex-1 bg-gray-200 mt-1"></div>
           </div>
           <div class="pb-4">
-            <h3 class="text-sm font-semibold text-navy">Valoración de partido (Match Rating)</h3>
-            <p class="text-xs text-muted mt-1 leading-relaxed">
-              Se compara tu rendimiento real vs esperado. Si ganas más de lo esperado, tu match
-              rating sube por encima del rating del oponente.
-            </p>
-            <p class="text-xs text-muted mt-1">
-              Fórmula: <code class="bg-gray-100 px-1.5 py-0.5 rounded text-[11px]"
-                >matchRating = ratingOponente + (actualPct - expectedPct) × 3.0</code>
+            <h3 class="text-sm font-semibold text-navy">Ejemplos</h3>
+            <ul class="text-xs text-muted mt-2 space-y-2">
+              <li class="flex items-start gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-teal mt-1.5 shrink-0"></span>
+                <span
+                  ><strong class="text-navy">Misma valoración:</strong> El algoritmo proyecta que ganas
+                  el mismo número de juegos que tu oponente. Si ganas más, tu valoración aumentará.</span
+                >
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-teal mt-1.5 shrink-0"></span>
+                <span
+                  ><strong class="text-navy">Valoración más baja:</strong> Si el sistema espera que ganes
+                  6-2, 6-2 pero terminas ganando 6-1, 6-1, tu valoración aumentaría.</span
+                >
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-teal mt-1.5 shrink-0"></span>
+                <span
+                  ><strong class="text-navy">Valoración más alta:</strong> Si se espera que pierdas 6-3,
+                  6-3, pero pierdes 6-4, 6-4, tu valoración aumentará.</span
+                >
+              </li>
+            </ul>
+            <p class="text-xs text-muted mt-2 leading-relaxed">
+              Tu valoración continúa actualizándose a medida que se agregan más partidos.
             </p>
           </div>
         </div>
@@ -195,68 +236,55 @@ if (user.role !== 'admin') return Astro.redirect('/app')
             >
               3
             </div>
-            <div class="w-0.5 flex-1 bg-gray-200 mt-1"></div>
-          </div>
-          <div class="pb-4">
-            <h3 class="text-sm font-semibold text-navy">Peso del partido</h3>
-            <p class="text-xs text-muted mt-1 leading-relaxed">
-              Cada partido recibe un peso basado en 4 factores multiplicativos:
-            </p>
-            <ul class="text-xs text-muted mt-2 space-y-1.5 ml-1">
-              <li class="flex items-start gap-2">
-                <span class="w-1.5 h-1.5 rounded-full bg-teal mt-1 shrink-0"></span><strong
-                  class="text-navy">Formato:</strong
-                > más juegos jugados = resultado más fiable (6→0.5, 24+→1.0)
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="w-1.5 h-1.5 rounded-full bg-teal mt-1 shrink-0"></span><strong
-                  class="text-navy">Competitividad:</strong
-                > rivales de nivel similar pesan más (diff=0→1.0, diff=3→0.25)
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="w-1.5 h-1.5 rounded-full bg-teal mt-1 shrink-0"></span><strong
-                  class="text-navy">Fiabilidad rival:</strong
-                > oponente con más partidos = rating más fiable (0→0.3, 5+→1.0)
-              </li>
-              <li class="flex items-start gap-2">
-                <span class="w-1.5 h-1.5 rounded-full bg-teal mt-1 shrink-0"></span><strong
-                  class="text-navy">Tiempo:</strong
-                > partidos recientes pesan más (0d→1.0, 180d→0.5, 365d→0.25)
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="flex gap-4">
-          <div class="flex flex-col items-center">
-            <div
-              class="w-8 h-8 rounded-full bg-coral text-white text-sm font-bold flex items-center justify-center shrink-0"
-            >
-              4
-            </div>
           </div>
           <div>
-            <h3 class="text-sm font-semibold text-navy">Valoración final (Peak Blend)</h3>
+            <h3 class="text-sm font-semibold text-navy">Peso del partido</h3>
             <p class="text-xs text-muted mt-1 leading-relaxed">
-              Se calcula el promedio ponderado de las valoraciones de partido (últimos 30, máx 12
-              meses). Se mezcla con el mejor resultado reciente para reconocer el potencial.
+              Los siguientes factores se utilizan en el cálculo del peso del partido:
             </p>
-            <p class="text-xs text-muted mt-1">
-              Fórmula: <code class="bg-gray-100 px-1.5 py-0.5 rounded text-[11px]"
-                >rating = 0.8 × promedioFonderado + 0.2 × mejorResultado</code>
-            </p>
+            <ul class="text-xs text-muted mt-2 space-y-2">
+              <li class="flex items-start gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-teal mt-1.5 shrink-0"></span>
+                <span
+                  ><strong class="text-navy">Formato:</strong> A medida que el partido aumenta en longitud,
+                  se le da más peso.</span
+                >
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-teal mt-1.5 shrink-0"></span>
+                <span
+                  ><strong class="text-navy">Competitividad:</strong> A medida que aumenta la diferencia
+                  de clasificación entre jugadores, se le da menos peso.</span
+                >
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-teal mt-1.5 shrink-0"></span>
+                <span
+                  ><strong class="text-navy">Fiabilidad:</strong> A medida que aumenta la fiabilidad de
+                  la clasificación del oponente, se le da más peso. Un oponente que compite con frecuencia
+                  tiene una clasificación más fiable.</span
+                >
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-teal mt-1.5 shrink-0"></span>
+                <span
+                  ><strong class="text-navy">Degradación del tiempo:</strong> A medida que los partidos
+                  anteriores envejecen, se les da menos peso. Se otorga más crédito a los partidos recientes.</span
+                >
+              </li>
+            </ul>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Rating inicial -->
+    <!-- Cómo mejorar -->
     <div class="card p-6 space-y-3">
       <h2
         class="font-display text-sm font-bold text-navy uppercase tracking-wider flex items-center gap-2"
       >
         <svg
-          class="w-4 h-4 text-coral"
+          class="w-4 h-4 text-teal"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -264,31 +292,110 @@ if (user.role !== 'admin') return Astro.redirect('/app')
           ><path
             stroke-linecap="round"
             stroke-linejoin="round"
-            d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+            d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"
           ></path></svg
         >
-        Rating inicial (sin partidos)
+        ¿Cómo mejorar tu valoración?
       </h2>
-      <p class="text-sm text-navy/80 leading-relaxed">
-        Jugadores nuevos sin partidos reciben un rating inicial basado en su perfil (máximo <strong
-          >2.5</strong
-        >):
-      </p>
-      <div class="grid sm:grid-cols-2 gap-3">
-        <div class="bg-gray-50 rounded-xl p-3">
-          <div class="text-[10px] text-muted uppercase tracking-wider">Experiencia pádel</div>
-          <div class="text-xs text-navy mt-1 space-y-0.5">
-            <div>1 año → <strong>+0.3</strong></div>
-            <div>3 años → <strong>+0.7</strong></div>
-            <div>5 años → <strong>+1.0</strong></div>
-            <div>10+ años → <strong>+1.5</strong></div>
+      <ul class="space-y-2">
+        <li class="flex items-start gap-2 text-sm text-navy/80 leading-relaxed">
+          <span class="w-1.5 h-1.5 rounded-full bg-coral mt-2 shrink-0"></span>
+          <span
+            ><strong>Compite bien:</strong> Puedes mejorar tu valoración ganando más juegos de los esperados,
+            independientemente de si ganas o pierdes el partido y de si juegas contra oponentes de mayor
+            o menor clasificación. Intenta ganar tantos juegos como sea posible.</span
+          >
+        </li>
+        <li class="flex items-start gap-2 text-sm text-navy/80 leading-relaxed">
+          <span class="w-1.5 h-1.5 rounded-full bg-coral mt-2 shrink-0"></span>
+          <span
+            ><strong>Juega con frecuencia:</strong> Cuantos más partidos juegues, más rápido tu valoración
+            reflejará tu forma actual. Es mejor jugar contra oponentes de nivel similar al tuyo.</span
+          >
+        </li>
+        <li class="flex items-start gap-2 text-sm text-navy/80 leading-relaxed">
+          <span class="w-1.5 h-1.5 rounded-full bg-coral mt-2 shrink-0"></span>
+          <span
+            ><strong>Sé paciente:</strong> Dado que la valoración es un promedio ponderado móvil, el efecto
+            de los nuevos resultados puede tardar un poco en reflejarse.</span
+          >
+        </li>
+      </ul>
+    </div>
+
+    <!-- Ventajas (punto 9) -->
+    <div class="card p-6 space-y-3">
+      <h2
+        class="font-display text-sm font-bold text-navy uppercase tracking-wider flex items-center gap-2"
+      >
+        <svg
+          class="w-4 h-4 text-teal"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+          ><path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"
+          ></path></svg
+        >
+        Ventajas de Score Padel
+      </h2>
+      <div class="grid sm:grid-cols-3 gap-3">
+        <div class="bg-gray-50 rounded-xl p-4 text-center">
+          <svg
+            class="w-6 h-6 text-coral mx-auto mb-2"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+            ><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"
+            ></path></svg
+          >
+          <div class="text-xs font-semibold text-navy">Seguimiento</div>
+          <div class="text-[11px] text-muted mt-0.5">Seguimiento y análisis de tu progreso</div>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-4 text-center">
+          <svg
+            class="w-6 h-6 text-coral mx-auto mb-2"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+            ><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"></path><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
+            ></path></svg
+          >
+          <div class="text-xs font-semibold text-navy">Encontrar partidos</div>
+          <div class="text-[11px] text-muted mt-0.5">
+            Encuentra jugadores de tu vecindario o ciudad
           </div>
         </div>
-        <div class="bg-gray-50 rounded-xl p-3">
-          <div class="text-[10px] text-muted uppercase tracking-wider">Deportes de raqueta</div>
-          <div class="text-xs text-navy mt-1 space-y-0.5">
-            <div>Cada deporte → <strong>+0.2</strong></div>
-            <div>Máximo bonus → <strong>+0.5</strong></div>
+        <div class="bg-gray-50 rounded-xl p-4 text-center">
+          <svg
+            class="w-6 h-6 text-coral mx-auto mb-2"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+            ><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"
+            ></path></svg
+          >
+          <div class="text-xs font-semibold text-navy">Conexiones sociales</div>
+          <div class="text-[11px] text-muted mt-0.5">
+            Expande tu red con otros jugadores de pádel
           </div>
         </div>
       </div>

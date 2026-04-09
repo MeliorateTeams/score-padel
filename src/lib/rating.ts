@@ -37,7 +37,7 @@ function clampRating(r: number): number {
 
 /**
  * Calcula el % de juegos esperado para el equipo A dada la diferencia de ratings.
- * Escala 1-7 de pádel (no 1-16.5 de tenis).
+ * Escala 1-7 de pádel.
  */
 function expectedGamePercentage(ratingA: number, ratingB: number): number {
   const diff = ratingA - ratingB
