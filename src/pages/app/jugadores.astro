@@ -86,7 +86,7 @@ const players = await db
       ) : (
         <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {players.results?.map((p: any) => (
-            <div class="card-hover p-5">
+            <a href={`/app/jugadores/${p.id}`} class="card-hover p-5 block">
               <div class="flex items-center justify-between mb-2">
                 <h3 class="text-sm font-semibold text-navy">{p.name}</h3>
                 <span class="font-display text-sm font-bold text-coral">
@@ -98,7 +98,7 @@ const players = await db
                 <span>{p.matches_played ?? 0} partidos</span>
                 <span>{p.experience_years ?? 0} años exp.</span>
               </div>
-            </div>
+            </a>
           ))}
         </div>
       )

@@ -63,7 +63,8 @@ function calculateMatchRating(
 }
 
 /**
- * Calcula el peso del partido según:
+ * Calcula el peso del partido según (punto 8c del documento):
+ * - Formato: partidos más largos → más peso (más fiable el resultado)
  * - Competitividad: ratings más cercanos → más peso
  * - Fiabilidad: oponente con más partidos → más peso
  * - Degradación temporal: partidos más recientes → más peso
@@ -72,7 +73,12 @@ function calculateMatchWeight(
   ratingDiff: number,
   opponentMatchesPlayed: number,
   matchAgeInDays: number,
+  totalGames: number,
 ): number {
+  // Formato/duración: partidos con más juegos son más representativos
+  // 6 juegos (mínimo) → 0.5, 12 juegos → ~0.8, 24+ juegos → ~1.0
+  const formatWeight = 0.5 + 0.5 * Math.min(totalGames / 24, 1)
+
   // Competitividad: partidos entre rivales cercanos pesan más
   // diff=0 → peso 1.0, diff=3 → peso ~0.25
   const competitiveness = 1 / (1 + Math.pow(Math.abs(ratingDiff) / 1.5, 2))
@@ -85,12 +91,13 @@ function calculateMatchWeight(
   // 0 días → 1.0, 180 días → ~0.5, 365 días → ~0.25
   const timeDecay = Math.pow(0.5, matchAgeInDays / 180)
 
-  return competitiveness * reliability * timeDecay
+  return formatWeight * competitiveness * reliability * timeDecay
 }
 
 /**
  * Recalcula la valoración Score Padel de un jugador.
  * Promedio ponderado de hasta 30 valoraciones de partido más recientes (últimos 12 meses).
+ * Incorpora factor 8b.iii: mejor resultado reciente influye en la valoración final.
  */
 export async function recalculatePlayerRating(db: D1Database, playerId: string): Promise<number> {
   const cutoffDate = new Date()
@@ -125,6 +132,7 @@ export async function recalculatePlayerRating(db: D1Database, playerId: string):
 
   let weightedSum = 0
   let totalWeight = 0
+  let bestMatchRating = MIN_RATING
 
   for (const h of history.results as any[]) {
     const isTeam1 = h.team1_player1 === playerId
@@ -150,13 +158,16 @@ export async function recalculatePlayerRating(db: D1Database, playerId: string):
       totalGames,
     )
 
+    // Rastrear mejor resultado reciente (punto 8b.iii)
+    if (matchRating > bestMatchRating) bestMatchRating = matchRating
+
     // Antiguedad del partido en días
     const matchDate = new Date(h.created_at as string)
     const ageInDays = Math.max(0, (Date.now() - matchDate.getTime()) / (1000 * 60 * 60 * 24))
 
-    // Peso del partido
+    // Peso del partido (incluye formato/duración - punto 8c)
     const ratingDiff = playerRatingAtTime - opponentRating
-    const weight = calculateMatchWeight(ratingDiff, opponentMatches, ageInDays)
+    const weight = calculateMatchWeight(ratingDiff, opponentMatches, ageInDays, totalGames)
 
     weightedSum += matchRating * weight
     totalWeight += weight
@@ -164,7 +175,14 @@ export async function recalculatePlayerRating(db: D1Database, playerId: string):
 
   if (totalWeight === 0) return MIN_RATING
 
-  return clampRating(weightedSum / totalWeight)
+  const weightedAvg = weightedSum / totalWeight
+
+  // Punto 8b.iii: resultados recientes comparados con mejor resultado reciente
+  // Mezcla promedio ponderado (80%) con mejor resultado reciente (20%)
+  // Esto reconoce el potencial demostrado del jugador, no solo su promedio
+  const peakBlend = 0.8 * weightedAvg + 0.2 * bestMatchRating
+
+  return clampRating(peakBlend)
 }
 
 /**

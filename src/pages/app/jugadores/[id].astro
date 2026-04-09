@@ -1,0 +1,235 @@
+---
+import AppLayout from '../../../layouts/AppLayout.astro'
+
+const user = (Astro.locals as any).user
+if (!user) return Astro.redirect('/login')
+
+const db = (Astro.locals as any).db
+const { id } = Astro.params
+
+const player = await db
+  .prepare(
+    `
+  SELECT u.id, u.name, u.created_at as joined_at,
+         p.bio, p.location, p.experience_years, p.racquet_sports,
+         p.rating, p.matches_played, p.matches_won
+  FROM users u
+  LEFT JOIN profiles p ON u.id = p.user_id
+  WHERE u.id = ?
+`,
+  )
+  .bind(id)
+  .first()
+
+if (!player) return Astro.redirect('/app/jugadores')
+
+const ratingLevel = (r: number) => {
+  if (r < 2.0) return { nombre: 'Iniciación Pádel', div: 'C' }
+  if (r < 2.5) return { nombre: 'Consistencia Inicial', div: 'C' }
+  if (r < 3.0) return { nombre: 'Precisión en Desarrollo', div: 'C' }
+  if (r < 3.5) return { nombre: 'Confianza Intermedia', div: 'C' }
+  if (r < 4.0) return { nombre: 'Control y Ritmo', div: 'B' }
+  if (r < 4.5) return { nombre: 'Estrategas del Pádel', div: 'B' }
+  if (r < 5.0) return { nombre: 'Jugadores Ingeniosos', div: 'B' }
+  if (r < 5.5) return { nombre: 'Competidores de Torneo', div: 'B' }
+  if (r < 5.5) return { nombre: 'Estrellas Nacionales', div: 'B' }
+  if (r < 6.0) return { nombre: 'Estrellas Nacionales', div: 'B' }
+  if (r < 6.5) return { nombre: 'Semiprofesionales en Ascenso', div: 'A' }
+  if (r < 7.0) return { nombre: 'Profesionales de Élite', div: 'A' }
+  return { nombre: 'Élite Mundial del Pádel', div: 'A' }
+}
+
+const level = ratingLevel(player.rating ?? 1.0)
+const winRate =
+  (player.matches_played ?? 0) > 0
+    ? Math.round(((player.matches_won ?? 0) / (player.matches_played ?? 1)) * 100)
+    : 0
+
+// Partidos recientes del jugador
+const recentMatches = await db
+  .prepare(
+    `
+  SELECT m.team1_games, m.team2_games, m.created_at,
+         m.team1_player1, m.team2_player1,
+         u1.name as team1_name, u2.name as team2_name
+  FROM matches m
+  LEFT JOIN users u1 ON m.team1_player1 = u1.id
+  LEFT JOIN users u2 ON m.team2_player1 = u2.id
+  WHERE m.team1_player1 = ? OR m.team1_player2 = ? OR m.team2_player1 = ? OR m.team2_player2 = ?
+  ORDER BY m.created_at DESC LIMIT 10
+`,
+  )
+  .bind(id, id, id, id)
+  .all()
+
+// Torneos del jugador
+const tournaments = await db
+  .prepare(
+    `
+  SELECT t.id, t.name, t.location, t.event_date, t.status
+  FROM tournament_players tp
+  JOIN tournaments t ON tp.tournament_id = t.id
+  WHERE tp.user_id = ?
+  ORDER BY t.event_date DESC LIMIT 5
+`,
+  )
+  .bind(id)
+  .all()
+
+const isOwnProfile = id === user.id
+---
+
+<AppLayout title={player.name} user={user}>
+  <div class="max-w-2xl">
+    <a
+      href="/app/jugadores"
+      class="text-xs text-muted hover:text-coral transition-colors mb-6 inline-block"
+    >
+      ← Volver a jugadores
+    </a>
+
+    <!-- Header -->
+    <div class="card p-6 mb-6">
+      <div class="flex items-start justify-between">
+        <div>
+          <h1 class="font-display text-2xl font-extrabold text-navy">{player.name}</h1>
+          <div class="text-sm text-muted mt-1">
+            {player.location || 'Sin ubicación'}
+            {player.experience_years > 0 && ` · ${player.experience_years} años de experiencia`}
+          </div>
+          {player.bio && <p class="text-sm text-navy/70 mt-3">{player.bio}</p>}
+        </div>
+        <div class="text-right">
+          <div class="font-display text-4xl font-extrabold text-coral">
+            {Number(player.rating || 1).toFixed(1)}
+          </div>
+          <div class="text-xs text-muted mt-1">{level.nombre}</div>
+          <div class="text-xs font-semibold text-navy mt-0.5">División {level.div}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-3 gap-4 mb-6">
+      <div class="card p-5 text-center">
+        <div class="font-display text-2xl font-extrabold text-navy">
+          {player.matches_played ?? 0}
+        </div>
+        <div class="text-xs text-muted mt-1">Partidos</div>
+      </div>
+      <div class="card p-5 text-center">
+        <div class="font-display text-2xl font-extrabold text-teal">{player.matches_won ?? 0}</div>
+        <div class="text-xs text-muted mt-1">Victorias</div>
+      </div>
+      <div class="card p-5 text-center">
+        <div class="font-display text-2xl font-extrabold text-navy">{winRate}%</div>
+        <div class="text-xs text-muted mt-1">Win rate</div>
+      </div>
+    </div>
+
+    {
+      player.racquet_sports && (
+        <div class="card p-5 mb-6">
+          <h2 class="font-display text-sm font-bold text-navy mb-2">Otros deportes de raqueta</h2>
+          <div class="flex flex-wrap gap-2">
+            {player.racquet_sports
+              .split(',')
+              .map((s: string) => s.trim())
+              .filter(Boolean)
+              .map((sport: string) => (
+                <span class="px-3 py-1 bg-surface-2 text-xs text-navy rounded-full border border-gray-100">
+                  {sport}
+                </span>
+              ))}
+          </div>
+        </div>
+      )
+    }
+
+    <!-- Recent matches -->
+    <div class="card p-6 mb-6">
+      <h2 class="font-display text-base font-bold text-navy mb-4">Partidos recientes</h2>
+      {
+        (recentMatches.results?.length ?? 0) === 0 ? (
+          <p class="text-sm text-muted">Sin partidos registrados.</p>
+        ) : (
+          <div class="space-y-2">
+            {recentMatches.results?.map((m: any) => {
+              const isTeam1 = m.team1_player1 === id
+              const won = isTeam1 ? m.team1_games > m.team2_games : m.team2_games > m.team1_games
+              return (
+                <div class="flex items-center justify-between p-3 rounded-xl bg-surface-2 border border-gray-100">
+                  <div class="flex items-center gap-3">
+                    <span class:list={['w-2 h-2 rounded-full', won ? 'bg-teal' : 'bg-red-400']} />
+                    <div class="text-sm text-navy">
+                      {m.team1_name}
+                      <span class="text-muted mx-1">vs</span>
+                      {m.team2_name}
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <span class="text-sm font-semibold text-navy">
+                      {m.team1_games}-{m.team2_games}
+                    </span>
+                    <span class="text-xs text-muted">
+                      {new Date(m.created_at).toLocaleDateString('es')}
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )
+      }
+    </div>
+
+    <!-- Tournaments -->
+    {
+      (tournaments.results?.length ?? 0) > 0 && (
+        <div class="card p-6 mb-6">
+          <h2 class="font-display text-base font-bold text-navy mb-4">Torneos</h2>
+          <div class="space-y-2">
+            {tournaments.results?.map((t: any) => (
+              <a
+                href={`/app/torneos/${t.id}`}
+                class="flex items-center justify-between p-3 rounded-xl bg-surface-2 border border-gray-100 hover:border-coral/30 transition-colors"
+              >
+                <div>
+                  <div class="text-sm font-semibold text-navy">{t.name}</div>
+                  <div class="text-xs text-muted">{t.location}</div>
+                </div>
+                <div class="text-xs text-muted">
+                  {new Date(t.event_date).toLocaleDateString('es')}
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )
+    }
+
+    {
+      !isOwnProfile && user.role !== 'guest' && (
+        <div class="card p-5 text-center">
+          <p class="text-sm text-muted mb-3">¿Quieres jugar contra {player.name}?</p>
+          <a
+            href="/app/partidos/registrar"
+            class="inline-block px-6 py-2.5 bg-coral text-white text-sm font-semibold rounded-full hover:bg-coral-dark transition-colors"
+          >
+            Registrar partido
+          </a>
+        </div>
+      )
+    }
+
+    {
+      isOwnProfile && (
+        <div class="text-center">
+          <a href="/app/perfil" class="text-sm text-coral hover:underline">
+            Editar mi perfil
+          </a>
+        </div>
+      )
+    }
+  </div>
+</AppLayout>

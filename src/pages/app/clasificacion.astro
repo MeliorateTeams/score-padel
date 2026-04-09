@@ -110,9 +110,12 @@ function getLevel(rating: number) {
                     class={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${isMe ? 'bg-coral/5' : ''}`}
                   >
                     <td class="px-5 py-3.5">
-                      <span class={`font-medium ${isMe ? 'text-coral' : 'text-navy'}`}>
+                      <a
+                        href={`/app/jugadores/${p.id}`}
+                        class={`font-medium hover:underline ${isMe ? 'text-coral' : 'text-navy'}`}
+                      >
                         {p.name}
-                      </span>
+                      </a>
                       {p.location && <span class="ml-2 text-xs text-muted">· {p.location}</span>}
                       {isMe && (
                         <span class="ml-2 text-[10px] bg-coral/10 text-coral px-1.5 py-0.5 rounded-full">
