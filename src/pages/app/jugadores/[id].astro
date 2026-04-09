@@ -79,99 +79,134 @@ const isOwnProfile = id === user.id
 ---
 
 <AppLayout title={player.name} user={user}>
-  <div class="max-w-2xl">
+  <div class="max-w-2xl mx-auto space-y-6">
+    <!-- Back link -->
     <a
       href="/app/jugadores"
-      class="text-xs text-muted hover:text-coral transition-colors mb-6 inline-block"
+      class="text-xs text-muted hover:text-coral transition-colors inline-flex items-center gap-1"
     >
-      ← Volver a jugadores
+      <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"></path></svg>
+      Volver a jugadores
     </a>
 
-    <!-- Header -->
-    <div class="card p-6 mb-6">
-      <div class="flex items-start justify-between">
-        <div>
-          <h1 class="font-display text-2xl font-extrabold text-navy">{player.name}</h1>
-          <div class="text-sm text-muted mt-1">
-            {player.location || 'Sin ubicación'}
-            {player.experience_years > 0 && ` · ${player.experience_years} años de experiencia`}
+    <!-- Hero Card -->
+    <div class="card overflow-hidden">
+      <div class="h-20 bg-gradient-to-r from-coral to-orange-400 relative">
+        <div class="absolute -bottom-8 left-6">
+          <div class="w-16 h-16 rounded-2xl bg-white shadow-md border-2 border-white flex items-center justify-center">
+            <span class="font-display text-2xl font-extrabold text-coral">{(player.name as string)?.charAt(0)?.toUpperCase()}</span>
           </div>
-          {player.bio && <p class="text-sm text-navy/70 mt-3">{player.bio}</p>}
         </div>
-        <div class="text-right">
-          <div class="font-display text-4xl font-extrabold text-coral">
-            {Number(player.rating || 1).toFixed(1)}
+      </div>
+      <div class="pt-12 px-6 pb-6">
+        <div class="flex items-start justify-between">
+          <div>
+            <h1 class="font-display text-xl font-extrabold text-navy">{player.name}</h1>
+            <div class="flex items-center gap-2 mt-1">
+              {player.location && (
+                <span class="text-xs text-muted flex items-center gap-1">
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"></path></svg>
+                  {player.location}
+                </span>
+              )}
+              {player.experience_years > 0 && (
+                <span class="text-xs text-muted flex items-center gap-1">
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                  {player.experience_years} años
+                </span>
+              )}
+            </div>
+            {player.bio && <p class="text-sm text-navy/70 mt-3 leading-relaxed">{player.bio}</p>}
           </div>
-          <div class="text-xs text-muted mt-1">{level.nombre}</div>
-          <div class="text-xs font-semibold text-navy mt-0.5">División {level.div}</div>
+          <div class="text-right shrink-0 ml-4">
+            <div class="font-display text-3xl font-extrabold text-coral">
+              {Number(player.rating || 1).toFixed(1)}
+            </div>
+            <div class="text-[11px] text-muted mt-0.5">{level.nombre}</div>
+            <span class:list={[
+              'inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full',
+              level.div === 'A' ? 'bg-coral/10 text-coral' : level.div === 'B' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+            ]}>División {level.div}</span>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Stats -->
-    <div class="grid grid-cols-3 gap-4 mb-6">
-      <div class="card p-5 text-center">
-        <div class="font-display text-2xl font-extrabold text-navy">
-          {player.matches_played ?? 0}
-        </div>
-        <div class="text-xs text-muted mt-1">Partidos</div>
+    <div class="grid grid-cols-3 gap-3">
+      <div class="card p-4 text-center">
+        <div class="font-display text-2xl font-extrabold text-navy">{player.matches_played ?? 0}</div>
+        <div class="text-[11px] text-muted mt-0.5">Partidos</div>
       </div>
-      <div class="card p-5 text-center">
+      <div class="card p-4 text-center">
         <div class="font-display text-2xl font-extrabold text-teal">{player.matches_won ?? 0}</div>
-        <div class="text-xs text-muted mt-1">Victorias</div>
+        <div class="text-[11px] text-muted mt-0.5">Victorias</div>
       </div>
-      <div class="card p-5 text-center">
+      <div class="card p-4 text-center">
         <div class="font-display text-2xl font-extrabold text-navy">{winRate}%</div>
-        <div class="text-xs text-muted mt-1">Win rate</div>
+        <div class="text-[11px] text-muted mt-0.5">Win rate</div>
       </div>
     </div>
 
-    {
-      player.racquet_sports && (
-        <div class="card p-5 mb-6">
-          <h2 class="font-display text-sm font-bold text-navy mb-2">Otros deportes de raqueta</h2>
-          <div class="flex flex-wrap gap-2">
-            {player.racquet_sports
-              .split(',')
-              .map((s: string) => s.trim())
-              .filter(Boolean)
-              .map((sport: string) => (
-                <span class="px-3 py-1 bg-surface-2 text-xs text-navy rounded-full border border-gray-100">
-                  {sport}
-                </span>
-              ))}
-          </div>
+    {player.racquet_sports && (
+      <div class="card p-5">
+        <h2 class="font-display text-sm font-bold text-navy uppercase tracking-wider flex items-center gap-2 mb-3">
+          <svg class="w-4 h-4 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"></path></svg>
+          Otros deportes de raqueta
+        </h2>
+        <div class="flex flex-wrap gap-2">
+          {(player.racquet_sports as string)
+            .split(',')
+            .map((s: string) => s.trim())
+            .filter(Boolean)
+            .map((sport: string) => (
+              <span class="px-3 py-1 bg-gray-50 text-xs font-medium text-navy rounded-lg border border-gray-100">
+                {sport}
+              </span>
+            ))}
         </div>
-      )
-    }
+      </div>
+    )}
 
     <!-- Recent matches -->
-    <div class="card p-6 mb-6">
-      <h2 class="font-display text-base font-bold text-navy mb-4">Partidos recientes</h2>
+    <div class="card p-6">
+      <h2 class="font-display text-sm font-bold text-navy uppercase tracking-wider flex items-center gap-2 mb-4">
+        <svg class="w-4 h-4 text-coral" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0016.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.003 6.003 0 01-5.54 0"></path></svg>
+        Partidos recientes
+      </h2>
       {
         (recentMatches.results?.length ?? 0) === 0 ? (
-          <p class="text-sm text-muted">Sin partidos registrados.</p>
+          <div class="text-center py-6">
+            <svg class="w-10 h-10 text-muted/30 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <p class="text-sm text-muted">Sin partidos registrados.</p>
+          </div>
         ) : (
           <div class="space-y-2">
             {recentMatches.results?.map((m: any) => {
               const isTeam1 = m.team1_player1 === id
               const won = isTeam1 ? m.team1_games > m.team2_games : m.team2_games > m.team1_games
+              const tied = m.team1_games === m.team2_games
               return (
-                <div class="flex items-center justify-between p-3 rounded-xl bg-surface-2 border border-gray-100">
+                <div class="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100">
                   <div class="flex items-center gap-3">
-                    <span class:list={['w-2 h-2 rounded-full', won ? 'bg-teal' : 'bg-red-400']} />
+                    <span class:list={[
+                      'text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase',
+                      won ? 'bg-teal/10 text-teal' : tied ? 'bg-amber-100 text-amber-700' : 'bg-red-500/10 text-red-500'
+                    ]}>
+                      {won ? 'V' : tied ? 'E' : 'D'}
+                    </span>
                     <div class="text-sm text-navy">
                       {m.team1_name}
-                      <span class="text-muted mx-1">vs</span>
+                      <span class="text-muted mx-1.5 text-xs">vs</span>
                       {m.team2_name}
                     </div>
                   </div>
                   <div class="flex items-center gap-3">
-                    <span class="text-sm font-semibold text-navy">
-                      {m.team1_games}-{m.team2_games}
+                    <span class="text-sm font-display font-bold text-navy">
+                      {m.team1_games}–{m.team2_games}
                     </span>
-                    <span class="text-xs text-muted">
-                      {new Date(m.created_at).toLocaleDateString('es')}
+                    <span class="text-[11px] text-muted">
+                      {new Date(m.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
                     </span>
                   </div>
                 </div>
@@ -185,20 +220,26 @@ const isOwnProfile = id === user.id
     <!-- Tournaments -->
     {
       (tournaments.results?.length ?? 0) > 0 && (
-        <div class="card p-6 mb-6">
-          <h2 class="font-display text-base font-bold text-navy mb-4">Torneos</h2>
+        <div class="card p-6">
+          <h2 class="font-display text-sm font-bold text-navy uppercase tracking-wider flex items-center gap-2 mb-4">
+            <svg class="w-4 h-4 text-coral" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0016.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.003 6.003 0 01-5.54 0"></path></svg>
+            Torneos
+          </h2>
           <div class="space-y-2">
             {tournaments.results?.map((t: any) => (
               <a
                 href={`/app/torneos/${t.id}`}
-                class="flex items-center justify-between p-3 rounded-xl bg-surface-2 border border-gray-100 hover:border-coral/30 transition-colors"
+                class="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-100 hover:border-coral/30 transition-colors"
               >
                 <div>
                   <div class="text-sm font-semibold text-navy">{t.name}</div>
-                  <div class="text-xs text-muted">{t.location}</div>
+                  {t.location && <div class="text-[11px] text-muted">{t.location}</div>}
                 </div>
-                <div class="text-xs text-muted">
-                  {new Date(t.event_date).toLocaleDateString('es')}
+                <div class="flex items-center gap-2">
+                  <span class="text-[11px] text-muted">
+                    {new Date(t.event_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </span>
+                  <svg class="w-3.5 h-3.5 text-muted/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"></path></svg>
                 </div>
               </a>
             ))}
@@ -207,14 +248,16 @@ const isOwnProfile = id === user.id
       )
     }
 
+    <!-- CTA -->
     {
       !isOwnProfile && user.role !== 'guest' && (
         <div class="card p-5 text-center">
           <p class="text-sm text-muted mb-3">¿Quieres jugar contra {player.name}?</p>
           <a
             href="/app/partidos/registrar"
-            class="inline-block px-6 py-2.5 bg-coral text-white text-sm font-semibold rounded-full hover:bg-coral-dark transition-colors"
+            class="inline-flex items-center gap-2 px-6 py-2.5 bg-coral text-white text-sm font-semibold rounded-xl hover:bg-coral-dark transition-colors"
           >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path></svg>
             Registrar partido
           </a>
         </div>
@@ -224,7 +267,8 @@ const isOwnProfile = id === user.id
     {
       isOwnProfile && (
         <div class="text-center">
-          <a href="/app/perfil" class="text-sm text-coral hover:underline">
+          <a href="/app/perfil" class="text-sm text-coral hover:underline inline-flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"></path></svg>
             Editar mi perfil
           </a>
         </div>
