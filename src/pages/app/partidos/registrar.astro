@@ -23,10 +23,10 @@ if (Astro.request.method === 'POST') {
   } else if (team1_games === 0 && team2_games === 0) {
     error = 'Registra al menos un juego.'
   } else {
-    const opponent = await db
+    const opponent = (await db
       .prepare('SELECT id FROM users WHERE email = ?')
       .bind(opponent_email)
-      .first<{ id: string }>()
+      .first()) as { id: string } | null
     if (!opponent) {
       error = 'No se encontró un jugador con ese email. Debe estar registrado.'
     } else if (opponent.id === user.id) {
