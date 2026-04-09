@@ -8,5 +8,8 @@ export const POST: APIRoute = async ({ cookies, locals }) => {
     await deleteSession(db, token)
   }
   cookies.delete('session', { path: '/' })
-  return Response.redirect(new URL('/login', 'https://scorepadel.padelzone.workers.dev'), 303)
+  return new Response(null, {
+    status: 303,
+    headers: { Location: '/login' },
+  })
 }

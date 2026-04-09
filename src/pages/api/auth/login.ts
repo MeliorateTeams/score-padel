@@ -10,12 +10,18 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
   const password = form.get('password')?.toString()
 
   if (!email || !password) {
-    return Response.redirect(new URL('/login?error=campos', request.url), 303)
+    return new Response(null, {
+      status: 303,
+      headers: { Location: new URL('/login?error=campos', request.url).toString() },
+    })
   }
 
   const userId = await loginUser(db, email, password)
   if (!userId) {
-    return Response.redirect(new URL('/login?error=invalid', request.url), 303)
+    return new Response(null, {
+      status: 303,
+      headers: { Location: new URL('/login?error=invalid', request.url).toString() },
+    })
   }
 
   const token = await createSession(db, userId)
@@ -26,5 +32,8 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
     path: '/',
     maxAge: 72 * 3600,
   })
-  return Response.redirect(new URL('/app', request.url), 303)
+  return new Response(null, {
+    status: 303,
+    headers: { Location: new URL('/app', request.url).toString() },
+  })
 }

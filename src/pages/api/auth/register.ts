@@ -11,10 +11,16 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
   const password = form.get('password')?.toString()
 
   if (!name || !email || !password) {
-    return Response.redirect(new URL('/registro?error=campos', request.url), 303)
+    return new Response(null, {
+      status: 303,
+      headers: { Location: new URL('/registro?error=campos', request.url).toString() },
+    })
   }
   if (password.length < 8) {
-    return Response.redirect(new URL('/registro?error=password', request.url), 303)
+    return new Response(null, {
+      status: 303,
+      headers: { Location: new URL('/registro?error=password', request.url).toString() },
+    })
   }
 
   try {
@@ -27,11 +33,20 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
       path: '/',
       maxAge: 72 * 3600,
     })
-    return Response.redirect(new URL('/app', request.url), 303)
+    return new Response(null, {
+      status: 303,
+      headers: { Location: new URL('/app', request.url).toString() },
+    })
   } catch (e: any) {
     if (e.message?.includes('UNIQUE')) {
-      return Response.redirect(new URL('/registro?error=existe', request.url), 303)
+      return new Response(null, {
+        status: 303,
+        headers: { Location: new URL('/registro?error=existe', request.url).toString() },
+      })
     }
-    return Response.redirect(new URL('/registro?error=server', request.url), 303)
+    return new Response(null, {
+      status: 303,
+      headers: { Location: new URL('/registro?error=server', request.url).toString() },
+    })
   }
 }
