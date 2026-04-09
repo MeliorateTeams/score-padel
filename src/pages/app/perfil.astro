@@ -32,7 +32,7 @@ const profile = await getProfile(db, user.id)
 
     {
       message && (
-        <div class="bg-emerald/10 border border-emerald/20 text-emerald text-xs p-3 rounded-lg mb-6">
+        <div class="bg-teal/10 border border-teal/20 text-teal text-xs p-3 rounded-xl mb-6">
           {message}
         </div>
       )
@@ -46,7 +46,7 @@ const profile = await getProfile(db, user.id)
             type="text"
             disabled
             value={user.name}
-            class="w-full px-3.5 py-2.5 bg-surface border border-white/5 rounded-lg text-sm text-muted"
+            class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-muted"
           />
         </div>
         <div>
@@ -55,7 +55,7 @@ const profile = await getProfile(db, user.id)
             type="email"
             disabled
             value={user.email}
-            class="w-full px-3.5 py-2.5 bg-surface border border-white/5 rounded-lg text-sm text-muted"
+            class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-muted"
           />
         </div>
       </div>
@@ -70,7 +70,7 @@ const profile = await getProfile(db, user.id)
           name="location"
           value={profile?.location ?? ''}
           placeholder="Madrid, España"
-          class="w-full px-3.5 py-2.5 bg-surface border border-white/10 rounded-lg text-sm text-text placeholder:text-muted/50 focus:outline-none focus:border-emerald/50 transition-colors"
+          class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
         />
       </div>
 
@@ -86,7 +86,7 @@ const profile = await getProfile(db, user.id)
             min="0"
             max="50"
             value={profile?.experience_years ?? 0}
-            class="w-full px-3.5 py-2.5 bg-surface border border-white/10 rounded-lg text-sm text-text focus:outline-none focus:border-emerald/50 transition-colors"
+            class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy focus:outline-none focus:border-coral/50 transition-colors"
           />
         </div>
         <div>
@@ -99,7 +99,7 @@ const profile = await getProfile(db, user.id)
             name="racquet_sports"
             value={profile?.racquet_sports ?? ''}
             placeholder="Tenis, Squash..."
-            class="w-full px-3.5 py-2.5 bg-surface border border-white/10 rounded-lg text-sm text-text placeholder:text-muted/50 focus:outline-none focus:border-emerald/50 transition-colors"
+            class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
           />
         </div>
       </div>
@@ -111,22 +111,22 @@ const profile = await getProfile(db, user.id)
           name="bio"
           rows="3"
           placeholder="Cuéntanos sobre tu juego..."
-          class="w-full px-3.5 py-2.5 bg-surface border border-white/10 rounded-lg text-sm text-text placeholder:text-muted/50 focus:outline-none focus:border-emerald/50 transition-colors resize-none"
+          class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors resize-none"
           >{profile?.bio ?? ''}</textarea
         >
       </div>
 
       <button
         type="submit"
-        class="px-6 py-2.5 bg-emerald text-bg text-sm font-semibold rounded-lg hover:bg-emerald-glow transition-colors"
+        class="px-6 py-2.5 bg-coral text-white text-sm font-semibold rounded-full hover:bg-coral-dark transition-colors"
       >
         Guardar cambios
       </button>
     </form>
 
-    <div class="mt-10 p-5 gradient-border rounded-xl bg-surface">
+    <div class="mt-10 card p-5">
       <div class="text-xs text-muted mb-2">Tu valoración actual</div>
-      <div class="font-display text-4xl font-bold text-emerald">
+      <div class="font-display text-4xl font-bold text-coral">
         {profile?.rating?.toFixed(1) ?? '1.0'}
       </div>
     </div>

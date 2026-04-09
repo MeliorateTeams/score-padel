@@ -1,4 +1,4 @@
----
+﻿---
 import AppLayout from '../../../layouts/AppLayout.astro'
 import { generateId } from '../../../lib/auth'
 
@@ -38,7 +38,7 @@ if (Astro.request.method === 'POST') {
   <div class="max-w-xl">
     <h1 class="font-display text-2xl font-bold mb-1">Crear torneo</h1>
     <p class="text-sm text-muted mb-8">
-      Organiza una competición y suma puntos para todos los participantes.
+      Organiza una competiciÃ³n y suma puntos para todos los participantes.
     </p>
 
     <form method="POST" class="space-y-5">
@@ -52,31 +52,31 @@ if (Astro.request.method === 'POST') {
           name="name"
           required
           placeholder="Torneo de Primavera 2026"
-          class="w-full px-3.5 py-2.5 bg-surface border border-white/10 rounded-lg text-sm text-text placeholder:text-muted/50 focus:outline-none focus:border-emerald/50 transition-colors"
+          class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
         />
       </div>
       <div>
         <label for="description" class="text-xs font-medium text-muted block mb-1.5"
-          >Descripción</label
+          >DescripciÃ³n</label
         >
         <textarea
           id="description"
           name="description"
           rows="3"
           placeholder="Detalles del torneo..."
-          class="w-full px-3.5 py-2.5 bg-surface border border-white/10 rounded-lg text-sm text-text placeholder:text-muted/50 focus:outline-none focus:border-emerald/50 transition-colors resize-none"
+          class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors resize-none"
         ></textarea>
       </div>
       <div class="grid sm:grid-cols-2 gap-4">
         <div>
-          <label for="location" class="text-xs font-medium text-muted block mb-1.5">Ubicación</label
+          <label for="location" class="text-xs font-medium text-muted block mb-1.5">UbicaciÃ³n</label
           >
           <input
             type="text"
             id="location"
             name="location"
-            placeholder="Club Pádel Madrid"
-            class="w-full px-3.5 py-2.5 bg-surface border border-white/10 rounded-lg text-sm text-text placeholder:text-muted/50 focus:outline-none focus:border-emerald/50 transition-colors"
+            placeholder="Club PÃ¡del Madrid"
+            class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
           />
         </div>
         <div>
@@ -86,13 +86,13 @@ if (Astro.request.method === 'POST') {
             id="event_date"
             name="event_date"
             required
-            class="w-full px-3.5 py-2.5 bg-surface border border-white/10 rounded-lg text-sm text-text focus:outline-none focus:border-emerald/50 transition-colors"
+            class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy focus:outline-none focus:border-coral/50 transition-colors"
           />
         </div>
       </div>
       <div>
         <label for="max_players" class="text-xs font-medium text-muted block mb-1.5"
-          >Máximo de jugadores</label
+          >MÃ¡ximo de jugadores</label
         >
         <input
           type="number"
@@ -101,12 +101,12 @@ if (Astro.request.method === 'POST') {
           min="4"
           max="128"
           value="16"
-          class="w-full px-3.5 py-2.5 bg-surface border border-white/10 rounded-lg text-sm text-text focus:outline-none focus:border-emerald/50 transition-colors"
+          class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy focus:outline-none focus:border-coral/50 transition-colors"
         />
       </div>
       <button
         type="submit"
-        class="px-6 py-2.5 bg-emerald text-bg text-sm font-semibold rounded-lg hover:bg-emerald-glow transition-colors"
+        class="px-6 py-2.5 bg-coral text-white text-sm font-semibold rounded-full hover:bg-coral-dark transition-colors"
       >
         Crear torneo
       </button>

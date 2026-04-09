@@ -23,10 +23,10 @@ function getLevel(rating: number) {
   if (rating < 2.0) return { name: 'Iniciación +', division: 'Formativa', color: 'text-blue-400' }
   if (rating < 2.5) return { name: 'Intermedio', division: 'Formativa', color: 'text-blue-400' }
   if (rating < 3.0)
-    return { name: 'Intermedio Avanzado', division: 'Competitiva', color: 'text-emerald' }
-  if (rating < 3.5) return { name: 'Avanzado', division: 'Competitiva', color: 'text-emerald' }
-  if (rating < 4.0) return { name: 'Avanzado +', division: 'Competitiva', color: 'text-emerald' }
-  if (rating < 4.5) return { name: 'Competición', division: 'Competitiva', color: 'text-emerald' }
+    return { name: 'Intermedio Avanzado', division: 'Competitiva', color: 'text-teal' }
+  if (rating < 3.5) return { name: 'Avanzado', division: 'Competitiva', color: 'text-teal' }
+  if (rating < 4.0) return { name: 'Avanzado +', division: 'Competitiva', color: 'text-teal' }
+  if (rating < 4.5) return { name: 'Competición', division: 'Competitiva', color: 'text-teal' }
   if (rating < 5.0) return { name: 'Pre-Profesional', division: 'Élite', color: 'text-amber' }
   if (rating < 5.5) return { name: 'Profesional', division: 'Élite', color: 'text-amber' }
   if (rating < 6.0) return { name: 'Profesional +', division: 'Élite', color: 'text-amber' }
@@ -40,11 +40,11 @@ function getLevel(rating: number) {
     <h1 class="font-display text-2xl font-bold mb-1">Clasificación global</h1>
     <p class="text-sm text-muted mb-8">Ranking de jugadores por valoración.</p>
 
-    <div class="gradient-border rounded-2xl overflow-hidden">
-      <div class="bg-surface overflow-x-auto">
+    <div class="card rounded-2xl overflow-hidden">
+      <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
-            <tr class="border-b border-white/5 text-muted text-left">
+            <tr class="border-b border-gray-100 text-muted text-left">
               <th class="px-5 py-3 font-medium w-12">#</th>
               <th class="px-5 py-3 font-medium">Jugador</th>
               <th class="px-5 py-3 font-medium">Nivel</th>
@@ -60,18 +60,18 @@ function getLevel(rating: number) {
                 const isMe = p.id === user.id
                 return (
                   <tr
-                    class={`border-b border-white/5 hover:bg-white/[0.02] transition-colors ${isMe ? 'bg-emerald/5' : ''}`}
+                    class={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${isMe ? 'bg-coral/5' : ''}`}
                   >
                     <td class="px-5 py-3.5 font-display font-bold text-muted">
                       {i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}
                     </td>
                     <td class="px-5 py-3.5">
-                      <span class={`font-medium ${isMe ? 'text-emerald' : 'text-text'}`}>
+                      <span class={`font-medium ${isMe ? 'text-coral' : 'text-navy'}`}>
                         {p.name}
                       </span>
                       {p.location && <span class="ml-2 text-xs text-muted">· {p.location}</span>}
                       {isMe && (
-                        <span class="ml-2 text-[10px] bg-emerald/20 text-emerald px-1.5 py-0.5 rounded">
+                        <span class="ml-2 text-[10px] bg-coral/10 text-coral px-1.5 py-0.5 rounded-full">
                           Tú
                         </span>
                       )}
@@ -83,7 +83,7 @@ function getLevel(rating: number) {
                     <td class="px-5 py-3.5 text-center text-muted">{p.matches_played ?? 0}</td>
                     <td class="px-5 py-3.5 text-center text-muted">{p.matches_won ?? 0}</td>
                     <td class="px-5 py-3.5 text-right">
-                      <span class="font-display font-bold text-emerald">
+                      <span class="font-display font-bold text-coral">
                         {Number(p.rating || 1).toFixed(1)}
                       </span>
                     </td>

@@ -27,7 +27,7 @@ const tournaments = await db
     </div>
     <a
       href="/app/torneos/crear"
-      class="px-5 py-2.5 bg-emerald text-bg text-sm font-semibold rounded-lg hover:bg-emerald-glow transition-colors"
+      class="px-5 py-2.5 bg-coral text-white text-sm font-semibold rounded-full hover:bg-coral-dark transition-colors"
     >
       Crear torneo
     </a>
@@ -35,24 +35,21 @@ const tournaments = await db
 
   {
     (tournaments.results?.length ?? 0) === 0 ? (
-      <div class="gradient-border rounded-xl bg-surface p-10 text-center">
+      <div class="card rounded-xl p-10 text-center">
         <p class="text-muted mb-4">No hay torneos creados aún.</p>
-        <a href="/app/torneos/crear" class="text-emerald text-sm hover:underline">
+        <a href="/app/torneos/crear" class="text-coral text-sm hover:underline">
           Sé el primero en organizar uno
         </a>
       </div>
     ) : (
-      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-white/5 rounded-2xl overflow-hidden">
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {tournaments.results?.map((t: any) => (
-          <a
-            href={`/app/torneos/${t.id}`}
-            class="bg-surface hover:bg-surface-2 transition-colors p-6 block"
-          >
+          <a href={`/app/torneos/${t.id}`} class="card-hover p-6 block">
             <div class="flex items-center justify-between mb-3">
               <span
                 class:list={[
-                  'text-xs font-medium px-2 py-0.5 rounded',
-                  t.status === 'open' ? 'bg-emerald/10 text-emerald' : 'bg-muted/10 text-muted',
+                  'text-xs font-medium px-2 py-0.5 rounded-full',
+                  t.status === 'open' ? 'bg-teal/10 text-teal' : 'bg-muted/10 text-muted',
                 ]}
               >
                 {t.status === 'open' ? 'Abierto' : 'Cerrado'}
@@ -61,7 +58,7 @@ const tournaments = await db
                 {t.player_count}/{t.max_players}
               </span>
             </div>
-            <h3 class="font-display text-sm font-semibold text-text mb-1">{t.name}</h3>
+            <h3 class="font-display text-sm font-semibold text-navy mb-1">{t.name}</h3>
             <p class="text-xs text-muted mb-2">{t.location || 'Sin ubicación'}</p>
             <div class="text-xs text-muted">
               {new Date(t.event_date).toLocaleDateString('es', {

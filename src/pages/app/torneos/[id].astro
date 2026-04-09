@@ -56,7 +56,7 @@ const isFull = (players.results?.length ?? 0) >= (tournament as any).max_players
 ---
 
 <AppLayout title={(tournament as any).name} user={user}>
-  <a href="/app/torneos" class="text-xs text-muted hover:text-emerald transition-colors mb-6 block"
+  <a href="/app/torneos" class="text-xs text-muted hover:text-coral transition-colors mb-6 block"
     >← Volver a torneos</a
   >
 
@@ -77,9 +77,9 @@ const isFull = (players.results?.length ?? 0) >= (tournament as any).max_players
         </div>
         <span
           class:list={[
-            'text-xs font-medium px-2.5 py-1 rounded',
+            'text-xs font-medium px-2.5 py-1 rounded-full',
             (tournament as any).status === 'open'
-              ? 'bg-emerald/10 text-emerald'
+              ? 'bg-teal/10 text-teal'
               : 'bg-muted/10 text-muted',
           ]}
         >
@@ -103,7 +103,7 @@ const isFull = (players.results?.length ?? 0) >= (tournament as any).max_players
                 <input type="hidden" name="action" value="leave" />
                 <button
                   type="submit"
-                  class="px-5 py-2.5 border border-red-500/20 text-red-400 text-sm rounded-lg hover:bg-red-500/10 transition-colors"
+                  class="px-5 py-2.5 border border-red-500/20 text-red-500 text-sm rounded-full hover:bg-red-500/10 transition-colors"
                 >
                   Abandonar torneo
                 </button>
@@ -113,7 +113,7 @@ const isFull = (players.results?.length ?? 0) >= (tournament as any).max_players
                 <input type="hidden" name="action" value="join" />
                 <button
                   type="submit"
-                  class="px-5 py-2.5 bg-emerald text-bg text-sm font-semibold rounded-lg hover:bg-emerald-glow transition-colors"
+                  class="px-5 py-2.5 bg-coral text-white text-sm font-semibold rounded-full hover:bg-coral-dark transition-colors"
                 >
                   Inscribirse
                 </button>
@@ -126,8 +126,8 @@ const isFull = (players.results?.length ?? 0) >= (tournament as any).max_players
       }
     </div>
 
-    <div class="gradient-border rounded-xl bg-surface p-6">
-      <h2 class="font-display text-sm font-semibold mb-4">
+    <div class="card p-6">
+      <h2 class="font-display text-sm font-semibold text-navy mb-4">
         Jugadores inscritos ({players.results?.length ?? 0}/{(tournament as any).max_players})
       </h2>
       {
@@ -136,12 +136,12 @@ const isFull = (players.results?.length ?? 0) >= (tournament as any).max_players
         ) : (
           <div class="space-y-2">
             {players.results?.map((p: any) => (
-              <div class="flex items-center justify-between p-2.5 rounded-lg bg-bg/50 border border-white/5">
+              <div class="flex items-center justify-between p-2.5 rounded-xl bg-surface-2 border border-gray-100">
                 <div>
-                  <div class="text-sm text-text">{p.name}</div>
+                  <div class="text-sm text-navy">{p.name}</div>
                   <div class="text-xs text-muted">{p.location || 'Sin ubicación'}</div>
                 </div>
-                <span class="text-xs font-medium text-emerald">
+                <span class="text-xs font-medium text-coral">
                   {Number(p.rating || 1).toFixed(1)}
                 </span>
               </div>

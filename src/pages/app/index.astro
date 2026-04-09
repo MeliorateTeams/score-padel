@@ -54,11 +54,11 @@ const errorParam = Astro.url.searchParams.get('error')
 
 <AppLayout title="Dashboard" user={user}>
   <div class="mb-8">
-    <h1 class="font-display text-2xl font-bold mb-1">Hola, {user.name}</h1>
+    <h1 class="font-display text-2xl font-extrabold mb-1 text-navy">Hola, {user.name}</h1>
     <p class="text-sm text-muted">Tu centro de control en Score Padel.</p>
     {
       isAdmin && (
-        <span class="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 bg-amber/10 text-amber text-xs font-semibold rounded-md">
+        <span class="inline-flex items-center gap-1.5 mt-2 px-3 py-1 bg-coral/10 text-coral text-xs font-bold rounded-full">
           Administrador
         </span>
       )
@@ -67,7 +67,7 @@ const errorParam = Astro.url.searchParams.get('error')
 
   {
     errorParam === 'guest' && (
-      <div class="mb-6 p-4 rounded-lg bg-amber/10 border border-amber/20 text-sm text-amber">
+      <div class="mb-6 p-4 rounded-xl bg-amber/10 border border-amber/20 text-sm text-amber-700">
         Tu cuenta de invitado no tiene acceso a esta función.{' '}
         <a href="/registro" class="underline font-semibold">
           Crea una cuenta completa
@@ -79,7 +79,7 @@ const errorParam = Astro.url.searchParams.get('error')
 
   {
     isGuest && (
-      <div class="mb-6 p-4 rounded-lg bg-indigo/10 border border-indigo/20 text-sm text-indigo">
+      <div class="mb-6 p-4 rounded-xl bg-teal/10 border border-teal/20 text-sm text-teal">
         Estás usando una <strong>cuenta de invitado</strong>. Puedes explorar la plataforma, ver
         clasificaciones y jugadores, pero no podrás registrar partidos, crear torneos ni editar tu
         perfil.{' '}
@@ -92,26 +92,28 @@ const errorParam = Astro.url.searchParams.get('error')
   }
 
   <!-- Stats grid -->
-  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-white/5 rounded-xl overflow-hidden mb-8">
-    <div class="bg-surface p-6">
-      <div class="text-xs text-muted mb-2">Tu valoración</div>
-      <div class="font-display text-3xl font-bold text-emerald">{rating}</div>
+  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="card p-6">
+      <div class="text-xs text-muted font-medium mb-2">Tu valoración</div>
+      <div class="font-display text-3xl font-extrabold text-coral">{rating}</div>
       <div class="text-xs text-muted mt-1">{level.nombre}</div>
     </div>
-    <div class="bg-surface p-6">
-      <div class="text-xs text-muted mb-2">División</div>
-      <div class="font-display text-3xl font-bold">{level.div}</div>
+    <div class="card p-6">
+      <div class="text-xs text-muted font-medium mb-2">División</div>
+      <div class="font-display text-3xl font-extrabold text-navy">{level.div}</div>
       <div class="text-xs text-muted mt-1">
         {level.div === 'A' ? 'Élite' : level.div === 'B' ? 'Competitiva' : 'Iniciación'}
       </div>
     </div>
-    <div class="bg-surface p-6">
-      <div class="text-xs text-muted mb-2">Partidos jugados</div>
-      <div class="font-display text-3xl font-bold">{profile?.matches_played ?? 0}</div>
+    <div class="card p-6">
+      <div class="text-xs text-muted font-medium mb-2">Partidos jugados</div>
+      <div class="font-display text-3xl font-extrabold text-navy">
+        {profile?.matches_played ?? 0}
+      </div>
     </div>
-    <div class="bg-surface p-6">
-      <div class="text-xs text-muted mb-2">Victorias</div>
-      <div class="font-display text-3xl font-bold">{profile?.matches_won ?? 0}</div>
+    <div class="card p-6">
+      <div class="text-xs text-muted font-medium mb-2">Victorias</div>
+      <div class="font-display text-3xl font-extrabold text-teal">{profile?.matches_won ?? 0}</div>
       <div class="text-xs text-muted mt-1">
         {
           (profile?.matches_played ?? 0) > 0
@@ -123,46 +125,37 @@ const errorParam = Astro.url.searchParams.get('error')
   </div>
 
   <!-- Quick actions -->
-  <div class="grid sm:grid-cols-3 gap-3 mb-8">
+  <div class="grid sm:grid-cols-3 gap-4 mb-8">
     {
       !isGuest && (
-        <a
-          href="/app/partidos/registrar"
-          class="gradient-border rounded-xl bg-surface p-5 hover:bg-surface-2 transition-colors block"
-        >
-          <div class="text-sm font-semibold text-text mb-1">Registrar partido</div>
+        <a href="/app/partidos/registrar" class="card-hover p-5 block">
+          <div class="text-sm font-bold text-navy mb-1">Registrar partido</div>
           <div class="text-xs text-muted">Añade un resultado para actualizar tu valoración.</div>
         </a>
       )
     }
     {
       !isGuest && (
-        <a
-          href="/app/torneos/crear"
-          class="gradient-border rounded-xl bg-surface p-5 hover:bg-surface-2 transition-colors block"
-        >
-          <div class="text-sm font-semibold text-text mb-1">Crear torneo</div>
+        <a href="/app/torneos/crear" class="card-hover p-5 block">
+          <div class="text-sm font-bold text-navy mb-1">Crear torneo</div>
           <div class="text-xs text-muted">Organiza una competición en tu zona.</div>
         </a>
       )
     }
-    <a
-      href="/app/jugadores"
-      class="gradient-border rounded-xl bg-surface p-5 hover:bg-surface-2 transition-colors block"
-    >
-      <div class="text-sm font-semibold text-text mb-1">Buscar jugadores</div>
+    <a href="/app/jugadores" class="card-hover p-5 block">
+      <div class="text-sm font-bold text-navy mb-1">Buscar jugadores</div>
       <div class="text-xs text-muted">Encuentra rivales de tu nivel cerca de ti.</div>
     </a>
   </div>
 
   <!-- Recent matches -->
-  <div class="gradient-border rounded-xl bg-surface p-6">
-    <h2 class="font-display text-base font-semibold mb-4">Partidos recientes</h2>
+  <div class="card p-6">
+    <h2 class="font-display text-base font-bold text-navy mb-4">Partidos recientes</h2>
     {
       (recentMatches.results?.length ?? 0) === 0 ? (
         <p class="text-sm text-muted">
           Aún no has registrado ningún partido.{' '}
-          <a href="/app/partidos/registrar" class="text-emerald hover:underline">
+          <a href="/app/partidos/registrar" class="text-coral hover:underline">
             Registra tu primero
           </a>
           .
@@ -170,8 +163,8 @@ const errorParam = Astro.url.searchParams.get('error')
       ) : (
         <div class="space-y-2">
           {recentMatches.results?.map((m: any) => (
-            <div class="flex items-center justify-between p-3 rounded-lg bg-bg/50 border border-white/5">
-              <div class="text-sm text-text">
+            <div class="flex items-center justify-between p-3 rounded-xl bg-surface-2 border border-gray-100">
+              <div class="text-sm text-navy">
                 Equipo 1 ({m.team1_games}g) vs Equipo 2 ({m.team2_games}g)
               </div>
               <div class="text-xs text-muted">
@@ -187,18 +180,18 @@ const errorParam = Astro.url.searchParams.get('error')
   <!-- Rating history -->
   {
     (ratingHist.results?.length ?? 0) > 0 && (
-      <div class="gradient-border rounded-xl bg-surface p-6 mt-6">
-        <h2 class="font-display text-base font-semibold mb-4">Evolución de valoración</h2>
+      <div class="card p-6 mt-6">
+        <h2 class="font-display text-base font-bold text-navy mb-4">Evolución de valoración</h2>
         <div class="space-y-2">
           {ratingHist.results?.map((h: any) => (
-            <div class="flex items-center justify-between p-3 rounded-lg bg-bg/50 border border-white/5">
+            <div class="flex items-center justify-between p-3 rounded-xl bg-surface-2 border border-gray-100">
               <div class="text-sm">
                 <span class="text-muted">{Number(h.old_rating).toFixed(1)}</span>
                 <span class="text-muted mx-2">→</span>
                 <span
                   class:list={[
-                    Number(h.new_rating) > Number(h.old_rating) ? 'text-emerald' : 'text-red-400',
-                    'font-medium',
+                    Number(h.new_rating) > Number(h.old_rating) ? 'text-teal' : 'text-red-500',
+                    'font-semibold',
                   ]}
                 >
                   {Number(h.new_rating).toFixed(1)}
