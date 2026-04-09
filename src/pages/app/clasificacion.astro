@@ -31,9 +31,13 @@ if (divisionFilter === 'C') {
 
 leaderboardQuery += ' ORDER BY p.rating DESC LIMIT 100'
 
-const leaderboard = lbParams.length > 0
-  ? await db.prepare(leaderboardQuery).bind(...lbParams).all()
-  : await db.prepare(leaderboardQuery).all()
+const leaderboard =
+  lbParams.length > 0
+    ? await db
+        .prepare(leaderboardQuery)
+        .bind(...lbParams)
+        .all()
+    : await db.prepare(leaderboardQuery).all()
 
 function getLevel(rating: number) {
   if (rating < 2.0) return { name: 'Iniciación Pádel', division: 'C', color: 'text-blue-400' }
@@ -53,10 +57,10 @@ function getLevel(rating: number) {
 }
 ---
 
-<AppLayout title="Clasificación" user={user}>
+<AppLayout title="Valoraciones" user={user}>
   <div>
-    <h1 class="font-display text-2xl font-bold mb-1">Clasificación global</h1>
-    <p class="text-sm text-muted mb-4">Ranking de jugadores por valoración.</p>
+    <h1 class="font-display text-2xl font-bold mb-1">Valoraciones globales</h1>
+    <p class="text-sm text-muted mb-4">Valoración numérica de jugadores según su nivel de juego.</p>
 
     <form method="GET" class="flex flex-wrap gap-3 mb-6">
       <select
@@ -89,7 +93,6 @@ function getLevel(rating: number) {
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-gray-100 text-muted text-left">
-              <th class="px-5 py-3 font-medium w-12">#</th>
               <th class="px-5 py-3 font-medium">Jugador</th>
               <th class="px-5 py-3 font-medium">Nivel</th>
               <th class="px-5 py-3 font-medium text-center">Partidos</th>
@@ -99,16 +102,13 @@ function getLevel(rating: number) {
           </thead>
           <tbody>
             {
-              leaderboard.results?.map((p: any, i: number) => {
+              leaderboard.results?.map((p: any) => {
                 const level = getLevel(Number(p.rating || 1))
                 const isMe = p.id === user.id
                 return (
                   <tr
                     class={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${isMe ? 'bg-coral/5' : ''}`}
                   >
-                    <td class="px-5 py-3.5 font-display font-bold text-muted">
-                      {i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}
-                    </td>
                     <td class="px-5 py-3.5">
                       <span class={`font-medium ${isMe ? 'text-coral' : 'text-navy'}`}>
                         {p.name}
