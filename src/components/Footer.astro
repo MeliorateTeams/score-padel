@@ -1,0 +1,86 @@
+---
+const currentYear = new Date().getFullYear()
+---
+
+<footer class="bg-primary border-t border-white/5">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-12">
+      <!-- Brand -->
+      <div class="md:col-span-2">
+        <a href="/" class="flex items-center gap-3 mb-4">
+          <div
+            class="w-10 h-10 rounded-xl bg-gradient-to-br from-secondary to-accent flex items-center justify-center font-black text-dark text-lg"
+          >
+            SP
+          </div>
+          <span class="text-xl font-bold tracking-tight text-light">
+            Score<span class="text-secondary">Padel</span>
+          </span>
+        </a>
+        <p class="text-muted text-sm leading-relaxed max-w-md">
+          La plataforma global que organiza, estandariza y jerarquiza las competiciones de pádel.
+          Cada jugador cuenta su propia historia de éxito.
+        </p>
+      </div>
+
+      <!-- Navigation -->
+      <div>
+        <h3 class="text-sm font-semibold text-light mb-4 uppercase tracking-wider">Navegación</h3>
+        <ul class="space-y-3">
+          <li>
+            <a
+              href="#quienes-somos"
+              class="text-sm text-muted hover:text-secondary transition-colors">Quiénes somos</a>
+          </li>
+          <li>
+            <a href="#mision" class="text-sm text-muted hover:text-secondary transition-colors"
+              >Misión</a>
+          </li>
+          <li>
+            <a href="#niveles" class="text-sm text-muted hover:text-secondary transition-colors"
+              >Niveles</a>
+          </li>
+          <li>
+            <a
+              href="#por-que-unirse"
+              class="text-sm text-muted hover:text-secondary transition-colors">Únete</a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Legal -->
+      <div>
+        <h3 class="text-sm font-semibold text-light mb-4 uppercase tracking-wider">Legal</h3>
+        <ul class="space-y-3">
+          <li>
+            <a
+              href="/politica-privacidad"
+              class="text-sm text-muted hover:text-secondary transition-colors"
+              >Política de Privacidad</a>
+          </li>
+          <li>
+            <a
+              href="/politica-cookies"
+              class="text-sm text-muted hover:text-secondary transition-colors"
+              >Política de Cookies</a>
+          </li>
+          <li>
+            <a href="/aviso-legal" class="text-sm text-muted hover:text-secondary transition-colors"
+              >Aviso Legal</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div
+      class="border-t border-white/5 mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4"
+    >
+      <p class="text-sm text-muted">
+        &copy; {currentYear} Score Padel. Todos los derechos reservados.
+      </p>
+      <p class="text-xs text-muted/60">
+        Plataforma desarrollada cumpliendo con el RGPD y la LOPD-GDD.
+      </p>
+    </div>
+  </div>
+</footer>

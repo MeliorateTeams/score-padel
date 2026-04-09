@@ -1,0 +1,298 @@
+---
+import Layout from '../layouts/Layout.astro'
+import Navbar from '../components/Navbar.astro'
+import Footer from '../components/Footer.astro'
+import CookieBanner from '../components/CookieBanner.astro'
+
+const niveles = [
+  { cal: '1.0', div: 'C', nombre: 'Iniciación Pádel', color: 'from-gray-500 to-gray-600' },
+  { cal: '2.0', div: 'C', nombre: 'Consistencia Inicial', color: 'from-gray-500 to-gray-600' },
+  { cal: '2.5', div: 'C', nombre: 'Precisión en Desarrollo', color: 'from-gray-500 to-gray-600' },
+  { cal: '3.0', div: 'C', nombre: 'Confianza Intermedia', color: 'from-gray-500 to-gray-600' },
+  { cal: '3.5', div: 'B', nombre: 'Control y Ritmo', color: 'from-blue-500 to-blue-600' },
+  { cal: '4.0', div: 'B', nombre: 'Estrategas del Pádel', color: 'from-blue-500 to-blue-600' },
+  { cal: '4.5', div: 'B', nombre: 'Jugadores Ingeniosos', color: 'from-blue-500 to-blue-600' },
+  { cal: '5.0', div: 'B', nombre: 'Competidores de Torneo', color: 'from-blue-500 to-blue-600' },
+  { cal: '5.5', div: 'B', nombre: 'Estrellas Nacionales', color: 'from-blue-500 to-blue-600' },
+  {
+    cal: '6.0',
+    div: 'A',
+    nombre: 'Semiprofesionales en Ascenso',
+    color: 'from-accent to-yellow-500',
+  },
+  { cal: '6.5', div: 'A', nombre: 'Profesionales de Élite', color: 'from-accent to-yellow-500' },
+  { cal: '7.0', div: 'A', nombre: 'Élite Mundial del Pádel', color: 'from-accent to-yellow-500' },
+]
+
+const ventajas = [
+  {
+    icon: '📊',
+    titulo: 'Progreso Personalizado',
+    desc: 'Gracias a nuestro sistema de valoración, identifícate en tu nivel y sigue tu evolución de forma única.',
+  },
+  {
+    icon: '🌍',
+    titulo: 'Visibilidad Internacional',
+    desc: 'Tu participación no se limita al ámbito local. Cada victoria contribuye a tu reconocimiento global.',
+  },
+  {
+    icon: '🎯',
+    titulo: 'Eventos a tu Medida',
+    desc: 'Encuentra competiciones que se adapten a tu estilo y nivel. Desafía tus límites.',
+  },
+  {
+    icon: '🤝',
+    titulo: 'Comunidad Apasionada',
+    desc: 'Conecta con jugadores que comparten tu pasión y genera conexiones dentro y fuera de la pista.',
+  },
+  {
+    icon: '📈',
+    titulo: 'Seguimiento Detallado',
+    desc: 'Visualiza marcadores, victorias y compara tu desempeño. Tu carrera resumida para tu mejora continua.',
+  },
+]
+---
+
+<Layout title="Score Padel | Plataforma Global de Ranking de Pádel">
+  <Navbar />
+
+  <!-- HERO -->
+  <section class="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-b from-primary via-dark to-dark"></div>
+    <div class="absolute inset-0 opacity-10">
+      <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-secondary rounded-full blur-[128px]"></div>
+      <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent rounded-full blur-[128px]">
+      </div>
+    </div>
+    <div class="relative z-10 max-w-5xl mx-auto px-4 text-center pt-20">
+      <div
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-8"
+      >
+        <span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+        <span class="text-xs font-medium text-muted">Plataforma global de pádel</span>
+      </div>
+      <h1 class="text-5xl md:text-7xl font-black tracking-tight leading-tight mb-6">
+        Eleva tu juego,<br />
+        <span class="bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent"
+          >forja tu legado</span
+        >
+      </h1>
+      <p class="text-lg md:text-xl text-muted max-w-2xl mx-auto mb-10 leading-relaxed">
+        La plataforma que organiza, estandariza y jerarquiza las competiciones de pádel a nivel
+        mundial. Cada punto cuenta tu historia.
+      </p>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a
+          href="#por-que-unirse"
+          class="px-8 py-4 bg-secondary text-dark font-bold rounded-full hover:bg-accent transition-all duration-300 hover:shadow-lg hover:shadow-secondary/25"
+        >
+          Únete ahora
+        </a>
+        <a
+          href="#quienes-somos"
+          class="px-8 py-4 border border-white/10 text-light font-medium rounded-full hover:border-secondary hover:text-secondary transition-all duration-300"
+        >
+          Descubre más
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUIÉNES SOMOS -->
+  <section id="quienes-somos" class="py-24 bg-dark">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <span class="text-secondary text-sm font-semibold uppercase tracking-widest"
+          >Quiénes somos</span
+        >
+        <h2 class="text-4xl md:text-5xl font-bold mt-4 mb-6">Transformando el pádel</h2>
+        <div class="w-20 h-1 bg-gradient-to-r from-secondary to-accent mx-auto rounded-full"></div>
+      </div>
+      <div class="grid md:grid-cols-2 gap-12 items-center">
+        <div>
+          <p class="text-muted leading-relaxed text-lg mb-6">
+            Score Padel es la respuesta a la necesidad de transformar la escena del pádel. Nacimos
+            con el propósito de
+            <span class="text-light font-medium">organizar y estandarizar las competiciones</span>,
+            jerarquizar a los jugadores y proporcionar una plataforma global donde cada deportista
+            cuente su propia historia de éxito.
+          </p>
+          <p class="text-muted leading-relaxed text-lg">
+            Somos el impulso que eleva el pádel, ofreciendo orden, sentido y comunidad a la escena
+            amateur y profesional apasionada por este deporte.
+          </p>
+        </div>
+        <div class="bg-gradient-to-br from-primary to-dark rounded-2xl p-8 border border-white/5">
+          <div class="grid grid-cols-2 gap-6">
+            <div class="text-center p-4">
+              <div class="text-3xl font-black text-secondary">12</div>
+              <div class="text-xs text-muted mt-1">Niveles de juego</div>
+            </div>
+            <div class="text-center p-4">
+              <div class="text-3xl font-black text-accent">3</div>
+              <div class="text-xs text-muted mt-1">Divisiones</div>
+            </div>
+            <div class="text-center p-4">
+              <div class="text-3xl font-black text-secondary">🌍</div>
+              <div class="text-xs text-muted mt-1">Alcance global</div>
+            </div>
+            <div class="text-center p-4">
+              <div class="text-3xl font-black text-accent">♾️</div>
+              <div class="text-xs text-muted mt-1">Torneos</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MISIÓN -->
+  <section id="mision" class="py-24 bg-primary/30">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <span class="text-secondary text-sm font-semibold uppercase tracking-widest"
+          >Nuestra misión</span
+        >
+        <h2 class="text-4xl md:text-5xl font-bold mt-4 mb-6">Orden, sentido y jerarquía</h2>
+        <div class="w-20 h-1 bg-gradient-to-r from-secondary to-accent mx-auto rounded-full"></div>
+      </div>
+      <div class="max-w-3xl mx-auto">
+        <p class="text-muted leading-relaxed text-lg mb-6">
+          Nuestra misión trasciende el simple juego: buscamos <span class="text-light font-medium"
+            >empoderar a cada jugador</span
+          >, brindándole la oportunidad de identificarse en su nivel y trazar sus propios caminos de
+          progreso.
+        </p>
+        <p class="text-muted leading-relaxed text-lg mb-6">
+          Administramos competiciones con sentido y jerarquía, estableciendo estándares globales que
+          permiten a los jugadores no solo competir, sino también medir y celebrar su evolución.
+        </p>
+        <div class="bg-dark/50 rounded-2xl p-8 border border-white/5 mt-10">
+          <h3 class="text-xl font-bold text-light mb-4">Cómo funciona Score Padel</h3>
+          <ul class="space-y-4">
+            <li class="flex items-start gap-3">
+              <span
+                class="w-6 h-6 rounded-full bg-secondary/20 text-secondary flex items-center justify-center text-xs font-bold mt-0.5"
+                >1</span
+              >
+              <span class="text-muted text-sm"
+                >El algoritmo se basa en el resultado de cada equipo en cada partido según los
+                juegos ganados.</span
+              >
+            </li>
+            <li class="flex items-start gap-3">
+              <span
+                class="w-6 h-6 rounded-full bg-secondary/20 text-secondary flex items-center justify-center text-xs font-bold mt-0.5"
+                >2</span
+              >
+              <span class="text-muted text-sm"
+                >Se considera la diferencia de valoraciones entre jugadores, el porcentaje de juegos
+                ganados y resultados recientes.</span
+              >
+            </li>
+            <li class="flex items-start gap-3">
+              <span
+                class="w-6 h-6 rounded-full bg-secondary/20 text-secondary flex items-center justify-center text-xs font-bold mt-0.5"
+                >3</span
+              >
+              <span class="text-muted text-sm"
+                >Se contabilizan todos los formatos de juego, la competitividad y la fiabilidad del
+                ranking rival.</span
+              >
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NIVELES -->
+  <section id="niveles" class="py-24 bg-dark">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <span class="text-secondary text-sm font-semibold uppercase tracking-widest"
+          >Sistema de niveles</span
+        >
+        <h2 class="text-4xl md:text-5xl font-bold mt-4 mb-6">Tu valoración, tu nivel</h2>
+        <div class="w-20 h-1 bg-gradient-to-r from-secondary to-accent mx-auto rounded-full"></div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {
+          niveles.map((n) => (
+            <div class="group relative bg-primary/40 rounded-xl p-5 border border-white/5 hover:border-secondary/30 transition-all duration-300">
+              <div class="flex items-center gap-4">
+                <div
+                  class={`w-12 h-12 rounded-xl bg-gradient-to-br ${n.color} flex items-center justify-center font-black text-white text-sm`}
+                >
+                  {n.cal}
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-light font-semibold text-sm">{n.nombre}</span>
+                  </div>
+                  <span class="text-xs text-muted">División {n.div}</span>
+                </div>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+      <div class="flex justify-center gap-8 mt-12">
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded bg-gray-500"></span><span class="text-xs text-muted"
+            >División C</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded bg-blue-500"></span><span class="text-xs text-muted"
+            >División B</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 rounded bg-accent"></span><span class="text-xs text-muted"
+            >División A</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- POR QUÉ UNIRSE -->
+  <section id="por-que-unirse" class="py-24 bg-primary/30">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <span class="text-secondary text-sm font-semibold uppercase tracking-widest">Ventajas</span>
+        <h2 class="text-4xl md:text-5xl font-bold mt-4 mb-6">¿Por qué unirse?</h2>
+        <div class="w-20 h-1 bg-gradient-to-r from-secondary to-accent mx-auto rounded-full"></div>
+      </div>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {
+          ventajas.map((v) => (
+            <div class="bg-dark/50 rounded-2xl p-8 border border-white/5 hover:border-secondary/20 transition-all duration-300">
+              <div class="text-4xl mb-4">{v.icon}</div>
+              <h3 class="text-lg font-bold text-light mb-3">{v.titulo}</h3>
+              <p class="text-sm text-muted leading-relaxed">{v.desc}</p>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACTO -->
+  <section id="contacto" class="py-24 bg-dark">
+    <div class="max-w-3xl mx-auto px-4 text-center">
+      <span class="text-secondary text-sm font-semibold uppercase tracking-widest">Contacto</span>
+      <h2 class="text-4xl md:text-5xl font-bold mt-4 mb-6">¿Listo para empezar?</h2>
+      <p class="text-muted text-lg mb-10">
+        Únete a Score Padel y sé protagonista de tu propio viaje hacia el éxito.
+      </p>
+      <a
+        href="mailto:info@scorepadel.com"
+        class="inline-flex items-center px-8 py-4 bg-secondary text-dark font-bold rounded-full hover:bg-accent transition-all duration-300 hover:shadow-lg hover:shadow-secondary/25"
+      >
+        Contáctanos
+      </a>
+    </div>
+  </section>
+
+  <Footer />
+  <CookieBanner />
+</Layout>
