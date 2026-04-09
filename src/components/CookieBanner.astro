@@ -7,44 +7,32 @@
   class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-sm z-50 hidden"
 >
   <div class="bg-white rounded-2xl p-5 shadow-xl border border-gray-100">
-    <p class="text-sm text-navy font-semibold mb-1.5">Cookies</p>
+    <p class="text-sm text-navy font-semibold mb-1.5">Aviso de Cookies</p>
     <p class="text-xs text-muted leading-relaxed mb-4">
-      Solo usamos cookies estrictamente necesarias. Sin seguimiento ni terceros.
-      <a href="/politica-cookies" class="text-coral hover:underline">Más info</a>.
+      Este sitio utiliza únicamente cookies técnicas necesarias para el funcionamiento de la
+      aplicación (sesión de usuario). No utilizamos cookies de análisis, publicidad ni de terceros.
+      Estas cookies están exentas de consentimiento según el artículo 22.2 de la LSSI-CE.
+      <a href="/politica-cookies" class="text-coral hover:underline">Más información</a>.
     </p>
-    <div class="flex gap-2">
-      <button
-        id="cookie-reject"
-        class="flex-1 px-3 py-2 text-xs font-medium text-muted border border-gray-200 rounded-full hover:border-coral/40 hover:text-navy transition-all"
-      >
-        Rechazar
-      </button>
-      <button
-        id="cookie-accept"
-        class="flex-1 px-3 py-2 text-xs font-semibold bg-coral text-white rounded-full hover:bg-coral-dark transition-colors"
-      >
-        Aceptar
-      </button>
-    </div>
+    <button
+      id="cookie-dismiss"
+      class="w-full px-3 py-2 text-xs font-semibold bg-coral text-white rounded-full hover:bg-coral-dark transition-colors"
+    >
+      Entendido
+    </button>
   </div>
 </div>
 
 <script>
   const banner = document.getElementById('cookie-banner')
-  const acceptBtn = document.getElementById('cookie-accept')
-  const rejectBtn = document.getElementById('cookie-reject')
+  const dismissBtn = document.getElementById('cookie-dismiss')
 
-  if (!localStorage.getItem('cookie-consent')) {
+  if (!localStorage.getItem('cookie-notice-seen')) {
     banner?.classList.remove('hidden')
   }
 
-  acceptBtn?.addEventListener('click', () => {
-    localStorage.setItem('cookie-consent', 'accepted')
-    banner?.classList.add('hidden')
-  })
-
-  rejectBtn?.addEventListener('click', () => {
-    localStorage.setItem('cookie-consent', 'rejected')
+  dismissBtn?.addEventListener('click', () => {
+    localStorage.setItem('cookie-notice-seen', '1')
     banner?.classList.add('hidden')
   })
 </script>

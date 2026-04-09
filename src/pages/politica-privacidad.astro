@@ -19,48 +19,98 @@ import Footer from '../components/Footer.astro'
           2016/679 y la Ley Orgánica 3/2018 de Protección de Datos Personales y garantía de los
           derechos digitales (LOPD-GDD).
         </p>
-
-        <h2 class="text-xl font-bold text-navy mt-8">2. Datos que recopilamos</h2>
         <p>
-          Actualmente esta web es informativa y no recopila datos personales de los usuarios. En
-          caso de que en el futuro se implementen formularios de contacto o registro, se informará
-          debidamente antes de la recogida de cualquier dato personal.
+          Correo de contacto: <a
+            href="mailto:info@scorepadel.com"
+            class="text-coral hover:underline">info@scorepadel.com</a
+          >
         </p>
 
-        <h2 class="text-xl font-bold text-navy mt-8">3. Finalidad del tratamiento</h2>
-        <p>En el momento en que se recojan datos, las finalidades serán:</p>
+        <h2 class="text-xl font-bold text-navy mt-8">2. Datos que recopilamos</h2>
+        <p>Cuando te registras y usas Score Padel, recopilamos los siguientes datos personales:</p>
         <ul class="list-disc pl-6 space-y-2">
-          <li>Gestionar la relación con los usuarios de la plataforma.</li>
-          <li>Responder a consultas y solicitudes de información.</li>
-          <li>Gestión del sistema de valoración y competiciones.</li>
+          <li>
+            <strong class="text-navy">Datos de registro:</strong> nombre completo, dirección de correo
+            electrónico y contraseña (almacenada cifrada mediante PBKDF2).
+          </li>
+          <li>
+            <strong class="text-navy">Datos de perfil:</strong> ubicación (ciudad/país), fecha de nacimiento,
+            género, años de experiencia en pádel, otros deportes de raqueta y biografía.
+          </li>
+          <li>
+            <strong class="text-navy">Datos de actividad:</strong> partidos registrados (resultados, fechas),
+            inscripciones a torneos, historial de valoración.
+          </li>
+          <li>
+            <strong class="text-navy">Datos técnicos:</strong> cookie de sesión (identificador técnico,
+            sin datos personales).
+          </li>
+        </ul>
+
+        <h2 class="text-xl font-bold text-navy mt-8">3. Finalidad del tratamiento</h2>
+        <ul class="list-disc pl-6 space-y-2">
+          <li>Creación y gestión de la cuenta de usuario.</li>
+          <li>Cálculo y actualización de la valoración Score Padel del jugador.</li>
+          <li>Gestión de torneos y partidos.</li>
+          <li>Permitir la búsqueda de jugadores por nivel, ubicación, género y división.</li>
+          <li>Mostrar el perfil público del jugador a otros usuarios registrados.</li>
         </ul>
 
         <h2 class="text-xl font-bold text-navy mt-8">4. Base legal</h2>
         <p>
-          El tratamiento de datos se basará en el consentimiento explícito del usuario (Art. 6.1.a
-          RGPD) y/o la ejecución de un contrato o precontrato (Art. 6.1.b RGPD).
+          El tratamiento se basa en la ejecución de la relación contractual con el usuario (Art.
+          6.1.b RGPD) para la prestación del servicio, y en el consentimiento explícito del usuario
+          (Art. 6.1.a RGPD) otorgado al registrarse y aceptar esta política.
         </p>
 
-        <h2 class="text-xl font-bold text-navy mt-8">5. Derechos del usuario</h2>
+        <h2 class="text-xl font-bold text-navy mt-8">5. Destinatarios</h2>
         <p>
-          Todo usuario podrá ejercer sus derechos de acceso, rectificación, supresión, limitación,
-          portabilidad y oposición enviando un correo a <a
+          Tus datos no se cederán a terceros salvo obligación legal. El servicio está alojado en
+          <strong class="text-navy">Cloudflare Workers</strong> (Cloudflare, Inc.) con base de datos Cloudflare
+          D1. Cloudflare actúa como encargado del tratamiento conforme al Art. 28 RGPD.
+        </p>
+
+        <h2 class="text-xl font-bold text-navy mt-8">6. Transferencias internacionales</h2>
+        <p>
+          Los datos pueden ser procesados en servidores de Cloudflare ubicados fuera del Espacio
+          Económico Europeo. Cloudflare está adherido al EU-US Data Privacy Framework y ofrece
+          garantías adecuadas conforme al Art. 46 RGPD.
+        </p>
+
+        <h2 class="text-xl font-bold text-navy mt-8">7. Conservación de datos</h2>
+        <p>
+          Los datos se conservarán mientras mantengas tu cuenta activa. Puedes solicitar la
+          eliminación de tu cuenta y datos en cualquier momento. Tras la baja, los datos serán
+          eliminados en un plazo máximo de 30 días, salvo obligación legal de conservación.
+        </p>
+
+        <h2 class="text-xl font-bold text-navy mt-8">8. Derechos del usuario</h2>
+        <p>
+          Puedes ejercer tus derechos de acceso, rectificación, supresión, limitación del
+          tratamiento, portabilidad y oposición enviando un correo a <a
             href="mailto:info@scorepadel.com"
             class="text-coral hover:underline">info@scorepadel.com</a
-          >.
+          >. Tienes derecho a presentar una reclamación ante la Agencia Española de Protección de
+          Datos (<a
+            href="https://www.aepd.es"
+            class="text-coral hover:underline"
+            target="_blank"
+            rel="noopener">www.aepd.es</a
+          >).
         </p>
 
-        <h2 class="text-xl font-bold text-navy mt-8">6. Conservación de datos</h2>
-        <p>
-          Los datos se conservarán mientras dure la relación contractual o durante el tiempo
-          necesario para cumplir con las obligaciones legales aplicables.
-        </p>
-
-        <h2 class="text-xl font-bold text-navy mt-8">7. Seguridad</h2>
-        <p>
-          Adoptamos medidas técnicas y organizativas adecuadas para proteger los datos personales
-          contra accesos no autorizados, alteración, pérdida o destrucción.
-        </p>
+        <h2 class="text-xl font-bold text-navy mt-8">9. Medidas de seguridad</h2>
+        <ul class="list-disc pl-6 space-y-2">
+          <li>Contraseñas cifradas con PBKDF2 (100.000 iteraciones, sal aleatoria).</li>
+          <li>
+            Sesiones con token aleatorio de 256 bits, cookie <code>httpOnly</code>, <code
+              >secure</code
+            >, <code>sameSite=lax</code>.
+          </li>
+          <li>Comunicaciones cifradas mediante HTTPS (TLS).</li>
+          <li>Cabeceras de seguridad HTTP: CSP, HSTS, X-Frame-Options, Permissions-Policy.</li>
+          <li>Protección contra CSRF mediante validación de origen en peticiones POST.</li>
+        </ul>
       </div>
 
       <div class="mt-12">

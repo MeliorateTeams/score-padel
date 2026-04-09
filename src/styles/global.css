@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "@fontsource-variable/outfit";
+@import "@fontsource-variable/dm-sans";
 
 @theme {
   --color-bg: #F8F7F4;

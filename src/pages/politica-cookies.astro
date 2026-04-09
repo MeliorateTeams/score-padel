@@ -18,37 +18,64 @@ import Footer from '../components/Footer.astro'
           visitar un sitio web. Permiten al sitio recordar información sobre la visita.
         </p>
 
-        <h2 class="text-xl font-bold text-navy mt-8">2. Tipos de cookies que utilizamos</h2>
-        <p>Actualmente, este sitio web utiliza exclusivamente:</p>
-        <ul class="list-disc pl-6 space-y-2">
-          <li>
-            <strong class="text-navy">Cookies técnicas/necesarias:</strong> Imprescindibles para el correcto
-            funcionamiento del sitio. No requieren consentimiento.
-          </li>
-          <li>
-            <strong class="text-navy">Almacenamiento local (localStorage):</strong> Utilizado para recordar
-            la preferencia del usuario respecto al banner de cookies.
-          </li>
-        </ul>
-        <p>No utilizamos cookies de análisis, publicidad ni de terceros.</p>
-
-        <h2 class="text-xl font-bold text-navy mt-8">3. Gestión de cookies</h2>
+        <h2 class="text-xl font-bold text-navy mt-8">2. Cookies que utilizamos</h2>
         <p>
-          El usuario puede configurar su navegador para bloquear o eliminar cookies. Cada navegador
-          tiene un procedimiento distinto para gestionar las cookies en su configuración.
+          Este sitio web utiliza exclusivamente cookies técnicas necesarias, exentas de
+          consentimiento según el artículo 22.2 de la LSSI-CE:
         </p>
 
-        <h2 class="text-xl font-bold text-navy mt-8">4. Consentimiento</h2>
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-xs border border-gray-200 rounded-lg">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-2 text-left text-navy font-semibold">Cookie</th>
+                <th class="px-4 py-2 text-left text-navy font-semibold">Tipo</th>
+                <th class="px-4 py-2 text-left text-navy font-semibold">Finalidad</th>
+                <th class="px-4 py-2 text-left text-navy font-semibold">Duración</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-t border-gray-100">
+                <td class="px-4 py-2 font-mono">session</td>
+                <td class="px-4 py-2">Técnica / necesaria</td>
+                <td class="px-4 py-2">Mantener la sesión del usuario autenticado</td>
+                <td class="px-4 py-2">72 horas</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
         <p>
-          Al acceder a este sitio web, se muestra un banner informativo sobre el uso de cookies. El
-          usuario puede aceptar o rechazar su uso. La preferencia se almacena localmente en el
-          navegador.
+          Adicionalmente, se utiliza <strong class="text-navy">localStorage</strong> del navegador para
+          recordar que el usuario ha visto el aviso informativo de cookies. No se transfiere al servidor
+          ni contiene datos personales.
         </p>
 
-        <h2 class="text-xl font-bold text-navy mt-8">5. Cambios en esta política</h2>
+        <h2 class="text-xl font-bold text-navy mt-8">3. Cookies de terceros</h2>
+        <p>
+          No utilizamos cookies de análisis, publicidad ni de terceros. Las fuentes tipográficas se
+          sirven desde el propio servidor (auto-alojadas), sin conexión a servicios externos.
+        </p>
+
+        <h2 class="text-xl font-bold text-navy mt-8">4. Gestión de cookies</h2>
+        <p>
+          El usuario puede configurar su navegador para bloquear o eliminar cookies. Tenga en cuenta
+          que bloquear la cookie de sesión impedirá el acceso a la zona autenticada de la
+          aplicación.
+        </p>
+
+        <h2 class="text-xl font-bold text-navy mt-8">5. Base legal</h2>
+        <p>
+          Las cookies técnicas necesarias se amparan en el interés legítimo del responsable
+          (artículo 6.1.f del RGPD) y están exentas del requisito de consentimiento conforme al
+          artículo 22.2 de la Ley 34/2002 (LSSI-CE). El banner informativo se muestra con carácter
+          de transparencia, no como mecanismo de consentimiento.
+        </p>
+
+        <h2 class="text-xl font-bold text-navy mt-8">6. Cambios en esta política</h2>
         <p>
           Nos reservamos el derecho a modificar esta política de cookies. Los cambios se publicarán
-          en esta página.
+          en esta página con fecha de actualización.
         </p>
       </div>
 

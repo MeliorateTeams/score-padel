@@ -16,10 +16,15 @@ if (Astro.request.method === 'POST') {
   const team1_games = parseInt(form.get('team1_games')?.toString() ?? '0')
   const team2_games = parseInt(form.get('team2_games')?.toString() ?? '0')
   const opponent_email = form.get('opponent_email')?.toString().trim().toLowerCase()
+  const partner_email = form.get('partner_email')?.toString().trim().toLowerCase() || null
+  const opponent2_email = form.get('opponent2_email')?.toString().trim().toLowerCase() || null
   const tournament_id = form.get('tournament_id')?.toString() || null
+  const is_doubles = partner_email || opponent2_email
 
   if (!opponent_email) {
-    error = 'Indica el email de tu oponente.'
+    error = 'Indica el email del oponente.'
+  } else if (is_doubles && (!partner_email || !opponent2_email)) {
+    error = 'Para dobles, indica tanto a tu compañero como al segundo oponente.'
   } else if (team1_games === 0 && team2_games === 0) {
     error = 'Registra al menos un juego.'
   } else {
@@ -28,27 +33,63 @@ if (Astro.request.method === 'POST') {
       .bind(opponent_email)
       .first()) as { id: string } | null
     if (!opponent) {
-      error = 'No se encontró un jugador con ese email. Debe estar registrado.'
+      error = 'No se encontró al oponente. Debe estar registrado.'
     } else if (opponent.id === user.id) {
       error = 'No puedes jugar contra ti mismo.'
     } else {
-      const matchId = generateId()
-      await db
-        .prepare(
-          'INSERT INTO matches (id, tournament_id, team1_player1, team2_player1, team1_games, team2_games, recorded_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        )
-        .bind(matchId, tournament_id, user.id, opponent.id, team1_games, team2_games, user.id)
-        .run()
+      let partnerId: string | null = null
+      let opponent2Id: string | null = null
 
-      await calculateAndUpdateRatings(
-        db,
-        matchId,
-        [user.id],
-        [opponent.id],
-        team1_games,
-        team2_games,
-      )
-      message = '¡Partido registrado! Las valoraciones se han actualizado.'
+      if (is_doubles) {
+        const partner = (await db
+          .prepare('SELECT id FROM users WHERE email = ?')
+          .bind(partner_email)
+          .first()) as { id: string } | null
+        const opp2 = (await db
+          .prepare('SELECT id FROM users WHERE email = ?')
+          .bind(opponent2_email)
+          .first()) as { id: string } | null
+
+        if (!partner) {
+          error = 'No se encontró a tu compañero. Debe estar registrado.'
+        } else if (!opp2) {
+          error = 'No se encontró al segundo oponente. Debe estar registrado.'
+        } else {
+          const allIds = [user.id, partner.id, opponent.id, opp2.id]
+          if (new Set(allIds).size !== 4) {
+            error = 'Todos los jugadores deben ser distintos.'
+          } else {
+            partnerId = partner.id
+            opponent2Id = opp2.id
+          }
+        }
+      }
+
+      if (!error) {
+        const matchId = generateId()
+        await db
+          .prepare(
+            'INSERT INTO matches (id, tournament_id, team1_player1, team1_player2, team2_player1, team2_player2, team1_games, team2_games, recorded_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          )
+          .bind(
+            matchId,
+            tournament_id,
+            user.id,
+            partnerId,
+            opponent.id,
+            opponent2Id,
+            team1_games,
+            team2_games,
+            user.id,
+          )
+          .run()
+
+        const team1 = partnerId ? [user.id, partnerId] : [user.id]
+        const team2 = opponent2Id ? [opponent.id, opponent2Id] : [opponent.id]
+
+        await calculateAndUpdateRatings(db, matchId, team1, team2, team1_games, team2_games)
+        message = '¡Partido registrado! Las valoraciones se han actualizado.'
+      }
     }
   }
 }
@@ -89,6 +130,27 @@ const tournaments = await db
     }
 
     <form method="POST" class="space-y-5">
+      {/* Modalidad toggle */}
+      <div>
+        <label class="text-xs font-medium text-muted block mb-2">Modalidad</label>
+        <div class="flex gap-2">
+          <button
+            type="button"
+            id="btn-singles"
+            class="flex-1 px-4 py-2 text-sm font-semibold rounded-full border-2 border-coral bg-coral text-white transition-all"
+          >
+            1 vs 1
+          </button>
+          <button
+            type="button"
+            id="btn-doubles"
+            class="flex-1 px-4 py-2 text-sm font-semibold rounded-full border-2 border-gray-200 text-muted hover:border-coral/40 transition-all"
+          >
+            2 vs 2 (Dobles)
+          </button>
+        </div>
+      </div>
+
       <div>
         <label for="opponent_email" class="text-xs font-medium text-muted block mb-1.5"
           >Email del oponente</label
@@ -101,8 +163,37 @@ const tournaments = await db
           placeholder="oponente@email.com"
           class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
         />
-        <p class="text-xs text-muted/50 mt-1">El oponente debe tener cuenta en Score Padel.</p>
       </div>
+
+      {/* Campos de dobles (ocultos por defecto) */}
+      <div id="doubles-fields" class="hidden space-y-5">
+        <div>
+          <label for="partner_email" class="text-xs font-medium text-muted block mb-1.5"
+            >Email de tu compañero/a</label
+          >
+          <input
+            type="email"
+            id="partner_email"
+            name="partner_email"
+            placeholder="companero@email.com"
+            class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
+          />
+        </div>
+        <div>
+          <label for="opponent2_email" class="text-xs font-medium text-muted block mb-1.5"
+            >Email del segundo oponente</label
+          >
+          <input
+            type="email"
+            id="opponent2_email"
+            name="opponent2_email"
+            placeholder="oponente2@email.com"
+            class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
+          />
+        </div>
+      </div>
+
+      <p class="text-xs text-muted/50">Todos los jugadores deben tener cuenta en Score Padel.</p>
 
       <div class="grid grid-cols-2 gap-4">
         <div>
@@ -165,4 +256,33 @@ const tournaments = await db
       </button>
     </form>
   </div>
+
+  <script>
+    const btnSingles = document.getElementById('btn-singles')
+    const btnDoubles = document.getElementById('btn-doubles')
+    const doublesFields = document.getElementById('doubles-fields')
+    const partnerInput = document.getElementById('partner_email') as HTMLInputElement | null
+    const opp2Input = document.getElementById('opponent2_email') as HTMLInputElement | null
+
+    function setMode(doubles: boolean) {
+      if (doubles) {
+        doublesFields?.classList.remove('hidden')
+        btnDoubles?.classList.add('border-coral', 'bg-coral', 'text-white')
+        btnDoubles?.classList.remove('border-gray-200', 'text-muted')
+        btnSingles?.classList.remove('border-coral', 'bg-coral', 'text-white')
+        btnSingles?.classList.add('border-gray-200', 'text-muted')
+      } else {
+        doublesFields?.classList.add('hidden')
+        btnSingles?.classList.add('border-coral', 'bg-coral', 'text-white')
+        btnSingles?.classList.remove('border-gray-200', 'text-muted')
+        btnDoubles?.classList.remove('border-coral', 'bg-coral', 'text-white')
+        btnDoubles?.classList.add('border-gray-200', 'text-muted')
+        if (partnerInput) partnerInput.value = ''
+        if (opp2Input) opp2Input.value = ''
+      }
+    }
+
+    btnSingles?.addEventListener('click', () => setMode(false))
+    btnDoubles?.addEventListener('click', () => setMode(true))
+  </script>
 </AppLayout>

@@ -9,11 +9,18 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
   const name = form.get('name')?.toString().trim()
   const email = form.get('email')?.toString().trim().toLowerCase()
   const password = form.get('password')?.toString()
+  const privacy = form.get('privacy')
 
   if (!name || !email || !password) {
     return new Response(null, {
       status: 303,
       headers: { Location: new URL('/registro?error=campos', request.url).toString() },
+    })
+  }
+  if (!privacy) {
+    return new Response(null, {
+      status: 303,
+      headers: { Location: new URL('/registro?error=privacidad', request.url).toString() },
     })
   }
   if (password.length < 8) {

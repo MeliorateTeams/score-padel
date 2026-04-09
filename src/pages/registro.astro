@@ -8,6 +8,7 @@ const errorMsg: Record<string, string> = {
   campos: 'Todos los campos son obligatorios.',
   password: 'La contraseña debe tener al menos 8 caracteres.',
   existe: 'Ya existe una cuenta con ese email.',
+  privacidad: 'Debes aceptar la política de privacidad.',
   server: 'Error del servidor. Inténtalo de nuevo.',
 }
 ---
@@ -76,6 +77,22 @@ const errorMsg: Record<string, string> = {
             class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral focus:ring-2 focus:ring-coral/10 transition-all"
           />
           <p class="text-xs text-muted/50 mt-1">Mínimo 8 caracteres</p>
+        </div>
+        <div class="flex items-start gap-2">
+          <input
+            type="checkbox"
+            id="privacy"
+            name="privacy"
+            required
+            class="mt-0.5 h-4 w-4 rounded border-gray-300 text-coral focus:ring-coral/20"
+          />
+          <label for="privacy" class="text-xs text-muted leading-relaxed">
+            He leído y acepto la <a
+              href="/politica-privacidad"
+              target="_blank"
+              class="text-coral hover:underline">Política de Privacidad</a
+            >.
+          </label>
         </div>
         <button
           type="submit"

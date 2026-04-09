@@ -16,12 +16,6 @@ const isGuest = user?.role === 'guest'
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
     <title>{title} — Score Padel</title>
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
@@ -34,7 +28,8 @@ const isGuest = user?.role === 'guest'
             <a href="/app" class="font-display font-bold text-base tracking-tight text-navy">
               Score<span class="text-coral">Padel</span>
             </a>
-            <div class="flex items-center gap-0.5">
+            {/* Desktop nav */}
+            <div class="hidden md:flex items-center gap-0.5">
               <a
                 href="/app"
                 class="px-3 py-1.5 text-xs font-medium text-muted hover:text-coral rounded-full hover:bg-coral/5 transition-all"
@@ -81,6 +76,72 @@ const isGuest = user?.role === 'guest'
                 </button>
               </form>
             </div>
+            {/* Mobile hamburger */}
+            <button
+              id="mobile-menu-btn"
+              class="md:hidden p-2 text-navy hover:text-coral transition-colors"
+              aria-label="Abrir menú"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  id="hamburger-icon"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </button>
+          </div>
+          {/* Mobile menu panel */}
+          <div id="mobile-menu" class="md:hidden hidden border-t border-gray-100 bg-white">
+            <div class="px-6 py-3 space-y-1">
+              <a
+                href="/app"
+                class="block px-3 py-2 text-sm font-medium text-muted hover:text-coral rounded-lg hover:bg-coral/5 transition-all"
+              >
+                Dashboard
+              </a>
+              <a
+                href="/app/torneos"
+                class="block px-3 py-2 text-sm font-medium text-muted hover:text-coral rounded-lg hover:bg-coral/5 transition-all"
+              >
+                Torneos
+              </a>
+              {!isGuest && (
+                <a
+                  href="/app/partidos"
+                  class="block px-3 py-2 text-sm font-medium text-muted hover:text-coral rounded-lg hover:bg-coral/5 transition-all"
+                >
+                  Partidos
+                </a>
+              )}
+              <a
+                href="/app/jugadores"
+                class="block px-3 py-2 text-sm font-medium text-muted hover:text-coral rounded-lg hover:bg-coral/5 transition-all"
+              >
+                Jugadores
+              </a>
+              <a
+                href="/app/clasificacion"
+                class="block px-3 py-2 text-sm font-medium text-muted hover:text-coral rounded-lg hover:bg-coral/5 transition-all"
+              >
+                Valoraciones
+              </a>
+              {!isGuest && (
+                <a
+                  href="/app/perfil"
+                  class="block px-3 py-2 text-sm font-medium text-muted hover:text-coral rounded-lg hover:bg-coral/5 transition-all"
+                >
+                  Perfil
+                </a>
+              )}
+              <form method="POST" action="/api/auth/logout">
+                <button class="w-full text-left px-3 py-2 text-sm font-medium text-muted hover:text-red-500 rounded-lg hover:bg-red-50 transition-all">
+                  Salir
+                </button>
+              </form>
+            </div>
           </div>
         </nav>
       ) : null
@@ -88,5 +149,12 @@ const isGuest = user?.role === 'guest'
     <main class={user ? 'pt-20 pb-12 px-6 lg:px-8 max-w-7xl mx-auto' : ''}>
       <slot />
     </main>
+    <script>
+      const menuBtn = document.getElementById('mobile-menu-btn')
+      const mobileMenu = document.getElementById('mobile-menu')
+      menuBtn?.addEventListener('click', () => {
+        mobileMenu?.classList.toggle('hidden')
+      })
+    </script>
   </body>
 </html>

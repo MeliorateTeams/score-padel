@@ -48,7 +48,11 @@ export async function loginUser(db: D1Database, email: string, password: string)
 
 export async function createSession(db: D1Database, userId: string): Promise<string> {
   const token = generateSessionToken()
-  const expires = new Date(Date.now() + SESSION_DURATION_HOURS * 3600000).toISOString()
+  // Formato compatible con datetime('now') de SQLite: YYYY-MM-DD HH:MM:SS
+  const expires = new Date(Date.now() + SESSION_DURATION_HOURS * 3600000)
+    .toISOString()
+    .replace('T', ' ')
+    .slice(0, 19)
   await db
     .prepare('INSERT INTO sessions (id, user_id, expires_at) VALUES (?, ?, ?)')
     .bind(token, userId, expires)

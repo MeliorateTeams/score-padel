@@ -1,18 +1,30 @@
 import type { D1Database } from '@cloudflare/workers-types'
 import { generateId } from './auth'
 
-// Score Padel Rating Algorithm
-// Escala: 1.0 - 7.0 (valoración, no ranking)
-// Basado en el documento Score Padel:
-// 1. Diferencia entre clasificaciones de los jugadores enfrentados
-// 2. % de juegos ganados vs resultado esperado
-// 3. Resultados recientes (promedio ponderado de hasta 30 partidos, últimos 12 meses)
+// ═══════════════════════════════════════════════════════════════════════════
+// Configuración Oficial Score Padel v1.0 — Algoritmo de Valoración
+// ═══════════════════════════════════════════════════════════════════════════
 //
-// Para cada partido se calcula:
-//   - Valoración de partido (match rating): qué rating implica la actuación
-//   - Peso del partido (match weight): competitividad, fiabilidad rival, degradación temporal
+// Escala: 1.0 - 7.0 (valoración continua, no ranking posicional)
 //
-// La valoración Score Padel = promedio ponderado de las valoraciones de partido
+// Parámetros oficiales:
+//  - Sigmoid scale factor:      1.5   (diff ±3 pts → ~95%/5% expected)
+//  - Performance delta mult:    3.0   (delta 0.5 → ±1.5 pts adjustment)
+//  - Format cap (max games):    24    (partidos 24+ juegos = peso completo)
+//  - Competitiveness halfpoint: 1.5   (diff 1.5 pts → peso 50%)
+//  - Reliability ramp:          5     (oponente con 5+ partidos = fiable)
+//  - Time decay half-life:      180   (días hasta peso 50%)
+//  - Peak blend ratio:          80/20 (promedio 80% + mejor resultado 20%)
+//  - Match window:              30    (últimos partidos considerados)
+//  - Time window:               12    (meses de antigüedad máxima)
+//  - Rating inicial máximo:     2.5   (perfil sin partidos jugados)
+//
+// Flujo por partido:
+//  1. Calcular % juegos esperado (sigmoid sobre diff de ratings)
+//  2. Calcular match rating = rating oponente + ajuste rendimiento
+//  3. Calcular peso (formato × competitividad × fiabilidad × tiempo)
+//  4. Recalcular valoración = promedio ponderado (80%) + peak (20%)
+// ═══════════════════════════════════════════════════════════════════════════
 
 const MIN_RATING = 1.0
 const MAX_RATING = 7.0
