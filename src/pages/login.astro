@@ -1,0 +1,69 @@
+---
+import AppLayout from '../layouts/AppLayout.astro'
+const user = (Astro.locals as any).user
+if (user) return Astro.redirect('/app')
+
+const error = Astro.url.searchParams.get('error')
+const errorMsg: Record<string, string> = {
+  campos: 'Email y contraseña son obligatorios.',
+  invalid: 'Email o contraseña incorrectos.',
+}
+---
+
+<AppLayout title="Iniciar sesión">
+  <div class="min-h-screen flex items-center justify-center px-6">
+    <div class="w-full max-w-sm">
+      <a href="/" class="font-display font-bold text-xl tracking-tight block text-center mb-10">
+        Score<span class="text-emerald">Padel</span>
+      </a>
+
+      <h1 class="font-display text-2xl font-bold text-center mb-2">Iniciar sesión</h1>
+      <p class="text-sm text-muted text-center mb-8">Accede a tu cuenta de Score Padel.</p>
+
+      {
+        error && (
+          <div class="bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-3 rounded-lg mb-6">
+            {errorMsg[error] || 'Error desconocido.'}
+          </div>
+        )
+      }
+
+      <form method="POST" action="/api/auth/login" class="space-y-4">
+        <div>
+          <label for="email" class="text-xs font-medium text-muted block mb-1.5">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            autocomplete="email"
+            class="w-full px-3.5 py-2.5 bg-surface border border-white/10 rounded-lg text-sm text-text placeholder:text-muted/50 focus:outline-none focus:border-emerald/50 transition-colors"
+          />
+        </div>
+        <div>
+          <label for="password" class="text-xs font-medium text-muted block mb-1.5"
+            >Contraseña</label
+          >
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            autocomplete="current-password"
+            class="w-full px-3.5 py-2.5 bg-surface border border-white/10 rounded-lg text-sm text-text placeholder:text-muted/50 focus:outline-none focus:border-emerald/50 transition-colors"
+          />
+        </div>
+        <button
+          type="submit"
+          class="w-full py-2.5 bg-emerald text-bg text-sm font-semibold rounded-lg hover:bg-emerald-glow transition-colors"
+        >
+          Iniciar sesión
+        </button>
+      </form>
+
+      <p class="text-xs text-muted text-center mt-6">
+        ¿No tienes cuenta? <a href="/registro" class="text-emerald hover:underline">Regístrate</a>
+      </p>
+    </div>
+  </div>
+</AppLayout>

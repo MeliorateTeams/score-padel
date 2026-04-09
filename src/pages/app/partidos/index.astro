@@ -1,0 +1,89 @@
+---
+import AppLayout from '../../../layouts/AppLayout.astro'
+
+const user = (Astro.locals as any).user
+if (!user) return Astro.redirect('/login')
+
+const db = (Astro.locals as any).db
+const matches = await db
+  .prepare(
+    `
+  SELECT m.*,
+    u1.name as t1p1_name, u2.name as t2p1_name,
+    p1.rating as t1p1_rating, p2.rating as t2p1_rating
+  FROM matches m
+  JOIN users u1 ON m.team1_player1 = u1.id
+  JOIN users u2 ON m.team2_player1 = u2.id
+  LEFT JOIN profiles p1 ON m.team1_player1 = p1.user_id
+  LEFT JOIN profiles p2 ON m.team2_player1 = p2.user_id
+  WHERE m.team1_player1 = ? OR m.team2_player1 = ?
+  ORDER BY m.created_at DESC LIMIT 50
+`,
+  )
+  .bind(user.id, user.id)
+  .all()
+---
+
+<AppLayout title="Mis partidos" user={user}>
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <h1 class="font-display text-2xl font-bold mb-1">Mis partidos</h1>
+      <p class="text-sm text-muted">Historial de todos tus partidos registrados.</p>
+    </div>
+    <a
+      href="/app/partidos/registrar"
+      class="px-5 py-2.5 bg-emerald text-bg text-sm font-semibold rounded-lg hover:bg-emerald-glow transition-colors"
+    >
+      Registrar partido
+    </a>
+  </div>
+
+  {
+    (matches.results?.length ?? 0) === 0 ? (
+      <div class="gradient-border rounded-xl bg-surface p-10 text-center">
+        <p class="text-muted mb-4">No tienes partidos registrados.</p>
+        <a href="/app/partidos/registrar" class="text-emerald text-sm hover:underline">
+          Registra tu primer partido
+        </a>
+      </div>
+    ) : (
+      <div class="space-y-2">
+        {matches.results?.map((m: any) => {
+          const isTeam1 = m.team1_player1 === user.id
+          const won = isTeam1 ? m.team1_games > m.team2_games : m.team2_games > m.team1_games
+          return (
+            <div class="flex items-center justify-between p-4 rounded-xl bg-surface border border-white/5">
+              <div class="flex items-center gap-4">
+                <span class:list={['w-2 h-2 rounded-full', won ? 'bg-emerald' : 'bg-red-400']} />
+                <div>
+                  <div class="text-sm text-text">
+                    {m.t1p1_name} <span class="text-muted">vs</span> {m.t2p1_name}
+                  </div>
+                  <div class="text-xs text-muted mt-0.5">
+                    {new Date(m.created_at).toLocaleDateString('es', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </div>
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="text-sm font-display font-semibold">
+                  <span class:list={[m.team1_games > m.team2_games ? 'text-emerald' : 'text-text']}>
+                    {m.team1_games}
+                  </span>
+                  <span class="text-muted mx-1">-</span>
+                  <span class:list={[m.team2_games > m.team1_games ? 'text-emerald' : 'text-text']}>
+                    {m.team2_games}
+                  </span>
+                </div>
+                <div class="text-xs text-muted">juegos</div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+</AppLayout>

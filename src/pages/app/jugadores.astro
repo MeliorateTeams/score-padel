@@ -1,0 +1,90 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro'
+
+const user = (Astro.locals as any).user
+if (!user) return Astro.redirect('/login')
+
+const db = (Astro.locals as any).db
+const search = Astro.url.searchParams.get('q') ?? ''
+const locationFilter = Astro.url.searchParams.get('location') ?? ''
+
+let query = `
+  SELECT u.id, u.name, p.rating, p.location, p.matches_played, p.experience_years
+  FROM users u
+  LEFT JOIN profiles p ON u.id = p.user_id
+  WHERE u.id != ?
+`
+const params: any[] = [user.id]
+
+if (search) {
+  query += ' AND u.name LIKE ?'
+  params.push(`%${search}%`)
+}
+if (locationFilter) {
+  query += ' AND p.location LIKE ?'
+  params.push(`%${locationFilter}%`)
+}
+
+query += ' ORDER BY p.rating DESC LIMIT 50'
+
+const players = await db
+  .prepare(query)
+  .bind(...params)
+  .all()
+---
+
+<AppLayout title="Buscar jugadores" user={user}>
+  <div>
+    <h1 class="font-display text-2xl font-bold mb-1">Buscar jugadores</h1>
+    <p class="text-sm text-muted mb-8">Encuentra jugadores en tu zona o de tu nivel.</p>
+
+    <form method="GET" class="flex flex-wrap gap-3 mb-8">
+      <input
+        type="text"
+        name="q"
+        value={search}
+        placeholder="Nombre del jugador..."
+        class="flex-1 min-w-[200px] px-3.5 py-2.5 bg-surface border border-white/10 rounded-lg text-sm text-text placeholder:text-muted/50 focus:outline-none focus:border-emerald/50 transition-colors"
+      />
+      <input
+        type="text"
+        name="location"
+        value={locationFilter}
+        placeholder="Ciudad o país..."
+        class="flex-1 min-w-[200px] px-3.5 py-2.5 bg-surface border border-white/10 rounded-lg text-sm text-text placeholder:text-muted/50 focus:outline-none focus:border-emerald/50 transition-colors"
+      />
+      <button
+        type="submit"
+        class="px-5 py-2.5 bg-emerald text-bg text-sm font-semibold rounded-lg hover:bg-emerald-glow transition-colors"
+      >
+        Buscar
+      </button>
+    </form>
+
+    {
+      (players.results?.length ?? 0) === 0 ? (
+        <div class="gradient-border rounded-xl bg-surface p-10 text-center">
+          <p class="text-muted">No se encontraron jugadores{search ? ` con "${search}"` : ''}.</p>
+        </div>
+      ) : (
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-white/5 rounded-2xl overflow-hidden">
+          {players.results?.map((p: any) => (
+            <div class="bg-surface hover:bg-surface-2 transition-colors p-5">
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="text-sm font-semibold text-text">{p.name}</h3>
+                <span class="font-display text-sm font-bold text-emerald">
+                  {Number(p.rating || 1).toFixed(1)}
+                </span>
+              </div>
+              <div class="text-xs text-muted">{p.location || 'Sin ubicación'}</div>
+              <div class="flex items-center gap-3 mt-2 text-xs text-muted">
+                <span>{p.matches_played ?? 0} partidos</span>
+                <span>{p.experience_years ?? 0} años exp.</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )
+    }
+  </div>
+</AppLayout>

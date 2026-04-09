@@ -1,0 +1,167 @@
+---
+import AppLayout from '../../../layouts/AppLayout.astro'
+import { generateId } from '../../../lib/auth'
+import { calculateAndUpdateRatings } from '../../../lib/rating'
+
+const user = (Astro.locals as any).user
+if (!user) return Astro.redirect('/login')
+
+const db = (Astro.locals as any).db
+let message = ''
+let error = ''
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData()
+  const team1_games = parseInt(form.get('team1_games')?.toString() ?? '0')
+  const team2_games = parseInt(form.get('team2_games')?.toString() ?? '0')
+  const opponent_email = form.get('opponent_email')?.toString().trim().toLowerCase()
+  const tournament_id = form.get('tournament_id')?.toString() || null
+
+  if (!opponent_email) {
+    error = 'Indica el email de tu oponente.'
+  } else if (team1_games === 0 && team2_games === 0) {
+    error = 'Registra al menos un juego.'
+  } else {
+    const opponent = await db
+      .prepare('SELECT id FROM users WHERE email = ?')
+      .bind(opponent_email)
+      .first<{ id: string }>()
+    if (!opponent) {
+      error = 'No se encontró un jugador con ese email. Debe estar registrado.'
+    } else if (opponent.id === user.id) {
+      error = 'No puedes jugar contra ti mismo.'
+    } else {
+      const matchId = generateId()
+      await db
+        .prepare(
+          'INSERT INTO matches (id, tournament_id, team1_player1, team2_player1, team1_games, team2_games, recorded_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        )
+        .bind(matchId, tournament_id, user.id, opponent.id, team1_games, team2_games, user.id)
+        .run()
+
+      await calculateAndUpdateRatings(
+        db,
+        matchId,
+        [user.id],
+        [opponent.id],
+        team1_games,
+        team2_games,
+      )
+      message = '¡Partido registrado! Las valoraciones se han actualizado.'
+    }
+  }
+}
+
+// Get user's tournaments for optional linking
+const tournaments = await db
+  .prepare(
+    `
+  SELECT t.id, t.name FROM tournament_players tp
+  JOIN tournaments t ON tp.tournament_id = t.id
+  WHERE tp.user_id = ? AND t.status = 'open'
+`,
+  )
+  .bind(user.id)
+  .all()
+---
+
+<AppLayout title="Registrar partido" user={user}>
+  <div class="max-w-xl">
+    <h1 class="font-display text-2xl font-bold mb-1">Registrar partido</h1>
+    <p class="text-sm text-muted mb-8">
+      Registra el resultado para actualizar las valoraciones de ambos jugadores.
+    </p>
+
+    {
+      message && (
+        <div class="bg-emerald/10 border border-emerald/20 text-emerald text-xs p-3 rounded-lg mb-6">
+          {message}
+        </div>
+      )
+    }
+    {
+      error && (
+        <div class="bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-3 rounded-lg mb-6">
+          {error}
+        </div>
+      )
+    }
+
+    <form method="POST" class="space-y-5">
+      <div>
+        <label for="opponent_email" class="text-xs font-medium text-muted block mb-1.5"
+          >Email del oponente</label
+        >
+        <input
+          type="email"
+          id="opponent_email"
+          name="opponent_email"
+          required
+          placeholder="oponente@email.com"
+          class="w-full px-3.5 py-2.5 bg-surface border border-white/10 rounded-lg text-sm text-text placeholder:text-muted/50 focus:outline-none focus:border-emerald/50 transition-colors"
+        />
+        <p class="text-xs text-muted/50 mt-1">El oponente debe tener cuenta en Score Padel.</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label for="team1_games" class="text-xs font-medium text-muted block mb-1.5"
+            >Tus juegos ganados</label
+          >
+          <input
+            type="number"
+            id="team1_games"
+            name="team1_games"
+            min="0"
+            max="99"
+            value="0"
+            required
+            class="w-full px-3.5 py-2.5 bg-surface border border-white/10 rounded-lg text-sm text-text focus:outline-none focus:border-emerald/50 transition-colors"
+          />
+        </div>
+        <div>
+          <label for="team2_games" class="text-xs font-medium text-muted block mb-1.5"
+            >Juegos del oponente</label
+          >
+          <input
+            type="number"
+            id="team2_games"
+            name="team2_games"
+            min="0"
+            max="99"
+            value="0"
+            required
+            class="w-full px-3.5 py-2.5 bg-surface border border-white/10 rounded-lg text-sm text-text focus:outline-none focus:border-emerald/50 transition-colors"
+          />
+        </div>
+      </div>
+
+      {
+        (tournaments.results?.length ?? 0) > 0 && (
+          <div>
+            <label for="tournament_id" class="text-xs font-medium text-muted block mb-1.5">
+              Torneo (opcional)
+            </label>
+            <select
+              id="tournament_id"
+              name="tournament_id"
+              class="w-full px-3.5 py-2.5 bg-surface border border-white/10 rounded-lg text-sm text-text focus:outline-none focus:border-emerald/50 transition-colors"
+            >
+              <option value="">Sin torneo</option>
+              {tournaments.results?.map((t: any) => (
+                <option value={t.id}>{t.name}</option>
+              ))}
+            </select>
+          </div>
+        )
+      }
+
+      <button
+        type="submit"
+        class="px-6 py-2.5 bg-emerald text-bg text-sm font-semibold rounded-lg hover:bg-emerald-glow transition-colors"
+      >
+        Registrar resultado
+      </button>
+    </form>
+  </div>
+</AppLayout>

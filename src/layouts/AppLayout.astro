@@ -1,0 +1,88 @@
+---
+import '../styles/global.css'
+
+interface Props {
+  title: string
+  user?: { id: string; name: string; email: string } | null
+}
+
+const { title, user = null } = Astro.props
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <title>{title} — Score Padel</title>
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+  </head>
+  <body class="min-h-screen">
+    {
+      user ? (
+        <nav class="fixed top-0 left-0 right-0 z-50 bg-bg/70 backdrop-blur-xl border-b border-white/5">
+          <div class="max-w-7xl mx-auto px-6 lg:px-8 flex items-center justify-between h-14">
+            <a href="/app" class="font-display font-bold text-sm tracking-tight">
+              Score<span class="text-emerald">Padel</span>
+            </a>
+            <div class="flex items-center gap-1">
+              <a
+                href="/app"
+                class="px-3 py-1.5 text-xs text-muted hover:text-text rounded-lg hover:bg-white/5 transition-all"
+              >
+                Dashboard
+              </a>
+              <a
+                href="/app/torneos"
+                class="px-3 py-1.5 text-xs text-muted hover:text-text rounded-lg hover:bg-white/5 transition-all"
+              >
+                Torneos
+              </a>
+              <a
+                href="/app/partidos"
+                class="px-3 py-1.5 text-xs text-muted hover:text-text rounded-lg hover:bg-white/5 transition-all"
+              >
+                Partidos
+              </a>
+              <a
+                href="/app/jugadores"
+                class="px-3 py-1.5 text-xs text-muted hover:text-text rounded-lg hover:bg-white/5 transition-all"
+              >
+                Jugadores
+              </a>
+              <a
+                href="/app/clasificacion"
+                class="px-3 py-1.5 text-xs text-muted hover:text-text rounded-lg hover:bg-white/5 transition-all"
+              >
+                Clasificación
+              </a>
+              <a
+                href="/app/perfil"
+                class="px-3 py-1.5 text-xs text-muted hover:text-text rounded-lg hover:bg-white/5 transition-all"
+              >
+                Perfil
+              </a>
+              <form method="POST" action="/api/auth/logout" class="ml-2">
+                <button class="px-3 py-1.5 text-xs text-muted hover:text-red-400 rounded-lg hover:bg-white/5 transition-all">
+                  Salir
+                </button>
+              </form>
+            </div>
+          </div>
+        </nav>
+      ) : null
+    }
+    <main class={user ? 'pt-20 pb-12 px-6 lg:px-8 max-w-7xl mx-auto' : ''}>
+      <slot />
+    </main>
+  </body>
+</html>

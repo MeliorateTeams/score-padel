@@ -1,0 +1,171 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro'
+import { getProfile } from '../../lib/db'
+
+const user = (Astro.locals as any).user
+if (!user) return Astro.redirect('/login')
+
+const db = (Astro.locals as any).db
+const profile = await getProfile(db, user.id)
+
+const ratingLevel = (r: number) => {
+  if (r < 2.0) return { nombre: 'Iniciación Pádel', div: 'C' }
+  if (r < 2.5) return { nombre: 'Consistencia Inicial', div: 'C' }
+  if (r < 3.0) return { nombre: 'Precisión en Desarrollo', div: 'C' }
+  if (r < 3.5) return { nombre: 'Confianza Intermedia', div: 'C' }
+  if (r < 4.0) return { nombre: 'Control y Ritmo', div: 'B' }
+  if (r < 4.5) return { nombre: 'Estrategas del Pádel', div: 'B' }
+  if (r < 5.0) return { nombre: 'Jugadores Ingeniosos', div: 'B' }
+  if (r < 5.5) return { nombre: 'Competidores de Torneo', div: 'B' }
+  if (r < 6.0) return { nombre: 'Estrellas Nacionales', div: 'B' }
+  if (r < 6.5) return { nombre: 'Semiprofesionales en Ascenso', div: 'A' }
+  if (r < 7.0) return { nombre: 'Profesionales de Élite', div: 'A' }
+  return { nombre: 'Élite Mundial del Pádel', div: 'A' }
+}
+
+const level = ratingLevel(profile?.rating ?? 1.0)
+const rating = profile?.rating?.toFixed(1) ?? '1.0'
+
+const recentMatches = await db
+  .prepare(
+    `
+  SELECT m.*, m.created_at as match_date FROM matches m
+  WHERE m.team1_player1 = ? OR m.team1_player2 = ? OR m.team2_player1 = ? OR m.team2_player2 = ?
+  ORDER BY m.created_at DESC LIMIT 5
+`,
+  )
+  .bind(user.id, user.id, user.id, user.id)
+  .all()
+
+const ratingHist = await db
+  .prepare(
+    `
+  SELECT old_rating, new_rating, created_at FROM rating_history
+  WHERE user_id = ? ORDER BY created_at DESC LIMIT 10
+`,
+  )
+  .bind(user.id)
+  .all()
+---
+
+<AppLayout title="Dashboard" user={user}>
+  <div class="mb-8">
+    <h1 class="font-display text-2xl font-bold mb-1">Hola, {user.name}</h1>
+    <p class="text-sm text-muted">Tu centro de control en Score Padel.</p>
+  </div>
+
+  <!-- Stats grid -->
+  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-white/5 rounded-xl overflow-hidden mb-8">
+    <div class="bg-surface p-6">
+      <div class="text-xs text-muted mb-2">Tu valoración</div>
+      <div class="font-display text-3xl font-bold text-emerald">{rating}</div>
+      <div class="text-xs text-muted mt-1">{level.nombre}</div>
+    </div>
+    <div class="bg-surface p-6">
+      <div class="text-xs text-muted mb-2">División</div>
+      <div class="font-display text-3xl font-bold">{level.div}</div>
+      <div class="text-xs text-muted mt-1">
+        {level.div === 'A' ? 'Élite' : level.div === 'B' ? 'Competitiva' : 'Iniciación'}
+      </div>
+    </div>
+    <div class="bg-surface p-6">
+      <div class="text-xs text-muted mb-2">Partidos jugados</div>
+      <div class="font-display text-3xl font-bold">{profile?.matches_played ?? 0}</div>
+    </div>
+    <div class="bg-surface p-6">
+      <div class="text-xs text-muted mb-2">Victorias</div>
+      <div class="font-display text-3xl font-bold">{profile?.matches_won ?? 0}</div>
+      <div class="text-xs text-muted mt-1">
+        {
+          (profile?.matches_played ?? 0) > 0
+            ? `${Math.round(((profile?.matches_won ?? 0) / (profile?.matches_played ?? 1)) * 100)}% win rate`
+            : 'Sin partidos aún'
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick actions -->
+  <div class="grid sm:grid-cols-3 gap-3 mb-8">
+    <a
+      href="/app/partidos/registrar"
+      class="gradient-border rounded-xl bg-surface p-5 hover:bg-surface-2 transition-colors block"
+    >
+      <div class="text-sm font-semibold text-text mb-1">Registrar partido</div>
+      <div class="text-xs text-muted">Añade un resultado para actualizar tu valoración.</div>
+    </a>
+    <a
+      href="/app/torneos/crear"
+      class="gradient-border rounded-xl bg-surface p-5 hover:bg-surface-2 transition-colors block"
+    >
+      <div class="text-sm font-semibold text-text mb-1">Crear torneo</div>
+      <div class="text-xs text-muted">Organiza una competición en tu zona.</div>
+    </a>
+    <a
+      href="/app/jugadores"
+      class="gradient-border rounded-xl bg-surface p-5 hover:bg-surface-2 transition-colors block"
+    >
+      <div class="text-sm font-semibold text-text mb-1">Buscar jugadores</div>
+      <div class="text-xs text-muted">Encuentra rivales de tu nivel cerca de ti.</div>
+    </a>
+  </div>
+
+  <!-- Recent matches -->
+  <div class="gradient-border rounded-xl bg-surface p-6">
+    <h2 class="font-display text-base font-semibold mb-4">Partidos recientes</h2>
+    {
+      (recentMatches.results?.length ?? 0) === 0 ? (
+        <p class="text-sm text-muted">
+          Aún no has registrado ningún partido.{' '}
+          <a href="/app/partidos/registrar" class="text-emerald hover:underline">
+            Registra tu primero
+          </a>
+          .
+        </p>
+      ) : (
+        <div class="space-y-2">
+          {recentMatches.results?.map((m: any) => (
+            <div class="flex items-center justify-between p-3 rounded-lg bg-bg/50 border border-white/5">
+              <div class="text-sm text-text">
+                Equipo 1 ({m.team1_games}g) vs Equipo 2 ({m.team2_games}g)
+              </div>
+              <div class="text-xs text-muted">
+                {new Date(m.match_date).toLocaleDateString('es')}
+              </div>
+            </div>
+          ))}
+        </div>
+      )
+    }
+  </div>
+
+  <!-- Rating history -->
+  {
+    (ratingHist.results?.length ?? 0) > 0 && (
+      <div class="gradient-border rounded-xl bg-surface p-6 mt-6">
+        <h2 class="font-display text-base font-semibold mb-4">Evolución de valoración</h2>
+        <div class="space-y-2">
+          {ratingHist.results?.map((h: any) => (
+            <div class="flex items-center justify-between p-3 rounded-lg bg-bg/50 border border-white/5">
+              <div class="text-sm">
+                <span class="text-muted">{Number(h.old_rating).toFixed(1)}</span>
+                <span class="text-muted mx-2">→</span>
+                <span
+                  class:list={[
+                    Number(h.new_rating) > Number(h.old_rating) ? 'text-emerald' : 'text-red-400',
+                    'font-medium',
+                  ]}
+                >
+                  {Number(h.new_rating).toFixed(1)}
+                </span>
+              </div>
+              <div class="text-xs text-muted">
+                {new Date(h.created_at).toLocaleDateString('es')}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+</AppLayout>

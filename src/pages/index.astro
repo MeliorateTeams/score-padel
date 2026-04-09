@@ -4,51 +4,51 @@ import Navbar from '../components/Navbar.astro'
 import Footer from '../components/Footer.astro'
 import CookieBanner from '../components/CookieBanner.astro'
 
-const pasos = [
+const puntos = [
   {
     num: '01',
-    titulo: 'Crea tu cuenta',
-    desc: 'Regístrate con tu email en segundos y accede a la plataforma global de pádel.',
+    titulo: 'Organización y estandarización',
+    desc: 'Score Padel organiza, estandariza y jerarquiza las competiciones de pádel a nivel mundial, proporcionando orden y sentido a la escena amateur y profesional.',
   },
   {
     num: '02',
-    titulo: 'Completa tu perfil',
-    desc: 'Indica tu experiencia, años de práctica y deportes de raqueta previos.',
+    titulo: 'Valoración, no ranking',
+    desc: 'No entregamos un ranking por acumulación de puntos, sino una valoración numérica (1.0–7.0) basada en tu destreza, experiencia deportiva, años de práctica y estado competitivo actual.',
   },
   {
     num: '03',
-    titulo: 'Obtén tu valoración',
-    desc: 'El algoritmo calcula tu nivel inicial (1.0–7.0) basándose en tu perfil.',
+    titulo: '12 niveles, 3 divisiones',
+    desc: 'Cada jugador se ubica en un nivel que refleja su capacidad real, agrupado en tres divisiones: Formativa, Competitiva y Élite.',
   },
   {
     num: '04',
-    titulo: 'Encuentra jugadores',
-    desc: 'Busca rivales por ubicación y nivel similar en cualquier parte del mundo.',
+    titulo: 'Encontrar jugadores',
+    desc: 'Busca jugadores de tu vecindario, lugar de vacaciones o la ciudad donde vives. Score Padel conecta jugadores en cualquier parte del mundo.',
   },
   {
     num: '05',
-    titulo: 'Crea o únete a torneos',
-    desc: 'Organiza torneos locales o inscríbete en competiciones existentes.',
+    titulo: 'Torneos con puntos globales',
+    desc: 'Todos los torneos organizados con Score Padel entregan puntos para tu status mundial en todos los niveles de juego, edad y género.',
   },
   {
     num: '06',
-    titulo: 'Registra partidos',
-    desc: 'Los sets, juegos y resultados alimentan tu valoración automáticamente.',
+    titulo: 'Seguimiento de partidos',
+    desc: 'Cada partido registrado alimenta tu valoración automáticamente. Sets, juegos y resultados se reflejan al instante en tu clasificación.',
   },
   {
     num: '07',
-    titulo: 'Sube tu valoración',
-    desc: 'Recálculo automático tras cada partido según el algoritmo de jerarquía.',
+    titulo: 'Algoritmo de jerarquía',
+    desc: 'Tres factores determinan tu valoración: diferencia de niveles entre rivales, rendimiento vs. expectativa, y resultados recientes.',
   },
   {
     num: '08',
-    titulo: 'Analiza tu progreso',
-    desc: 'Estadísticas detalladas, evolución histórica y comparativas con rivales.',
+    titulo: 'Empoderar al jugador',
+    desc: 'Nuestra misión es empoderar a cada jugador a disfrutar del juego y motivarlos a mejorar, brindándole la oportunidad de identificarse en su nivel.',
   },
   {
     num: '09',
-    titulo: 'Compite globalmente',
-    desc: 'Posicionamiento mundial sin importar dónde juegues. Cada punto cuenta.',
+    titulo: 'Alcance global',
+    desc: 'Tu valoración te acompaña donde quiera que juegues. Sin importar el país o continente, cada punto cuenta para tu clasificación mundial.',
   },
 ]
 
@@ -67,30 +67,26 @@ const niveles = [
   { cal: '7.0', nombre: 'Élite Mundial del Pádel', div: 'A' },
 ]
 
-const ventajas = [
+const porQueUnirse = [
   {
-    titulo: 'Seguimiento y análisis de tu progreso',
-    desc: 'Cada partido cuenta. Nuestra plataforma sigue tus avances y retrocesos en cada torneo, brindándote una visión completa de tu evolución como jugador.',
+    titulo: 'Identificación y Progreso Personalizado',
+    desc: 'Identifica tu nivel real y traza tu propio camino de progreso con una valoración que refleja quién eres como jugador. Cada partido cuenta tu historia.',
   },
   {
-    titulo: 'Encuentra jugadores cerca de ti',
-    desc: 'Busca partidos con jugadores de tu vecindario, ciudad o incluso en tu lugar de vacaciones. Score Padel conecta a jugadores en cualquier parte del mundo.',
+    titulo: 'Visibilidad Internacional',
+    desc: 'Tu clasificación tiene alcance global. Juegues donde juegues, tu valoración te representa y te conecta con la comunidad mundial del pádel.',
   },
   {
-    titulo: 'Expande tus conexiones',
-    desc: 'Amplía tu red social con otros jugadores de pádel y genera posibilidades de negocios asociados al deporte u otros intereses.',
+    titulo: 'Eventos a la Medida',
+    desc: 'Torneos organizados para todos los niveles, edades y géneros, con puntos que cuentan para tu status mundial. Compite en igualdad de condiciones.',
   },
   {
-    titulo: 'Torneos con puntos globales',
-    desc: 'Todos los torneos organizados con Score Padel entregan puntos para tu status mundial en todos los niveles de juego, edad y género.',
+    titulo: 'Comunidad Apasionada',
+    desc: 'Conecta con jugadores que comparten tu pasión, amplía tu red y genera nuevas posibilidades. El pádel es mejor cuando se comparte.',
   },
   {
-    titulo: 'Valoración, no ranking',
-    desc: 'Score Padel no entrega un ranking tradicional, sino una valoración numérica basada en tu destreza, experiencia y estado competitivo actual.',
-  },
-  {
-    titulo: 'Motivación para mejorar',
-    desc: 'Encuentra jugadores con características similares y genera la motivación necesaria para entrenar y mejorar tu clasificación continuamente.',
+    titulo: 'Seguimiento Personalizado',
+    desc: 'Análisis detallado de tu evolución, estadísticas de cada partido, comparativas con rivales y un historial completo de tu trayectoria.',
   },
 ]
 ---
@@ -128,16 +124,16 @@ const ventajas = [
           </p>
           <div class="flex flex-wrap gap-3">
             <a
-              href="#como-funciona"
+              href="/registro"
               class="px-6 py-3 bg-emerald text-bg text-sm font-semibold rounded-lg hover:bg-emerald-glow transition-colors"
             >
-              Descubre cómo funciona
+              Crear cuenta gratis
             </a>
             <a
-              href="#niveles"
+              href="#como-funciona"
               class="px-6 py-3 border border-white/10 text-text text-sm font-medium rounded-lg hover:border-emerald/40 hover:text-emerald transition-all"
             >
-              Ver niveles
+              Descubre cómo funciona
             </a>
           </div>
         </div>
@@ -277,18 +273,18 @@ const ventajas = [
             >Cómo funciona</span
           >
           <h2 class="font-display text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-            9 pasos hacia tu valoración global
+            La plataforma, punto por punto
           </h2>
           <p class="text-muted leading-relaxed">
-            Desde el registro hasta competir a nivel mundial. Así es el camino de cada jugador en
-            Score Padel.
+            9 características que definen Score Padel como la plataforma global de referencia para
+            el pádel amateur y profesional.
           </p>
         </div>
         <div
           class="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-white/5 rounded-2xl overflow-hidden"
         >
           {
-            pasos.map((p) => (
+            puntos.map((p) => (
               <div class="bg-surface hover:bg-surface-2 transition-colors p-7 group">
                 <span class="font-display text-3xl font-bold text-white/[0.06] group-hover:text-emerald/20 transition-colors block mb-4">
                   {p.num}
@@ -482,27 +478,21 @@ const ventajas = [
       <div class="max-w-7xl mx-auto px-6 lg:px-8">
         <div class="max-w-2xl mb-16">
           <span class="text-xs font-semibold text-emerald uppercase tracking-[0.2em] mb-4 block"
-            >Ventajas</span
+            >Por qué unirse</span
           >
           <h2 class="font-display text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-            ¿Por qué Score Padel?
+            ¿Por qué unirse a Score Padel?
           </h2>
           <p class="text-muted leading-relaxed">
-            Todo lo que necesitas para llevar tu juego al siguiente nivel.
+            Cinco razones para formar parte de la comunidad global del pádel.
           </p>
         </div>
         <div
           class="grid md:grid-cols-2 lg:grid-cols-3 gap-px bg-white/5 rounded-2xl overflow-hidden"
         >
           {
-            ventajas.map((v, i) => (
-              <div
-                class:list={[
-                  'bg-surface hover:bg-surface-2 transition-colors p-8',
-                  i === 0 && 'lg:row-span-2',
-                  i === 3 && 'lg:row-span-2',
-                ]}
-              >
+            porQueUnirse.map((v) => (
+              <div class="bg-surface hover:bg-surface-2 transition-colors p-8">
                 <h3 class="font-display text-base font-semibold text-text mb-3">{v.titulo}</h3>
                 <p class="text-sm text-muted leading-relaxed">{v.desc}</p>
               </div>
@@ -522,14 +512,22 @@ const ventajas = [
           ¿Listo para empezar?
         </h2>
         <p class="text-muted leading-relaxed mb-10">
-          Únete a Score Padel y sé protagonista de tu propio viaje hacia el éxito.
+          Crea tu cuenta gratuita, obtén tu valoración y empieza a competir a nivel mundial.
         </p>
-        <a
-          href="mailto:info@scorepadel.com"
-          class="inline-flex px-8 py-3.5 bg-emerald text-bg text-sm font-semibold rounded-lg hover:bg-emerald-glow transition-colors"
-        >
-          Contáctanos
-        </a>
+        <div class="flex flex-wrap justify-center gap-3">
+          <a
+            href="/registro"
+            class="inline-flex px-8 py-3.5 bg-emerald text-bg text-sm font-semibold rounded-lg hover:bg-emerald-glow transition-colors"
+          >
+            Crear cuenta gratis
+          </a>
+          <a
+            href="/login"
+            class="inline-flex px-8 py-3.5 border border-white/10 text-text text-sm font-medium rounded-lg hover:border-emerald/40 hover:text-emerald transition-all"
+          >
+            Ya tengo cuenta
+          </a>
+        </div>
       </div>
     </section>
   </div>
