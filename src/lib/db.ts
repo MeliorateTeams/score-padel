@@ -18,6 +18,8 @@ export interface Profile {
   rating: number
   matches_played: number
   matches_won: number
+  birth_date: string
+  gender: string
 }
 
 const SESSION_DURATION_HOURS = 72

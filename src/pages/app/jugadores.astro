@@ -7,6 +7,7 @@ if (!user) return Astro.redirect('/login')
 const db = (Astro.locals as any).db
 const search = Astro.url.searchParams.get('q') ?? ''
 const locationFilter = Astro.url.searchParams.get('location') ?? ''
+const divisionFilter = Astro.url.searchParams.get('division') ?? ''
 
 let query = `
   SELECT u.id, u.name, p.rating, p.location, p.matches_played, p.experience_years
@@ -23,6 +24,13 @@ if (search) {
 if (locationFilter) {
   query += ' AND p.location LIKE ?'
   params.push(`%${locationFilter}%`)
+}
+if (divisionFilter === 'C') {
+  query += ' AND p.rating < 3.5'
+} else if (divisionFilter === 'B') {
+  query += ' AND p.rating >= 3.5 AND p.rating < 6.0'
+} else if (divisionFilter === 'A') {
+  query += ' AND p.rating >= 6.0'
 }
 
 query += ' ORDER BY p.rating DESC LIMIT 50'
@@ -53,6 +61,15 @@ const players = await db
         placeholder="Ciudad o país..."
         class="flex-1 min-w-[200px] px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
       />
+      <select
+        name="division"
+        class="px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy focus:outline-none focus:border-coral/50 transition-colors"
+      >
+        <option value="">Todas las divisiones</option>
+        <option value="C" selected={divisionFilter === 'C'}>División C (1.0-3.0)</option>
+        <option value="B" selected={divisionFilter === 'B'}>División B (3.5-5.5)</option>
+        <option value="A" selected={divisionFilter === 'A'}>División A (6.0-7.0)</option>
+      </select>
       <button
         type="submit"
         class="px-5 py-2.5 bg-coral text-white text-sm font-semibold rounded-full hover:bg-coral-dark transition-colors"

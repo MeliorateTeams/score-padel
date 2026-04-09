@@ -14,12 +14,16 @@ if (Astro.request.method === 'POST') {
   const form = await Astro.request.formData()
   const experienceYears = parseInt(form.get('experience_years')?.toString() ?? '0') || 0
   const racquetSports = form.get('racquet_sports')?.toString() ?? ''
+  const birthDate = form.get('birth_date')?.toString() ?? ''
+  const gender = form.get('gender')?.toString() ?? ''
 
   await updateProfile(db, user.id, {
     bio: form.get('bio')?.toString() ?? '',
     location: form.get('location')?.toString() ?? '',
     experience_years: experienceYears,
     racquet_sports: racquetSports,
+    birth_date: birthDate,
+    gender: gender,
   })
 
   // Si el jugador no tiene partidos, ajustar rating inicial según perfil
@@ -87,6 +91,34 @@ const profile = await getProfile(db, user.id)
           placeholder="Madrid, España"
           class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
         />
+      </div>
+
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label for="birth_date" class="text-xs font-medium text-muted block mb-1.5"
+            >Fecha de nacimiento</label
+          >
+          <input
+            type="date"
+            id="birth_date"
+            name="birth_date"
+            value={profile?.birth_date ?? ''}
+            class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy focus:outline-none focus:border-coral/50 transition-colors"
+          />
+        </div>
+        <div>
+          <label for="gender" class="text-xs font-medium text-muted block mb-1.5">Género</label>
+          <select
+            id="gender"
+            name="gender"
+            class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy focus:outline-none focus:border-coral/50 transition-colors"
+          >
+            <option value="" selected={!profile?.gender}>Seleccionar</option>
+            <option value="masculino" selected={profile?.gender === 'masculino'}>Masculino</option>
+            <option value="femenino" selected={profile?.gender === 'femenino'}>Femenino</option>
+            <option value="otro" selected={profile?.gender === 'otro'}>Otro</option>
+          </select>
+        </div>
       </div>
 
       <div class="grid sm:grid-cols-2 gap-4">

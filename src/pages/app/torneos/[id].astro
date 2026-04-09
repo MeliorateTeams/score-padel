@@ -53,6 +53,21 @@ const players = await db
 
 const isJoined = players.results?.some((p: any) => p.id === user.id) ?? false
 const isFull = (players.results?.length ?? 0) >= (tournament as any).max_players
+
+// Partidos del torneo
+const tournamentMatches = await db
+  .prepare(
+    `
+  SELECT m.*, u1.name as t1_name, u2.name as t2_name
+  FROM matches m
+  JOIN users u1 ON m.team1_player1 = u1.id
+  JOIN users u2 ON m.team2_player1 = u2.id
+  WHERE m.tournament_id = ?
+  ORDER BY m.created_at DESC
+`,
+  )
+  .bind(id)
+  .all()
 ---
 
 <AppLayout title={(tournament as any).name} user={user}>
@@ -124,6 +139,51 @@ const isFull = (players.results?.length ?? 0) >= (tournament as any).max_players
           </form>
         )
       }
+
+      <!-- Partidos del torneo -->
+      <div class="mt-8">
+        <h2 class="font-display text-base font-bold text-navy mb-4">Partidos del torneo</h2>
+        {
+          (tournamentMatches.results?.length ?? 0) === 0 ? (
+            <p class="text-sm text-muted">Aún no se han registrado partidos en este torneo.</p>
+          ) : (
+            <div class="space-y-2">
+              {tournamentMatches.results?.map((m: any) => (
+                <div class="flex items-center justify-between p-3 rounded-xl bg-surface-2 border border-gray-100">
+                  <div class="flex items-center gap-3">
+                    <span
+                      class:list={[
+                        'w-2 h-2 rounded-full',
+                        m.team1_games > m.team2_games ? 'bg-teal' : 'bg-red-400',
+                      ]}
+                    />
+                    <div>
+                      <div class="text-sm text-navy">
+                        {m.t1_name} <span class="text-muted">vs</span> {m.t2_name}
+                      </div>
+                      <div class="text-xs text-muted mt-0.5">
+                        {new Date(m.created_at).toLocaleDateString('es', {
+                          day: 'numeric',
+                          month: 'short',
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="text-sm font-display font-semibold">
+                    <span class:list={[m.team1_games > m.team2_games ? 'text-coral' : 'text-navy']}>
+                      {m.team1_games}
+                    </span>
+                    <span class="text-muted mx-1">-</span>
+                    <span class:list={[m.team2_games > m.team1_games ? 'text-coral' : 'text-navy']}>
+                      {m.team2_games}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        }
+      </div>
     </div>
 
     <div class="card p-6">

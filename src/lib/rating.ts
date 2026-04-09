@@ -143,7 +143,12 @@ export async function recalculatePlayerRating(db: D1Database, playerId: string):
     const playerRatingAtTime = h.old_rating as number
 
     // Valoración de partido
-    const matchRating = calculateMatchRating(playerRatingAtTime, opponentRating, gamesWon, totalGames)
+    const matchRating = calculateMatchRating(
+      playerRatingAtTime,
+      opponentRating,
+      gamesWon,
+      totalGames,
+    )
 
     // Antiguedad del partido en días
     const matchDate = new Date(h.created_at as string)
@@ -177,7 +182,10 @@ export function calculateInitialRating(experienceYears: number, racquetSports: s
 
   // Otros deportes de raqueta: hasta +0.5 puntos
   if (racquetSports && racquetSports.trim().length > 0) {
-    const sports = racquetSports.split(',').map((s) => s.trim()).filter(Boolean)
+    const sports = racquetSports
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean)
     base += Math.min(sports.length * 0.2, 0.5)
   }
 

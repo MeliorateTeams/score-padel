@@ -6,17 +6,34 @@ if (!user) return Astro.redirect('/login')
 
 const db = (Astro.locals as any).db
 
-const leaderboard = await db
-  .prepare(
-    `
+const genderFilter = Astro.url.searchParams.get('gender') ?? ''
+const divisionFilter = Astro.url.searchParams.get('division') ?? ''
+
+let leaderboardQuery = `
   SELECT u.id, u.name, p.rating, p.location, p.matches_played, p.matches_won
   FROM users u
   LEFT JOIN profiles p ON u.id = p.user_id
-  ORDER BY p.rating DESC
-  LIMIT 100
-`,
-  )
-  .all()
+  WHERE 1=1
+`
+const lbParams: any[] = []
+
+if (genderFilter) {
+  leaderboardQuery += ' AND p.gender = ?'
+  lbParams.push(genderFilter)
+}
+if (divisionFilter === 'C') {
+  leaderboardQuery += ' AND p.rating < 3.5'
+} else if (divisionFilter === 'B') {
+  leaderboardQuery += ' AND p.rating >= 3.5 AND p.rating < 6.0'
+} else if (divisionFilter === 'A') {
+  leaderboardQuery += ' AND p.rating >= 6.0'
+}
+
+leaderboardQuery += ' ORDER BY p.rating DESC LIMIT 100'
+
+const leaderboard = lbParams.length > 0
+  ? await db.prepare(leaderboardQuery).bind(...lbParams).all()
+  : await db.prepare(leaderboardQuery).all()
 
 function getLevel(rating: number) {
   if (rating < 2.0) return { name: 'Iniciación Pádel', division: 'C', color: 'text-blue-400' }
@@ -39,7 +56,33 @@ function getLevel(rating: number) {
 <AppLayout title="Clasificación" user={user}>
   <div>
     <h1 class="font-display text-2xl font-bold mb-1">Clasificación global</h1>
-    <p class="text-sm text-muted mb-8">Ranking de jugadores por valoración.</p>
+    <p class="text-sm text-muted mb-4">Ranking de jugadores por valoración.</p>
+
+    <form method="GET" class="flex flex-wrap gap-3 mb-6">
+      <select
+        name="division"
+        class="px-3.5 py-2 bg-white border border-gray-200 rounded-xl text-sm text-navy focus:outline-none focus:border-coral/50 transition-colors"
+      >
+        <option value="">Todas las divisiones</option>
+        <option value="C" selected={divisionFilter === 'C'}>División C (1.0-3.0)</option>
+        <option value="B" selected={divisionFilter === 'B'}>División B (3.5-5.5)</option>
+        <option value="A" selected={divisionFilter === 'A'}>División A (6.0-7.0)</option>
+      </select>
+      <select
+        name="gender"
+        class="px-3.5 py-2 bg-white border border-gray-200 rounded-xl text-sm text-navy focus:outline-none focus:border-coral/50 transition-colors"
+      >
+        <option value="">Todos los géneros</option>
+        <option value="masculino" selected={genderFilter === 'masculino'}>Masculino</option>
+        <option value="femenino" selected={genderFilter === 'femenino'}>Femenino</option>
+      </select>
+      <button
+        type="submit"
+        class="px-5 py-2 bg-coral text-white text-sm font-semibold rounded-full hover:bg-coral-dark transition-colors"
+      >
+        Filtrar
+      </button>
+    </form>
 
     <div class="card rounded-2xl overflow-hidden">
       <div class="overflow-x-auto">
