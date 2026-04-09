@@ -103,111 +103,256 @@ const tournaments = await db
 ---
 
 <AppLayout title="Registrar partido" user={user}>
-  <div class="max-w-xl">
-    <h1 class="font-display text-2xl font-bold mb-1">Registrar partido</h1>
-    <p class="text-sm text-muted mb-8">
-      Registra el resultado para actualizar las valoraciones de ambos jugadores.
-    </p>
+  <div class="max-w-2xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-coral/10 flex items-center justify-center">
+        <svg
+          class="w-5 h-5 text-coral"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+          ><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"
+          ></path></svg
+        >
+      </div>
+      <div>
+        <h1 class="font-display text-xl font-bold text-navy">Registrar partido</h1>
+        <p class="text-xs text-muted">
+          Introduce los datos del partido para actualizar las valoraciones.
+        </p>
+      </div>
+    </div>
 
     {
       message && (
-        <div class="bg-teal/10 border border-teal/20 text-teal text-xs p-3 rounded-xl mb-6">
+        <div class="flex items-center gap-3 bg-teal/10 border border-teal/20 text-teal text-sm p-4 rounded-xl">
+          <svg
+            class="w-5 h-5 shrink-0"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
           {message}
         </div>
       )
     }
     {
       error && (
-        <div class="bg-red-500/10 border border-red-500/20 text-red-500 text-xs p-3 rounded-xl mb-6">
+        <div class="flex items-center gap-3 bg-red-500/10 border border-red-500/20 text-red-500 text-sm p-4 rounded-xl">
+          <svg
+            class="w-5 h-5 shrink-0"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+            />
+          </svg>
           {error}
         </div>
       )
     }
 
-    <form method="POST" class="space-y-5">
-      <div>
-        <label for="partner_email" class="text-xs font-medium text-muted block mb-1.5"
-          >Email de tu compañero/a</label
+    <form method="POST" class="space-y-6">
+      <!-- Tu pareja -->
+      <div class="card p-6 space-y-4">
+        <h2
+          class="font-display text-sm font-bold text-navy uppercase tracking-wider flex items-center gap-2"
         >
-        <input
-          type="email"
-          id="partner_email"
-          name="partner_email"
-          required
-          placeholder="companero@email.com"
-          class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
-        />
-      </div>
-
-      <div>
-        <label for="opponent_email" class="text-xs font-medium text-muted block mb-1.5"
-          >Email del oponente 1</label
-        >
-        <input
-          type="email"
-          id="opponent_email"
-          name="opponent_email"
-          required
-          placeholder="oponente1@email.com"
-          class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
-        />
-      </div>
-
-      <div>
-        <label for="opponent2_email" class="text-xs font-medium text-muted block mb-1.5"
-          >Email del oponente 2</label
-        >
-        <input
-          type="email"
-          id="opponent2_email"
-          name="opponent2_email"
-          required
-          placeholder="oponente2@email.com"
-          class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
-        />
-      </div>
-
-      <p class="text-xs text-muted/50">Todos los jugadores deben tener cuenta en Score Padel.</p>
-
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label for="team1_games" class="text-xs font-medium text-muted block mb-1.5"
-            >Tus juegos ganados</label
+          <svg
+            class="w-4 h-4 text-teal"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+            ><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
+            ></path></svg
           >
-          <input
-            type="number"
-            id="team1_games"
-            name="team1_games"
-            min="0"
-            max="99"
-            value="0"
-            required
-            class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy focus:outline-none focus:border-coral/50 transition-colors"
-          />
+          Tu equipo
+        </h2>
+        <div class="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
+          <div class="w-8 h-8 rounded-lg bg-coral/10 flex items-center justify-center">
+            <span class="text-sm font-bold text-coral">{user.name?.charAt(0)?.toUpperCase()}</span>
+          </div>
+          <div>
+            <div class="text-sm font-medium text-navy">{user.name}</div>
+            <div class="text-[11px] text-muted">{user.email}</div>
+          </div>
+          <span
+            class="ml-auto text-[10px] font-semibold text-teal bg-teal/10 px-2 py-0.5 rounded-full uppercase"
+            >Tú</span
+          >
         </div>
         <div>
-          <label for="team2_games" class="text-xs font-medium text-muted block mb-1.5"
-            >Juegos del oponente</label
+          <label for="partner_email" class="text-xs font-medium text-muted block mb-1.5"
+            >Email de tu compañero/a</label
           >
           <input
-            type="number"
-            id="team2_games"
-            name="team2_games"
-            min="0"
-            max="99"
-            value="0"
+            type="email"
+            id="partner_email"
+            name="partner_email"
             required
-            class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy focus:outline-none focus:border-coral/50 transition-colors"
+            placeholder="companero@email.com"
+            class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
           />
+        </div>
+      </div>
+
+      <!-- Equipo rival -->
+      <div class="card p-6 space-y-4">
+        <h2
+          class="font-display text-sm font-bold text-navy uppercase tracking-wider flex items-center gap-2"
+        >
+          <svg
+            class="w-4 h-4 text-coral"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+            ><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
+            ></path></svg
+          >
+          Equipo rival
+        </h2>
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label for="opponent_email" class="text-xs font-medium text-muted block mb-1.5"
+              >Oponente 1</label
+            >
+            <input
+              type="email"
+              id="opponent_email"
+              name="opponent_email"
+              required
+              placeholder="oponente1@email.com"
+              class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
+            />
+          </div>
+          <div>
+            <label for="opponent2_email" class="text-xs font-medium text-muted block mb-1.5"
+              >Oponente 2</label
+            >
+            <input
+              type="email"
+              id="opponent2_email"
+              name="opponent2_email"
+              required
+              placeholder="oponente2@email.com"
+              class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
+            />
+          </div>
+        </div>
+        <p class="text-[11px] text-muted/60 flex items-center gap-1">
+          <svg
+            class="w-3 h-3"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+            ><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
+            ></path></svg
+          >
+          Todos los jugadores deben tener cuenta en Score Padel.
+        </p>
+      </div>
+
+      <!-- Resultado -->
+      <div class="card p-6 space-y-4">
+        <h2
+          class="font-display text-sm font-bold text-navy uppercase tracking-wider flex items-center gap-2"
+        >
+          <svg
+            class="w-4 h-4 text-coral"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+            ><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0016.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.003 6.003 0 01-5.54 0"
+            ></path></svg
+          >
+          Resultado
+        </h2>
+
+        <div class="grid grid-cols-2 gap-0 bg-gray-50 rounded-xl overflow-hidden">
+          <div class="p-4 text-center border-r border-gray-200">
+            <div class="text-[10px] font-semibold text-teal uppercase tracking-wider mb-3">
+              Tu equipo
+            </div>
+            <input
+              type="number"
+              id="team1_games"
+              name="team1_games"
+              min="0"
+              max="99"
+              value="0"
+              required
+              class="w-20 mx-auto text-center px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-lg font-display font-bold text-navy focus:outline-none focus:border-coral/50 transition-colors"
+            />
+            <div class="text-[10px] text-muted mt-2">juegos</div>
+          </div>
+          <div class="p-4 text-center">
+            <div class="text-[10px] font-semibold text-coral uppercase tracking-wider mb-3">
+              Rival
+            </div>
+            <input
+              type="number"
+              id="team2_games"
+              name="team2_games"
+              min="0"
+              max="99"
+              value="0"
+              required
+              class="w-20 mx-auto text-center px-3 py-2.5 bg-white border border-gray-200 rounded-xl text-lg font-display font-bold text-navy focus:outline-none focus:border-coral/50 transition-colors"
+            />
+            <div class="text-[10px] text-muted mt-2">juegos</div>
+          </div>
         </div>
       </div>
 
       {
         (tournaments.results?.length ?? 0) > 0 && (
-          <div>
-            <label for="tournament_id" class="text-xs font-medium text-muted block mb-1.5">
+          <div class="card p-6 space-y-4">
+            <h2 class="font-display text-sm font-bold text-navy uppercase tracking-wider flex items-center gap-2">
+              <svg
+                class="w-4 h-4 text-coral"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"
+                />
+              </svg>
               Torneo (opcional)
-            </label>
+            </h2>
             <select
               id="tournament_id"
               name="tournament_id"
@@ -222,12 +367,25 @@ const tournaments = await db
         )
       }
 
-      <button
-        type="submit"
-        class="px-6 py-2.5 bg-coral text-white text-sm font-semibold rounded-full hover:bg-coral-dark transition-colors"
-      >
-        Registrar resultado
-      </button>
+      <div class="flex justify-end">
+        <button
+          type="submit"
+          class="px-8 py-2.5 bg-coral text-white text-sm font-semibold rounded-full hover:bg-coral-dark transition-colors shadow-sm flex items-center gap-2"
+        >
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+            ><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg
+          >
+          Registrar resultado
+        </button>
+      </div>
     </form>
   </div>
 </AppLayout>

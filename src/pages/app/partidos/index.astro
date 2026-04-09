@@ -25,65 +25,141 @@ const matches = await db
 ---
 
 <AppLayout title="Mis partidos" user={user}>
-  <div class="flex items-center justify-between mb-8">
-    <div>
-      <h1 class="font-display text-2xl font-bold mb-1">Mis partidos</h1>
-      <p class="text-sm text-muted">Historial de todos tus partidos registrados.</p>
+  <div class="max-w-3xl mx-auto space-y-6">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-coral/10 flex items-center justify-center">
+          <svg
+            class="w-5 h-5 text-coral"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+            ><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"
+            ></path></svg
+          >
+        </div>
+        <div>
+          <h1 class="font-display text-xl font-bold text-navy">Mis partidos</h1>
+          <p class="text-xs text-muted">Historial de resultados registrados.</p>
+        </div>
+      </div>
+      <a
+        href="/app/partidos/registrar"
+        class="px-5 py-2.5 bg-coral text-white text-sm font-semibold rounded-full hover:bg-coral-dark transition-colors shadow-sm flex items-center gap-2"
+      >
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+          ><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"
+          ></path></svg
+        >
+        Nuevo partido
+      </a>
     </div>
-    <a
-      href="/app/partidos/registrar"
-      class="px-5 py-2.5 bg-coral text-white text-sm font-semibold rounded-full hover:bg-coral-dark transition-colors"
-    >
-      Registrar partido
-    </a>
-  </div>
 
-  {
-    (matches.results?.length ?? 0) === 0 ? (
-      <div class="card rounded-xl p-10 text-center">
-        <p class="text-muted mb-4">No tienes partidos registrados.</p>
-        <a href="/app/partidos/registrar" class="text-coral text-sm hover:underline">
-          Registra tu primer partido
-        </a>
-      </div>
-    ) : (
-      <div class="space-y-2">
-        {matches.results?.map((m: any) => {
-          const isTeam1 = m.team1_player1 === user.id
-          const won = isTeam1 ? m.team1_games > m.team2_games : m.team2_games > m.team1_games
-          return (
-            <div class="flex items-center justify-between p-4 rounded-xl bg-white border border-gray-100 shadow-sm">
-              <div class="flex items-center gap-4">
-                <span class:list={['w-2 h-2 rounded-full', won ? 'bg-teal' : 'bg-red-500']} />
-                <div>
-                  <div class="text-sm text-navy">
-                    {m.t1p1_name} <span class="text-muted">vs</span> {m.t2p1_name}
-                  </div>
-                  <div class="text-xs text-muted mt-0.5">
-                    {new Date(m.created_at).toLocaleDateString('es', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
+    {
+      (matches.results?.length ?? 0) === 0 ? (
+        <div class="card rounded-xl p-12 text-center space-y-3">
+          <div class="w-14 h-14 rounded-2xl bg-coral/10 flex items-center justify-center mx-auto">
+            <svg
+              class="w-7 h-7 text-coral"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0016.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.003 6.003 0 01-5.54 0"
+              />
+            </svg>
+          </div>
+          <p class="text-sm text-muted">Aún no tienes partidos registrados.</p>
+          <a
+            href="/app/partidos/registrar"
+            class="text-coral text-sm font-medium hover:underline inline-flex items-center gap-1"
+          >
+            Registra tu primer partido
+            <svg
+              class="w-3.5 h-3.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
+              />
+            </svg>
+          </a>
+        </div>
+      ) : (
+        <div class="card p-0 overflow-hidden divide-y divide-gray-100">
+          {matches.results?.map((m: any) => {
+            const isTeam1 = m.team1_player1 === user.id
+            const won = isTeam1 ? m.team1_games > m.team2_games : m.team2_games > m.team1_games
+            const draw = m.team1_games === m.team2_games
+            return (
+              <div class="flex items-center justify-between px-5 py-4 hover:bg-gray-50/50 transition-colors">
+                <div class="flex items-center gap-3.5">
+                  <div
+                    class:list={[
+                      'w-2.5 h-2.5 rounded-full shrink-0',
+                      won ? 'bg-teal' : draw ? 'bg-amber-400' : 'bg-red-400',
+                    ]}
+                  />
+                  <div>
+                    <div class="text-sm font-medium text-navy">
+                      {m.t1p1_name} <span class="text-muted font-normal">vs</span> {m.t2p1_name}
+                    </div>
+                    <div class="text-[11px] text-muted mt-0.5">
+                      {new Date(m.created_at).toLocaleDateString('es', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div class="text-right">
-                <div class="text-sm font-display font-semibold">
-                  <span class:list={[m.team1_games > m.team2_games ? 'text-coral' : 'text-navy']}>
-                    {m.team1_games}
-                  </span>
-                  <span class="text-muted mx-1">-</span>
-                  <span class:list={[m.team2_games > m.team1_games ? 'text-coral' : 'text-navy']}>
-                    {m.team2_games}
+                <div class="text-right flex items-center gap-3">
+                  <div>
+                    <div class="text-base font-display font-bold tracking-tight">
+                      <span
+                        class:list={[m.team1_games > m.team2_games ? 'text-coral' : 'text-navy/60']}
+                      >
+                        {m.team1_games}
+                      </span>
+                      <span class="text-muted/40 mx-1.5">–</span>
+                      <span
+                        class:list={[m.team2_games > m.team1_games ? 'text-coral' : 'text-navy/60']}
+                      >
+                        {m.team2_games}
+                      </span>
+                    </div>
+                  </div>
+                  <span
+                    class:list={[
+                      'text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full',
+                      won
+                        ? 'bg-teal/10 text-teal'
+                        : draw
+                          ? 'bg-amber-400/10 text-amber-600'
+                          : 'bg-red-400/10 text-red-500',
+                    ]}
+                  >
+                    {won ? 'Victoria' : draw ? 'Empate' : 'Derrota'}
                   </span>
                 </div>
-                <div class="text-xs text-muted">juegos</div>
               </div>
-            </div>
-          )
-        })}
-      </div>
-    )
-  }
+            )
+          })}
+        </div>
+      )
+    }
+  </div>
 </AppLayout>
