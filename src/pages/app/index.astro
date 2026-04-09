@@ -56,24 +56,40 @@ const errorParam = Astro.url.searchParams.get('error')
   <div class="mb-8">
     <h1 class="font-display text-2xl font-bold mb-1">Hola, {user.name}</h1>
     <p class="text-sm text-muted">Tu centro de control en Score Padel.</p>
-    {isAdmin && (
-      <span class="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 bg-amber/10 text-amber text-xs font-semibold rounded-md">
-        Administrador
-      </span>
-    )}
+    {
+      isAdmin && (
+        <span class="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 bg-amber/10 text-amber text-xs font-semibold rounded-md">
+          Administrador
+        </span>
+      )
+    }
   </div>
 
-  {errorParam === 'guest' && (
-    <div class="mb-6 p-4 rounded-lg bg-amber/10 border border-amber/20 text-sm text-amber">
-      Tu cuenta de invitado no tiene acceso a esta función. <a href="/registro" class="underline font-semibold">Crea una cuenta completa</a> para desbloquear todas las funciones.
-    </div>
-  )}
+  {
+    errorParam === 'guest' && (
+      <div class="mb-6 p-4 rounded-lg bg-amber/10 border border-amber/20 text-sm text-amber">
+        Tu cuenta de invitado no tiene acceso a esta función.{' '}
+        <a href="/registro" class="underline font-semibold">
+          Crea una cuenta completa
+        </a>{' '}
+        para desbloquear todas las funciones.
+      </div>
+    )
+  }
 
-  {isGuest && (
-    <div class="mb-6 p-4 rounded-lg bg-indigo/10 border border-indigo/20 text-sm text-indigo">
-      Estás usando una <strong>cuenta de invitado</strong>. Puedes explorar la plataforma, ver clasificaciones y jugadores, pero no podrás registrar partidos, crear torneos ni editar tu perfil. <a href="/registro" class="underline font-semibold">Regístrate</a> para acceder a todo.
-    </div>
-  )}
+  {
+    isGuest && (
+      <div class="mb-6 p-4 rounded-lg bg-indigo/10 border border-indigo/20 text-sm text-indigo">
+        Estás usando una <strong>cuenta de invitado</strong>. Puedes explorar la plataforma, ver
+        clasificaciones y jugadores, pero no podrás registrar partidos, crear torneos ni editar tu
+        perfil.{' '}
+        <a href="/registro" class="underline font-semibold">
+          Regístrate
+        </a>{' '}
+        para acceder a todo.
+      </div>
+    )
+  }
 
   <!-- Stats grid -->
   <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-white/5 rounded-xl overflow-hidden mb-8">
@@ -108,24 +124,28 @@ const errorParam = Astro.url.searchParams.get('error')
 
   <!-- Quick actions -->
   <div class="grid sm:grid-cols-3 gap-3 mb-8">
-    {!isGuest && (
-      <a
-        href="/app/partidos/registrar"
-        class="gradient-border rounded-xl bg-surface p-5 hover:bg-surface-2 transition-colors block"
-      >
-        <div class="text-sm font-semibold text-text mb-1">Registrar partido</div>
-        <div class="text-xs text-muted">Añade un resultado para actualizar tu valoración.</div>
-      </a>
-    )}
-    {!isGuest && (
-      <a
-        href="/app/torneos/crear"
-        class="gradient-border rounded-xl bg-surface p-5 hover:bg-surface-2 transition-colors block"
-      >
-        <div class="text-sm font-semibold text-text mb-1">Crear torneo</div>
-        <div class="text-xs text-muted">Organiza una competición en tu zona.</div>
-      </a>
-    )}
+    {
+      !isGuest && (
+        <a
+          href="/app/partidos/registrar"
+          class="gradient-border rounded-xl bg-surface p-5 hover:bg-surface-2 transition-colors block"
+        >
+          <div class="text-sm font-semibold text-text mb-1">Registrar partido</div>
+          <div class="text-xs text-muted">Añade un resultado para actualizar tu valoración.</div>
+        </a>
+      )
+    }
+    {
+      !isGuest && (
+        <a
+          href="/app/torneos/crear"
+          class="gradient-border rounded-xl bg-surface p-5 hover:bg-surface-2 transition-colors block"
+        >
+          <div class="text-sm font-semibold text-text mb-1">Crear torneo</div>
+          <div class="text-xs text-muted">Organiza una competición en tu zona.</div>
+        </a>
+      )
+    }
     <a
       href="/app/jugadores"
       class="gradient-border rounded-xl bg-surface p-5 hover:bg-surface-2 transition-colors block"
