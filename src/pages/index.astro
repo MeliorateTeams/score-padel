@@ -27,28 +27,33 @@ const niveles = [
 const ventajas = [
   {
     icon: '📊',
-    titulo: 'Progreso Personalizado',
-    desc: 'Gracias a nuestro sistema de valoración, identifícate en tu nivel y sigue tu evolución de forma única.',
+    titulo: 'Seguimiento y análisis de tu progreso',
+    desc: 'Cada partido cuenta. Nuestra plataforma sigue tus avances y retrocesos en cada torneo, brindándote una visión completa de tu evolución como jugador.',
   },
   {
-    icon: '🌍',
-    titulo: 'Visibilidad Internacional',
-    desc: 'Tu participación no se limita al ámbito local. Cada victoria contribuye a tu reconocimiento global.',
-  },
-  {
-    icon: '🎯',
-    titulo: 'Eventos a tu Medida',
-    desc: 'Encuentra competiciones que se adapten a tu estilo y nivel. Desafía tus límites.',
+    icon: '🔍',
+    titulo: 'Encuentra jugadores cerca de ti',
+    desc: 'Busca partidos con jugadores de tu vecindario, ciudad o incluso en tu lugar de vacaciones. Score Padel conecta a jugadores en cualquier parte del mundo.',
   },
   {
     icon: '🤝',
-    titulo: 'Comunidad Apasionada',
-    desc: 'Conecta con jugadores que comparten tu pasión y genera conexiones dentro y fuera de la pista.',
+    titulo: 'Expande tus conexiones',
+    desc: 'Amplía tu red social con otros jugadores de pádel y genera posibilidades de negocios asociados al deporte u otros intereses.',
   },
   {
-    icon: '📈',
-    titulo: 'Seguimiento Detallado',
-    desc: 'Visualiza marcadores, victorias y compara tu desempeño. Tu carrera resumida para tu mejora continua.',
+    icon: '🏆',
+    titulo: 'Torneos con puntos globales',
+    desc: 'Todos los torneos organizados con Score Padel entregan puntos para tu status mundial en todos los niveles de juego, edad y género.',
+  },
+  {
+    icon: '⚡',
+    titulo: 'Valoración, no ranking',
+    desc: 'Score Padel no entrega un ranking tradicional, sino una valoración numérica basada en tu destreza, experiencia y estado competitivo actual.',
+  },
+  {
+    icon: '🎯',
+    titulo: 'Motivación para mejorar',
+    desc: 'Encuentra jugadores con características similares y genera la motivación necesaria para entrenar y mejorar tu clasificación continuamente.',
   },
 ]
 ---
@@ -117,6 +122,14 @@ const ventajas = [
             jerarquizar a los jugadores y proporcionar una plataforma global donde cada deportista
             cuente su propia historia de éxito.
           </p>
+          <p class="text-muted leading-relaxed text-lg mb-6">
+            Cada jugador que juegue pádel en el mundo podrá tener una clasificación de acuerdo con
+            su
+            <span class="text-light font-medium"
+              >nivel de destreza, experiencia deportiva, años de práctica, estado actual de
+              competencia</span
+            > e historia competitiva en pádel y otros deportes de raqueta.
+          </p>
           <p class="text-muted leading-relaxed text-lg">
             Somos el impulso que eleva el pádel, ofreciendo orden, sentido y comunidad a la escena
             amateur y profesional apasionada por este deporte.
@@ -159,48 +172,74 @@ const ventajas = [
       <div class="max-w-3xl mx-auto">
         <p class="text-muted leading-relaxed text-lg mb-6">
           Nuestra misión trasciende el simple juego: buscamos <span class="text-light font-medium"
-            >empoderar a cada jugador</span
+            >empoderar a cada jugador a disfrutar del juego y motivarlos a mejorar</span
           >, brindándole la oportunidad de identificarse en su nivel y trazar sus propios caminos de
           progreso.
         </p>
         <p class="text-muted leading-relaxed text-lg mb-6">
           Administramos competiciones con sentido y jerarquía, estableciendo estándares globales que
           permiten a los jugadores no solo competir, sino también medir y celebrar su evolución.
+          Cualquier jugador podrá encontrar una valoración para sus habilidades.
         </p>
+        <div class="bg-secondary/10 border border-secondary/20 rounded-2xl p-6 mb-10">
+          <div class="flex items-start gap-4">
+            <span class="text-3xl">💡</span>
+            <div>
+              <h4 class="text-light font-bold mb-2">Valoración, no ranking</h4>
+              <p class="text-muted text-sm leading-relaxed">
+                Score Padel no entrega un ranking tradicional, sino una <span
+                  class="text-secondary font-semibold">valoración numérica</span
+                > única que refleja tu nivel real. Esta valoración está basada en tu destreza, experiencia
+                deportiva, años de práctica, estado actual de competencia e historia competitiva.
+              </p>
+            </div>
+          </div>
+        </div>
         <div class="bg-dark/50 rounded-2xl p-8 border border-white/5 mt-10">
-          <h3 class="text-xl font-bold text-light mb-4">Cómo funciona Score Padel</h3>
-          <ul class="space-y-4">
-            <li class="flex items-start gap-3">
-              <span
-                class="w-6 h-6 rounded-full bg-secondary/20 text-secondary flex items-center justify-center text-xs font-bold mt-0.5"
-                >1</span
+          <h3 class="text-xl font-bold text-light mb-6">Cómo funciona el cálculo de valoración</h3>
+          <p class="text-muted text-sm mb-6">
+            El algoritmo de jerarquía se basa en el resultado de cada equipo en cada partido según
+            los juegos ganados. Tres factores principales determinan tu clasificación:
+          </p>
+          <div class="grid md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-primary/40 rounded-xl p-5 border border-white/5">
+              <div
+                class="w-8 h-8 rounded-full bg-secondary/20 text-secondary flex items-center justify-center text-sm font-bold mb-3"
               >
-              <span class="text-muted text-sm"
-                >El algoritmo se basa en el resultado de cada equipo en cada partido según los
-                juegos ganados.</span
+                1
+              </div>
+              <h4 class="text-light font-semibold text-sm mb-2">Diferencia de valoraciones</h4>
+              <p class="text-muted text-xs leading-relaxed">
+                La diferencia entre las clasificaciones de los jugadores que se enfrentan entre sí.
+              </p>
+            </div>
+            <div class="bg-primary/40 rounded-xl p-5 border border-white/5">
+              <div
+                class="w-8 h-8 rounded-full bg-secondary/20 text-secondary flex items-center justify-center text-sm font-bold mb-3"
               >
-            </li>
-            <li class="flex items-start gap-3">
-              <span
-                class="w-6 h-6 rounded-full bg-secondary/20 text-secondary flex items-center justify-center text-xs font-bold mt-0.5"
-                >2</span
+                2
+              </div>
+              <h4 class="text-light font-semibold text-sm mb-2">Rendimiento vs. expectativa</h4>
+              <p class="text-muted text-xs leading-relaxed">
+                El porcentaje de juegos ganados comparado con el resultado esperado según tu nivel.
+              </p>
+            </div>
+            <div class="bg-primary/40 rounded-xl p-5 border border-white/5">
+              <div
+                class="w-8 h-8 rounded-full bg-secondary/20 text-secondary flex items-center justify-center text-sm font-bold mb-3"
               >
-              <span class="text-muted text-sm"
-                >Se considera la diferencia de valoraciones entre jugadores, el porcentaje de juegos
-                ganados y resultados recientes.</span
-              >
-            </li>
-            <li class="flex items-start gap-3">
-              <span
-                class="w-6 h-6 rounded-full bg-secondary/20 text-secondary flex items-center justify-center text-xs font-bold mt-0.5"
-                >3</span
-              >
-              <span class="text-muted text-sm"
-                >Se contabilizan todos los formatos de juego, la competitividad y la fiabilidad del
-                ranking rival.</span
-              >
-            </li>
-          </ul>
+                3
+              </div>
+              <h4 class="text-light font-semibold text-sm mb-2">Resultados recientes</h4>
+              <p class="text-muted text-xs leading-relaxed">
+                Tus resultados de partidos recientes comparados con tu mejor rendimiento reciente.
+              </p>
+            </div>
+          </div>
+          <p class="text-muted text-xs italic">
+            Score Padel contabiliza todos los formatos de juego, la competitividad y la fiabilidad
+            de la clasificación de los rivales.
+          </p>
         </div>
       </div>
     </div>
@@ -240,15 +279,18 @@ const ventajas = [
       <div class="flex justify-center gap-8 mt-12">
         <div class="flex items-center gap-2">
           <span class="w-3 h-3 rounded bg-gray-500"></span><span class="text-xs text-muted"
-            >División C</span>
+            >División C</span
+          >
         </div>
         <div class="flex items-center gap-2">
           <span class="w-3 h-3 rounded bg-blue-500"></span><span class="text-xs text-muted"
-            >División B</span>
+            >División B</span
+          >
         </div>
         <div class="flex items-center gap-2">
           <span class="w-3 h-3 rounded bg-accent"></span><span class="text-xs text-muted"
-            >División A</span>
+            >División A</span
+          >
         </div>
       </div>
     </div>
