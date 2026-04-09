@@ -5,6 +5,7 @@ export interface User {
   id: string
   email: string
   name: string
+  role: string
   created_at: string
 }
 
@@ -57,7 +58,7 @@ export async function getSession(db: D1Database, token: string): Promise<User | 
   const row = await db
     .prepare(
       `
-    SELECT u.id, u.email, u.name, u.created_at FROM sessions s
+    SELECT u.id, u.email, u.name, u.role, u.created_at FROM sessions s
     JOIN users u ON s.user_id = u.id
     WHERE s.id = ? AND s.expires_at > datetime('now')
   `,

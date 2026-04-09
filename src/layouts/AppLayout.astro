@@ -3,10 +3,11 @@ import '../styles/global.css'
 
 interface Props {
   title: string
-  user?: { id: string; name: string; email: string } | null
+  user?: { id: string; name: string; email: string; role?: string } | null
 }
 
 const { title, user = null } = Astro.props
+const isGuest = user?.role === 'guest'
 ---
 
 <!doctype html>
@@ -47,12 +48,14 @@ const { title, user = null } = Astro.props
               >
                 Torneos
               </a>
-              <a
-                href="/app/partidos"
-                class="px-3 py-1.5 text-xs text-muted hover:text-text rounded-lg hover:bg-white/5 transition-all"
-              >
-                Partidos
-              </a>
+              {!isGuest && (
+                <a
+                  href="/app/partidos"
+                  class="px-3 py-1.5 text-xs text-muted hover:text-text rounded-lg hover:bg-white/5 transition-all"
+                >
+                  Partidos
+                </a>
+              )}
               <a
                 href="/app/jugadores"
                 class="px-3 py-1.5 text-xs text-muted hover:text-text rounded-lg hover:bg-white/5 transition-all"
@@ -65,12 +68,14 @@ const { title, user = null } = Astro.props
               >
                 Clasificación
               </a>
-              <a
-                href="/app/perfil"
-                class="px-3 py-1.5 text-xs text-muted hover:text-text rounded-lg hover:bg-white/5 transition-all"
-              >
-                Perfil
-              </a>
+              {!isGuest && (
+                <a
+                  href="/app/perfil"
+                  class="px-3 py-1.5 text-xs text-muted hover:text-text rounded-lg hover:bg-white/5 transition-all"
+                >
+                  Perfil
+                </a>
+              )}
               <form method="POST" action="/api/auth/logout" class="ml-2">
                 <button class="px-3 py-1.5 text-xs text-muted hover:text-red-400 rounded-lg hover:bg-white/5 transition-all">
                   Salir

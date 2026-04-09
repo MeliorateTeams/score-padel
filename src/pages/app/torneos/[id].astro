@@ -19,8 +19,8 @@ const tournament = await db
 
 if (!tournament) return Astro.redirect('/app/torneos')
 
-// Handle join
-if (Astro.request.method === 'POST') {
+// Handle join (guests can't join)
+if (Astro.request.method === 'POST' && user.role !== 'guest') {
   const form = await Astro.request.formData()
   const action = form.get('action')?.toString()
   if (action === 'join') {
