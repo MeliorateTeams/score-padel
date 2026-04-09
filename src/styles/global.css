@@ -1,21 +1,77 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #1B1F3B;
-  --color-secondary: #00C9A7;
-  --color-accent: #FFD700;
-  --color-dark: #0D0F1C;
-  --color-light: #F8F9FA;
+  --color-bg: #04060C;
+  --color-surface: #0A0E1A;
+  --color-surface-2: #111827;
+  --color-emerald: #10B981;
+  --color-emerald-glow: #059669;
+  --color-indigo: #818CF8;
+  --color-amber: #FBBF24;
+  --color-text: #E5E7EB;
   --color-muted: #6B7280;
+
+  /* Backward compat for legal pages */
+  --color-primary: #0A0E1A;
+  --color-secondary: #10B981;
+  --color-accent: #FBBF24;
+  --color-dark: #04060C;
+  --color-light: #E5E7EB;
+
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
 }
 
 @layer base {
   html {
     scroll-behavior: smooth;
-    font-family: var(--font-sans);
   }
   body {
-    @apply bg-dark text-light antialiased;
+    @apply bg-bg text-text antialiased;
+    font-family: var(--font-sans);
   }
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-emerald), var(--color-indigo));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.grid-bg {
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.gradient-border {
+  position: relative;
+}
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(129, 140, 248, 0.15));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+.float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.reveal {
+  animation: reveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
 }

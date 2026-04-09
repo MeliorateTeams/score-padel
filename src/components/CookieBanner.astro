@@ -2,35 +2,29 @@
 
 ---
 
-<div id="cookie-banner" class="fixed bottom-0 left-0 right-0 z-50 hidden">
-  <div class="bg-primary/95 backdrop-blur-lg border-t border-white/10 shadow-2xl">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div class="flex-1">
-          <p class="text-sm text-light font-medium mb-1">🍪 Uso de cookies</p>
-          <p class="text-xs text-muted leading-relaxed">
-            Utilizamos cookies estrictamente necesarias para el funcionamiento del sitio. No
-            utilizamos cookies de seguimiento ni de terceros. Consulta nuestra <a
-              href="/politica-cookies"
-              class="text-secondary hover:underline">Política de Cookies</a
-            >.
-          </p>
-        </div>
-        <div class="flex gap-3">
-          <button
-            id="cookie-reject"
-            class="px-4 py-2 text-xs font-medium text-muted border border-white/10 rounded-full hover:border-secondary hover:text-secondary transition-all"
-          >
-            Rechazar
-          </button>
-          <button
-            id="cookie-accept"
-            class="px-4 py-2 text-xs font-semibold bg-secondary text-dark rounded-full hover:bg-accent transition-all"
-          >
-            Aceptar
-          </button>
-        </div>
-      </div>
+<div
+  id="cookie-banner"
+  class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:max-w-sm z-50 hidden"
+>
+  <div class="gradient-border rounded-xl bg-surface p-5 shadow-2xl shadow-black/40">
+    <p class="text-sm text-text font-medium mb-1.5">Cookies</p>
+    <p class="text-xs text-muted leading-relaxed mb-4">
+      Solo usamos cookies estrictamente necesarias. Sin seguimiento ni terceros.
+      <a href="/politica-cookies" class="text-emerald hover:underline">Más info</a>.
+    </p>
+    <div class="flex gap-2">
+      <button
+        id="cookie-reject"
+        class="flex-1 px-3 py-2 text-xs font-medium text-muted border border-white/10 rounded-lg hover:border-emerald/30 hover:text-text transition-all"
+      >
+        Rechazar
+      </button>
+      <button
+        id="cookie-accept"
+        class="flex-1 px-3 py-2 text-xs font-semibold bg-emerald text-bg rounded-lg hover:bg-emerald-glow transition-colors"
+      >
+        Aceptar
+      </button>
     </div>
   </div>
 </div>

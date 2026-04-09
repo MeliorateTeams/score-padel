@@ -2,102 +2,85 @@
 
 ---
 
-<nav
-  id="navbar"
-  class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-dark/80 backdrop-blur-lg border-b border-white/5"
->
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex items-center justify-between h-16 md:h-20">
-      <!-- Logo -->
-      <a href="/" class="flex items-center gap-3 group">
-        <div
-          class="w-10 h-10 rounded-xl bg-gradient-to-br from-secondary to-accent flex items-center justify-center font-black text-dark text-lg"
-        >
-          SP
-        </div>
-        <span
-          class="text-xl font-bold tracking-tight text-light group-hover:text-secondary transition-colors"
-        >
-          Score<span class="text-secondary">Padel</span>
-        </span>
+<nav class="fixed top-0 left-0 right-0 z-50 bg-bg/70 backdrop-blur-xl border-b border-white/5">
+  <div class="max-w-7xl mx-auto px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      <a href="/" class="font-display font-bold text-lg tracking-tight">
+        Score<span class="text-emerald">Padel</span>
       </a>
 
-      <!-- Desktop Navigation -->
-      <div class="hidden md:flex items-center gap-8">
+      <!-- Desktop -->
+      <div class="hidden md:flex items-center gap-1">
         <a
           href="#quienes-somos"
-          class="text-sm font-medium text-muted hover:text-secondary transition-colors"
+          class="px-3.5 py-2 text-sm text-muted hover:text-text rounded-lg hover:bg-white/5 transition-all"
           >Quiénes somos</a
         >
         <a
-          href="#mision"
-          class="text-sm font-medium text-muted hover:text-secondary transition-colors">Misión</a
+          href="#como-funciona"
+          class="px-3.5 py-2 text-sm text-muted hover:text-text rounded-lg hover:bg-white/5 transition-all"
+          >Cómo funciona</a
         >
         <a
           href="#niveles"
-          class="text-sm font-medium text-muted hover:text-secondary transition-colors">Niveles</a
+          class="px-3.5 py-2 text-sm text-muted hover:text-text rounded-lg hover:bg-white/5 transition-all"
+          >Niveles</a
         >
         <a
-          href="#por-que-unirse"
-          class="text-sm font-medium text-muted hover:text-secondary transition-colors">Únete</a
+          href="#ventajas"
+          class="px-3.5 py-2 text-sm text-muted hover:text-text rounded-lg hover:bg-white/5 transition-all"
+          >Ventajas</a
         >
         <a
           href="#contacto"
-          class="inline-flex items-center px-5 py-2.5 text-sm font-semibold rounded-full bg-secondary text-dark hover:bg-accent transition-all duration-300 hover:shadow-lg hover:shadow-secondary/25"
+          class="ml-3 px-5 py-2 text-sm font-medium bg-emerald text-bg rounded-lg hover:bg-emerald-glow transition-colors"
+          >Contacto</a
         >
-          Contacto
-        </a>
       </div>
 
-      <!-- Mobile menu button -->
+      <!-- Mobile button -->
       <button
         id="mobile-menu-btn"
-        class="md:hidden p-2 text-muted hover:text-light transition-colors"
+        class="md:hidden p-2 text-muted hover:text-text transition-colors"
         aria-label="Abrir menú"
       >
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
-            stroke-width="2"
+            stroke-width="1.5"
             d="M4 6h16M4 12h16M4 18h16"></path>
         </svg>
       </button>
     </div>
   </div>
 
-  <!-- Mobile Navigation -->
-  <div
-    id="mobile-menu"
-    class="hidden md:hidden bg-dark/95 backdrop-blur-lg border-t border-white/5"
-  >
-    <div class="px-4 py-4 space-y-3">
+  <!-- Mobile menu -->
+  <div id="mobile-menu" class="hidden md:hidden border-t border-white/5 bg-bg/95 backdrop-blur-xl">
+    <div class="px-6 py-4 space-y-1">
       <a
         href="#quienes-somos"
-        class="block text-sm font-medium text-muted hover:text-secondary transition-colors py-2"
+        class="block py-2.5 text-sm text-muted hover:text-emerald transition-colors"
         >Quiénes somos</a
       >
       <a
-        href="#mision"
-        class="block text-sm font-medium text-muted hover:text-secondary transition-colors py-2"
-        >Misión</a
+        href="#como-funciona"
+        class="block py-2.5 text-sm text-muted hover:text-emerald transition-colors"
+        >Cómo funciona</a
       >
       <a
         href="#niveles"
-        class="block text-sm font-medium text-muted hover:text-secondary transition-colors py-2"
-        >Niveles</a
+        class="block py-2.5 text-sm text-muted hover:text-emerald transition-colors">Niveles</a
       >
       <a
-        href="#por-que-unirse"
-        class="block text-sm font-medium text-muted hover:text-secondary transition-colors py-2"
-        >Únete</a
+        href="#ventajas"
+        class="block py-2.5 text-sm text-muted hover:text-emerald transition-colors">Ventajas</a
       >
       <a
         href="#contacto"
-        class="block text-center px-5 py-2.5 text-sm font-semibold rounded-full bg-secondary text-dark hover:bg-accent transition-all duration-300"
+        class="block mt-2 text-center py-2.5 text-sm font-medium bg-emerald text-bg rounded-lg hover:bg-emerald-glow transition-colors"
+        >Contacto</a
       >
-        Contacto
-      </a>
     </div>
   </div>
 </nav>
@@ -108,7 +91,6 @@
   btn?.addEventListener('click', () => {
     menu?.classList.toggle('hidden')
   })
-  // Close mobile menu on link click
   menu?.querySelectorAll('a').forEach((link) => {
     link.addEventListener('click', () => {
       menu?.classList.add('hidden')
