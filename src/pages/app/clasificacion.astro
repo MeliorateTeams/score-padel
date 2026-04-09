@@ -19,19 +19,20 @@ const leaderboard = await db
   .all()
 
 function getLevel(rating: number) {
-  if (rating < 1.5) return { name: 'Iniciación', division: 'Formativa', color: 'text-blue-400' }
-  if (rating < 2.0) return { name: 'Iniciación +', division: 'Formativa', color: 'text-blue-400' }
-  if (rating < 2.5) return { name: 'Intermedio', division: 'Formativa', color: 'text-blue-400' }
+  if (rating < 2.0) return { name: 'Iniciación Pádel', division: 'C', color: 'text-blue-400' }
+  if (rating < 2.5) return { name: 'Consistencia Inicial', division: 'C', color: 'text-blue-400' }
   if (rating < 3.0)
-    return { name: 'Intermedio Avanzado', division: 'Competitiva', color: 'text-teal' }
-  if (rating < 3.5) return { name: 'Avanzado', division: 'Competitiva', color: 'text-teal' }
-  if (rating < 4.0) return { name: 'Avanzado +', division: 'Competitiva', color: 'text-teal' }
-  if (rating < 4.5) return { name: 'Competición', division: 'Competitiva', color: 'text-teal' }
-  if (rating < 5.0) return { name: 'Pre-Profesional', division: 'Élite', color: 'text-amber' }
-  if (rating < 5.5) return { name: 'Profesional', division: 'Élite', color: 'text-amber' }
-  if (rating < 6.0) return { name: 'Profesional +', division: 'Élite', color: 'text-amber' }
-  if (rating < 6.5) return { name: 'Élite', division: 'Élite', color: 'text-amber' }
-  return { name: 'World Class', division: 'Élite', color: 'text-amber' }
+    return { name: 'Precisión en Desarrollo', division: 'C', color: 'text-blue-400' }
+  if (rating < 3.5) return { name: 'Confianza Intermedia', division: 'C', color: 'text-blue-400' }
+  if (rating < 4.0) return { name: 'Control y Ritmo', division: 'B', color: 'text-teal' }
+  if (rating < 4.5) return { name: 'Estrategas del Pádel', division: 'B', color: 'text-teal' }
+  if (rating < 5.0) return { name: 'Jugadores Ingeniosos', division: 'B', color: 'text-teal' }
+  if (rating < 5.5) return { name: 'Competidores de Torneo', division: 'B', color: 'text-teal' }
+  if (rating < 6.0) return { name: 'Estrellas Nacionales', division: 'B', color: 'text-teal' }
+  if (rating < 6.5)
+    return { name: 'Semiprofesionales en Ascenso', division: 'A', color: 'text-amber' }
+  if (rating < 7.0) return { name: 'Profesionales de Élite', division: 'A', color: 'text-amber' }
+  return { name: 'Élite Mundial del Pádel', division: 'A', color: 'text-amber' }
 }
 ---
 
