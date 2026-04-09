@@ -8,6 +8,7 @@ interface Props {
 
 const { title, user = null } = Astro.props
 const isGuest = user?.role === 'guest'
+const isAdmin = user?.role === 'admin'
 ---
 
 <!doctype html>
@@ -143,6 +144,14 @@ const isGuest = user?.role === 'guest'
                   Perfil
                 </a>
               )}
+              {isAdmin && (
+                <a
+                  href="/app/algoritmo"
+                  class="px-3 py-1.5 text-xs font-medium text-muted hover:text-coral rounded-full hover:bg-coral/5 transition-all"
+                >
+                  Algoritmo
+                </a>
+              )}
               <form method="POST" action="/api/auth/logout" class="ml-2">
                 <button class="px-3 py-1.5 text-xs font-medium text-muted hover:text-red-500 rounded-full hover:bg-red-50 transition-all">
                   Salir
@@ -207,6 +216,14 @@ const isGuest = user?.role === 'guest'
                   class="block px-3 py-2 text-sm font-medium text-muted hover:text-coral rounded-lg hover:bg-coral/5 transition-all"
                 >
                   Perfil
+                </a>
+              )}
+              {isAdmin && (
+                <a
+                  href="/app/algoritmo"
+                  class="block px-3 py-2 text-sm font-medium text-muted hover:text-coral rounded-lg hover:bg-coral/5 transition-all"
+                >
+                  Algoritmo
                 </a>
               )}
               <form method="POST" action="/api/auth/logout">
