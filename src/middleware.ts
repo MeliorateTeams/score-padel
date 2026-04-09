@@ -1,9 +1,9 @@
 import { defineMiddleware } from 'astro:middleware'
+import { env } from 'cloudflare:workers'
 import { getSession } from './lib/db'
 
 export const onRequest = defineMiddleware(async (context, next) => {
-  const runtime = (context.locals as any).runtime
-  const db = runtime?.env?.DB
+  const db = (env as any).DB
 
   if (db) {
     const cookie = context.cookies.get('session')
