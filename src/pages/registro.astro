@@ -7,6 +7,7 @@ const error = Astro.url.searchParams.get('error')
 const errorMsg: Record<string, string> = {
   campos: 'Todos los campos son obligatorios.',
   password: 'La contraseña debe tener al menos 8 caracteres.',
+  email: 'Solo se permiten cuentas de Gmail, Outlook, Hotmail, Yahoo o iCloud.',
   existe: 'Ya existe una cuenta con ese email.',
   privacidad: 'Debes aceptar la política de privacidad.',
   server: 'Error del servidor. Inténtalo de nuevo.',
@@ -62,6 +63,7 @@ const errorMsg: Record<string, string> = {
             autocomplete="email"
             class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral focus:ring-2 focus:ring-coral/10 transition-all"
           />
+          <p class="text-xs text-muted/50 mt-1">Gmail, Outlook, Hotmail, Yahoo o iCloud</p>
         </div>
         <div>
           <label for="password" class="text-xs font-semibold text-navy block mb-1.5"

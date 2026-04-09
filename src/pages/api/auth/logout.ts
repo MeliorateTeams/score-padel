@@ -10,6 +10,6 @@ export const POST: APIRoute = async ({ cookies, locals }) => {
   cookies.delete('session', { path: '/' })
   return new Response(null, {
     status: 303,
-    headers: { Location: '/login' },
+    headers: { Location: '/' },
   })
 }

@@ -17,6 +17,26 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
       headers: { Location: new URL('/registro?error=campos', request.url).toString() },
     })
   }
+
+  const allowedDomains = [
+    'gmail.com',
+    'outlook.com',
+    'outlook.es',
+    'hotmail.com',
+    'hotmail.es',
+    'yahoo.com',
+    'yahoo.es',
+    'icloud.com',
+    'live.com',
+  ]
+  const emailDomain = email.split('@')[1]
+  if (!emailDomain || !allowedDomains.includes(emailDomain)) {
+    return new Response(null, {
+      status: 303,
+      headers: { Location: new URL('/registro?error=email', request.url).toString() },
+    })
+  }
+
   if (!privacy) {
     return new Response(null, {
       status: 303,
