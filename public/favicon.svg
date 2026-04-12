@@ -1,36 +1,57 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <!-- Shield shape -->
-  <path d="M6 12C6 8.686 8.686 6 12 6h40c3.314 0 6 2.686 6 6v24c0 10-12 18-26 22C18 48 6 40 6 30V12z" fill="#E5553B"/>
-  <path d="M8 13c0-2.761 2.239-5 5-5h38c2.761 0 5 2.239 5 5v21c0 8.5-11 16-24 20C19 50 8 42 8 33.5V13z" fill="#D14430"/>
-  <!-- Court background -->
-  <rect x="14" y="32" width="36" height="16" rx="2" fill="#C03D2B" opacity="0.5"/>
-  <line x1="32" y1="32" x2="32" y2="48" stroke="white" stroke-width="0.8" opacity="0.3"/>
-  <line x1="14" y1="40" x2="50" y2="40" stroke="white" stroke-width="0.8" opacity="0.3"/>
-  <!-- Net -->
-  <line x1="14" y1="36" x2="50" y2="36" stroke="white" stroke-width="1.2" opacity="0.4"/>
-  <!-- Padel racket - head (tilted) -->
-  <g transform="translate(32,26) rotate(-30)">
-    <rect x="-9" y="-14" width="18" height="22" rx="9" stroke="white" stroke-width="3" fill="none"/>
-    <!-- Holes pattern -->
-    <circle cx="-4" cy="-7" r="1.3" fill="white" opacity="0.7"/>
-    <circle cx="0" cy="-7" r="1.3" fill="white" opacity="0.7"/>
-    <circle cx="4" cy="-7" r="1.3" fill="white" opacity="0.7"/>
-    <circle cx="-4" cy="-3" r="1.3" fill="white" opacity="0.7"/>
-    <circle cx="0" cy="-3" r="1.3" fill="white" opacity="0.7"/>
-    <circle cx="4" cy="-3" r="1.3" fill="white" opacity="0.7"/>
-    <circle cx="-4" cy="1" r="1.3" fill="white" opacity="0.7"/>
-    <circle cx="0" cy="1" r="1.3" fill="white" opacity="0.7"/>
-    <circle cx="4" cy="1" r="1.3" fill="white" opacity="0.7"/>
-    <circle cx="-2" cy="5" r="1.3" fill="white" opacity="0.7"/>
-    <circle cx="2" cy="5" r="1.3" fill="white" opacity="0.7"/>
+  <!-- Shield outer border (bevel effect) -->
+  <path d="M4 10C4 6.686 6.686 4 10 4h44c3.314 0 6 2.686 6 6v26c0 11-14 20-28 24C18 56 4 47 4 36V10z" fill="#F06A4D"/>
+  <!-- Shield inner -->
+  <path d="M6 11c0-2.761 2.239-5 5-5h42c2.761 0 5 2.239 5 5v25c0 10-13 18-26 22C19 54 6 45 6 35V11z" fill="#E5553B"/>
+  <!-- Shield darker inner for depth -->
+  <path d="M8 12c0-2.209 1.791-4 4-4h40c2.209 0 4 1.791 4 4v23c0 9-12 17-24 20C20 52 8 43 8 34V12z" fill="#D44030"/>
+
+  <!-- Court/net behind racket -->
+  <!-- Vertical net lines -->
+  <line x1="16" y1="28" x2="16" y2="50" stroke="white" stroke-width="0.7" opacity="0.15"/>
+  <line x1="22" y1="28" x2="22" y2="52" stroke="white" stroke-width="0.7" opacity="0.15"/>
+  <line x1="28" y1="26" x2="28" y2="52" stroke="white" stroke-width="0.7" opacity="0.15"/>
+  <!-- Horizontal net lines -->
+  <line x1="10" y1="34" x2="34" y2="34" stroke="white" stroke-width="0.7" opacity="0.15"/>
+  <line x1="10" y1="40" x2="30" y2="40" stroke="white" stroke-width="0.7" opacity="0.15"/>
+  <line x1="10" y1="46" x2="26" y2="46" stroke="white" stroke-width="0.7" opacity="0.15"/>
+  <!-- Net top line (thicker) -->
+  <line x1="10" y1="28" x2="34" y2="28" stroke="white" stroke-width="1" opacity="0.25"/>
+
+  <!-- Padel racket (tilted ~45 degrees like the reference) -->
+  <g transform="translate(34,30) rotate(-40)">
+    <!-- Racket head outline -->
+    <ellipse cx="0" cy="-8" rx="11" ry="14" stroke="white" stroke-width="2.8" fill="#C03828" opacity="1"/>
+    <!-- Holes pattern (like reference - dots grid) -->
+    <circle cx="-5" cy="-14" r="1.2" fill="white" opacity="0.8"/>
+    <circle cx="0" cy="-14" r="1.2" fill="white" opacity="0.8"/>
+    <circle cx="5" cy="-14" r="1.2" fill="white" opacity="0.8"/>
+    <circle cx="-7" cy="-10" r="1.2" fill="white" opacity="0.8"/>
+    <circle cx="-2.5" cy="-10" r="1.2" fill="white" opacity="0.8"/>
+    <circle cx="2.5" cy="-10" r="1.2" fill="white" opacity="0.8"/>
+    <circle cx="7" cy="-10" r="1.2" fill="white" opacity="0.8"/>
+    <circle cx="-7" cy="-6" r="1.2" fill="white" opacity="0.8"/>
+    <circle cx="-2.5" cy="-6" r="1.2" fill="white" opacity="0.8"/>
+    <circle cx="2.5" cy="-6" r="1.2" fill="white" opacity="0.8"/>
+    <circle cx="7" cy="-6" r="1.2" fill="white" opacity="0.8"/>
+    <circle cx="-5" cy="-2" r="1.2" fill="white" opacity="0.8"/>
+    <circle cx="0" cy="-2" r="1.2" fill="white" opacity="0.8"/>
+    <circle cx="5" cy="-2" r="1.2" fill="white" opacity="0.8"/>
+    <circle cx="-3" cy="2" r="1.2" fill="white" opacity="0.7"/>
+    <circle cx="3" cy="2" r="1.2" fill="white" opacity="0.7"/>
     <!-- Handle -->
-    <rect x="-2.5" y="8" width="5" height="10" rx="2.5" fill="white"/>
-    <line x1="-1.5" y1="12" x2="1.5" y2="12" stroke="#E5553B" stroke-width="0.8"/>
-    <line x1="-1.5" y1="14" x2="1.5" y2="14" stroke="#E5553B" stroke-width="0.8"/>
+    <rect x="-3" y="6" width="6" height="14" rx="3" fill="white"/>
+    <!-- Handle grip lines -->
+    <line x1="-1.5" y1="11" x2="1.5" y2="13" stroke="#D44030" stroke-width="0.8"/>
+    <line x1="-1.5" y1="14" x2="1.5" y2="16" stroke="#D44030" stroke-width="0.8"/>
   </g>
-  <!-- Ball -->
-  <circle cx="46" cy="14" r="6" fill="#0D9488"/>
-  <path d="M43.5 11.5c2 1.2 2.5 4 1.2 5.8" stroke="white" stroke-width="1.2" opacity="0.7" fill="none" stroke-linecap="round"/>
-  <!-- Shield highlight -->
-  <path d="M10 13c0-1.657 1.343-3 3-3h10c-4 8-6 16-6 24-3-2-5.5-4.5-7-7V13z" fill="white" opacity="0.08"/>
+
+  <!-- Ball (yellow-green like reference, on the racket) -->
+  <circle cx="44" cy="12" r="6.5" fill="#C8E530"/>
+  <circle cx="44" cy="12" r="6.5" fill="none" stroke="#A0B820" stroke-width="0.8"/>
+  <!-- Ball seam curve -->
+  <path d="M40.5 9c2.5 1.5 3 4.5 1 6.5" stroke="white" stroke-width="1.3" opacity="0.7" fill="none" stroke-linecap="round"/>
+
+  <!-- Shield highlight (glossy effect like reference) -->
+  <path d="M8 12c0-2.2 1.8-4 4-4h12c-3 10-5 20-5 28-5-3-8-7-10-11L8 12z" fill="white" opacity="0.07"/>
 </svg>
