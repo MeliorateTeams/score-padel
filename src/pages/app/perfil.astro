@@ -43,7 +43,8 @@ const profile = await getProfile(db, user.id)
 
 // Stats queries
 const recentMatches = await db
-  .prepare(`
+  .prepare(
+    `
     SELECT m.team1_games, m.team2_games, m.team1_player1, m.set_scores, m.created_at,
            u1.name as team1_name, u2.name as team2_name
     FROM matches m
@@ -51,17 +52,20 @@ const recentMatches = await db
     LEFT JOIN users u2 ON m.team2_player1 = u2.id
     WHERE m.team1_player1 = ? OR m.team1_player2 = ? OR m.team2_player1 = ? OR m.team2_player2 = ?
     ORDER BY m.created_at DESC LIMIT 10
-  `)
+  `,
+  )
   .bind(user.id, user.id, user.id, user.id)
   .all()
 
 const ratingHistory = await db
-  .prepare(`
+  .prepare(
+    `
     SELECT old_rating, new_rating, created_at
     FROM rating_history
     WHERE user_id = ?
     ORDER BY created_at DESC LIMIT 15
-  `)
+  `,
+  )
   .bind(user.id)
   .all()
 
@@ -75,16 +79,25 @@ const matchResults = (recentMatches.results || []).map((m: any) => {
 let currentStreak = 0
 let streakType = ''
 for (const m of matchResults) {
-  if (currentStreak === 0) { streakType = m.won ? 'W' : 'L'; currentStreak = 1 }
-  else if ((m.won && streakType === 'W') || (!m.won && streakType === 'L')) currentStreak++
+  if (currentStreak === 0) {
+    streakType = m.won ? 'W' : 'L'
+    currentStreak = 1
+  } else if ((m.won && streakType === 'W') || (!m.won && streakType === 'L')) currentStreak++
   else break
 }
 
-const totalGamesWon = matchResults.reduce((s: number, m: any) => s + (m.isTeam1 ? m.team1_games : m.team2_games), 0)
-const totalGamesLost = matchResults.reduce((s: number, m: any) => s + (m.isTeam1 ? m.team2_games : m.team1_games), 0)
+const totalGamesWon = matchResults.reduce(
+  (s: number, m: any) => s + (m.isTeam1 ? m.team1_games : m.team2_games),
+  0,
+)
+const totalGamesLost = matchResults.reduce(
+  (s: number, m: any) => s + (m.isTeam1 ? m.team2_games : m.team1_games),
+  0,
+)
 
 const ratingChange = ratingHistory.results?.length
-  ? Number(ratingHistory.results[0].new_rating) - Number(ratingHistory.results[ratingHistory.results.length - 1].old_rating)
+  ? Number(ratingHistory.results[0].new_rating) -
+    Number(ratingHistory.results[ratingHistory.results.length - 1].old_rating)
   : 0
 
 const ratingLevel = (r: number) => {
@@ -220,36 +233,69 @@ const ratingLevel = (r: number) => {
     <!-- Stats section -->
     <div class="grid sm:grid-cols-2 gap-4">
       <div class="card p-5">
-        <h2 class="font-display text-sm font-bold text-navy uppercase tracking-wider flex items-center gap-2 mb-4">
-          <svg class="w-4 h-4 text-coral" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"></path></svg>
+        <h2
+          class="font-display text-sm font-bold text-navy uppercase tracking-wider flex items-center gap-2 mb-4"
+        >
+          <svg
+            class="w-4 h-4 text-coral"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+            ><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"
+            ></path></svg
+          >
           Estadísticas
         </h2>
         <div class="space-y-3">
           <div class="flex items-center justify-between">
             <span class="text-xs text-muted">Racha actual</span>
-            <span class:list={[
-              'text-sm font-display font-bold',
-              streakType === 'W' ? 'text-teal' : currentStreak > 0 ? 'text-red-500' : 'text-muted'
-            ]}>
-              {currentStreak > 0 ? `${currentStreak} ${streakType === 'W' ? 'victorias' : 'derrotas'}` : '—'}
+            <span
+              class:list={[
+                'text-sm font-display font-bold',
+                streakType === 'W'
+                  ? 'text-teal'
+                  : currentStreak > 0
+                    ? 'text-red-500'
+                    : 'text-muted',
+              ]}
+            >
+              {
+                currentStreak > 0
+                  ? `${currentStreak} ${streakType === 'W' ? 'victorias' : 'derrotas'}`
+                  : '—'
+              }
             </span>
           </div>
           <div class="flex items-center justify-between">
             <span class="text-xs text-muted">Juegos ganados / perdidos</span>
-            <span class="text-sm font-display font-bold text-navy">{totalGamesWon} / {totalGamesLost}</span>
+            <span class="text-sm font-display font-bold text-navy"
+              >{totalGamesWon} / {totalGamesLost}</span
+            >
           </div>
           <div class="flex items-center justify-between">
             <span class="text-xs text-muted">Ratio de juegos</span>
             <span class="text-sm font-display font-bold text-navy">
-              {totalGamesLost > 0 ? (totalGamesWon / totalGamesLost).toFixed(2) : totalGamesWon > 0 ? '∞' : '—'}
+              {
+                totalGamesLost > 0
+                  ? (totalGamesWon / totalGamesLost).toFixed(2)
+                  : totalGamesWon > 0
+                    ? '∞'
+                    : '—'
+              }
             </span>
           </div>
           <div class="flex items-center justify-between">
             <span class="text-xs text-muted">Evolución rating</span>
-            <span class:list={[
-              'text-sm font-display font-bold',
-              ratingChange > 0 ? 'text-teal' : ratingChange < 0 ? 'text-red-500' : 'text-muted'
-            ]}>
+            <span
+              class:list={[
+                'text-sm font-display font-bold',
+                ratingChange > 0 ? 'text-teal' : ratingChange < 0 ? 'text-red-500' : 'text-muted',
+              ]}
+            >
               {ratingChange > 0 ? '+' : ''}{ratingChange.toFixed(1)}
             </span>
           </div>
@@ -257,42 +303,63 @@ const ratingLevel = (r: number) => {
       </div>
 
       <div class="card p-5">
-        <h2 class="font-display text-sm font-bold text-navy uppercase tracking-wider flex items-center gap-2 mb-4">
-          <svg class="w-4 h-4 text-coral" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <h2
+          class="font-display text-sm font-bold text-navy uppercase tracking-wider flex items-center gap-2 mb-4"
+        >
+          <svg
+            class="w-4 h-4 text-coral"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+            ><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg
+          >
           Últimos partidos
         </h2>
-        {matchResults.length === 0 ? (
-          <p class="text-xs text-muted text-center py-4">Sin partidos registrados.</p>
-        ) : (
-          <div class="space-y-2">
-            {matchResults.slice(0, 5).map((m: any) => {
-              const setScores = m.set_scores ? JSON.parse(m.set_scores) : []
-              return (
-                <div class="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 border border-gray-100">
-                  <div class="flex items-center gap-2">
-                    <span class:list={[
-                      'text-[10px] font-semibold px-1.5 py-0.5 rounded-full uppercase',
-                      m.won ? 'bg-teal/10 text-teal' : 'bg-red-500/10 text-red-500'
-                    ]}>
-                      {m.won ? 'V' : 'D'}
-                    </span>
-                    <div>
-                      <div class="text-xs text-navy">{m.team1_name} <span class="text-muted">vs</span> {m.team2_name}</div>
-                      {setScores.length > 0 && (
-                        <div class="text-[10px] text-muted mt-0.5">
-                          {setScores.map((s: any) => `${s.team1}-${s.team2}`).join(' · ')}
+        {
+          matchResults.length === 0 ? (
+            <p class="text-xs text-muted text-center py-4">Sin partidos registrados.</p>
+          ) : (
+            <div class="space-y-2">
+              {matchResults.slice(0, 5).map((m: any) => {
+                const setScores = m.set_scores ? JSON.parse(m.set_scores) : []
+                return (
+                  <div class="flex items-center justify-between p-2.5 rounded-xl bg-gray-50 border border-gray-100">
+                    <div class="flex items-center gap-2">
+                      <span
+                        class:list={[
+                          'text-[10px] font-semibold px-1.5 py-0.5 rounded-full uppercase',
+                          m.won ? 'bg-teal/10 text-teal' : 'bg-red-500/10 text-red-500',
+                        ]}
+                      >
+                        {m.won ? 'V' : 'D'}
+                      </span>
+                      <div>
+                        <div class="text-xs text-navy">
+                          {m.team1_name} <span class="text-muted">vs</span> {m.team2_name}
                         </div>
-                      )}
+                        {setScores.length > 0 && (
+                          <div class="text-[10px] text-muted mt-0.5">
+                            {setScores.map((s: any) => `${s.team1}-${s.team2}`).join(' · ')}
+                          </div>
+                        )}
+                      </div>
                     </div>
+                    <span class="text-[11px] text-muted">
+                      {new Date(m.created_at).toLocaleDateString('es-ES', {
+                        day: 'numeric',
+                        month: 'short',
+                      })}
+                    </span>
                   </div>
-                  <span class="text-[11px] text-muted">
-                    {new Date(m.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
-        )}
+                )
+              })}
+            </div>
+          )
+        }
       </div>
     </div>
 
