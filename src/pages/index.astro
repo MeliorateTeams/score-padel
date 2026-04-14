@@ -4,6 +4,45 @@ import Navbar from '../components/Navbar.astro'
 import Footer from '../components/Footer.astro'
 import CookieBanner from '../components/CookieBanner.astro'
 
+// Live stats
+const db = (Astro.locals as any).db
+let totalPlayers = 0,
+  totalMatches = 0,
+  totalTournaments = 0
+if (db) {
+  const [p, m, t] = await Promise.all([
+    db.prepare('SELECT COUNT(*) as c FROM users WHERE role != ?').bind('guest').first(),
+    db.prepare('SELECT COUNT(*) as c FROM matches').first(),
+    db.prepare('SELECT COUNT(*) as c FROM tournaments').first(),
+  ])
+  totalPlayers = p?.c ?? 0
+  totalMatches = m?.c ?? 0
+  totalTournaments = t?.c ?? 0
+}
+
+const faqs = [
+  {
+    q: '¿Es gratis Score Padel?',
+    a: 'Sí, Score Padel es completamente gratuito. Crea tu cuenta, registra partidos y compite en torneos sin coste alguno.',
+  },
+  {
+    q: '¿Cómo se calcula mi valoración?',
+    a: 'Tu valoración (1.0–7.0) se calcula automáticamente mediante un algoritmo que analiza la diferencia de nivel entre rivales, tu rendimiento vs. expectativa, y tus resultados recientes.',
+  },
+  {
+    q: '¿Puedo organizar torneos?',
+    a: 'Sí, cualquier usuario registrado puede crear torneos, invitar jugadores y generar emparejamientos automáticos basados en nivel.',
+  },
+  {
+    q: '¿Mi valoración funciona en cualquier país?',
+    a: 'Sí, tu valoración es global. Juegues donde juegues, tu nivel te acompaña y se actualiza con cada partido registrado.',
+  },
+  {
+    q: '¿Qué necesito para empezar?',
+    a: 'Solo necesitas crear una cuenta gratuita. Desde tu dashboard podrás registrar partidos, unirte a torneos y seguir tu evolución.',
+  },
+]
+
 const puntos = [
   {
     num: '01',
@@ -70,23 +109,33 @@ const niveles = [
 const porQueUnirse = [
   {
     titulo: 'Identificación y Progreso Personalizado',
-    desc: 'Identifica tu nivel real y traza tu propio camino de progreso con una valoración que refleja quién eres como jugador. Cada partido cuenta tu historia.',
+    desc: 'Gracias a nuestro sistema de valoración, cada jugador puede identificarse en su nivel y seguir su progreso de manera única. Aquí, no solo juegas, también evolucionas.',
+    icon: 'M13 10V3L4 14h7v7l9-11h-7z',
+    color: 'coral',
   },
   {
     titulo: 'Visibilidad Internacional',
-    desc: 'Tu clasificación tiene alcance global. Juegues donde juegues, tu valoración te representa y te conecta con la comunidad mundial del pádel.',
+    desc: 'Tu participación no se limita al ámbito local; tendrás visibilidad a nivel internacional. Cada golpe, cada victoria, contribuirá a tu reconocimiento global.',
+    icon: 'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+    color: 'teal',
   },
   {
     titulo: 'Eventos a la Medida',
-    desc: 'Torneos organizados para todos los niveles, edades y géneros, con puntos que cuentan para tu status mundial. Compite en igualdad de condiciones.',
+    desc: 'Encuentra competiciones que se adapten a tu estilo y nivel. Cada evento en Score Padel es una oportunidad para desafiar tus límites y descubrir tu verdadero potencial.',
+    icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+    color: 'amber',
   },
   {
     titulo: 'Comunidad Apasionada',
-    desc: 'Conecta con jugadores que comparten tu pasión, amplía tu red y genera nuevas posibilidades. El pádel es mejor cuando se comparte.',
+    desc: 'Sé parte de una comunidad apasionada por el pádel. Conecta con jugadores que comparten tu amor por el deporte y forma parte del movimiento que transforma el pádel.',
+    icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',
+    color: 'navy',
   },
   {
     titulo: 'Seguimiento Personalizado',
-    desc: 'Análisis detallado de tu evolución, estadísticas de cada partido, comparativas con rivales y un historial completo de tu trayectoria.',
+    desc: 'Visualiza cada punto ganado, marcador conquistado y victoria celebrada. Compara tu desempeño con el de tus rivales. Toda tu carrera de pádel, resumida para tu mejora continua.',
+    icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+    color: 'teal',
   },
 ]
 ---
@@ -110,12 +159,15 @@ const porQueUnirse = [
             <h1
               class="font-display text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.05] mb-6 text-navy"
             >
-              Tu nivel real.<br />
-              <span class="text-gradient">Sin subjetividad.</span>
+              Eleva tu juego.<br />
+              <span class="text-gradient">Forja tu legado.</span>
             </h1>
-            <p class="text-lg text-muted max-w-xl leading-relaxed mb-10">
+            <p class="text-lg text-muted max-w-xl leading-relaxed mb-4">
               Score Padel organiza, estandariza y jerarquiza las competiciones de pádel a nivel
               mundial. Una valoración numérica basada en datos, no en opiniones.
+            </p>
+            <p class="text-base text-muted/80 max-w-xl leading-relaxed mb-10">
+              Únete a la comunidad global. Cada partido cuenta tu historia.
             </p>
             <div class="flex flex-wrap gap-3">
               <a
@@ -132,25 +184,92 @@ const porQueUnirse = [
               </a>
             </div>
           </div>
-          <div class="hidden lg:block">
-            <div class="grid grid-cols-2 gap-4">
-              <div class="card p-6 text-center space-y-1">
-                <div class="font-display text-4xl font-extrabold text-coral">12</div>
-                <div class="text-sm font-medium text-muted">Niveles</div>
+          <!-- Padel Court Illustration -->
+          <div class="hidden lg:flex items-center justify-center">
+            <div class="relative">
+              <!-- Glow effect behind the court -->
+              <div class="absolute inset-0 bg-teal/20 rounded-3xl blur-3xl scale-110"></div>
+              <svg
+                viewBox="0 0 320 200"
+                class="relative w-full max-w-md drop-shadow-2xl"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-label="Pista de pádel"
+                role="img"
+              >
+                <!-- Court background -->
+                <rect width="320" height="200" rx="12" fill="#0A3D3A"/>
+                <!-- Court surface -->
+                <rect x="20" y="20" width="280" height="160" rx="4" fill="#0D9488"/>
+                <!-- Court lines - outer -->
+                <rect x="20" y="20" width="280" height="160" rx="4" fill="none" stroke="white" stroke-width="2.5"/>
+                <!-- Service boxes -->
+                <line x1="160" y1="20" x2="160" y2="180" stroke="white" stroke-width="2"/>
+                <line x1="20" y1="73" x2="300" y2="73" stroke="white" stroke-width="1.5"/>
+                <line x1="20" y1="127" x2="300" y2="127" stroke="white" stroke-width="1.5"/>
+                <!-- Net -->
+                <rect x="156" y="14" width="8" height="172" rx="2" fill="#1A1F36" opacity="0.6"/>
+                <line x1="160" y1="14" x2="160" y2="186" stroke="white" stroke-width="3" stroke-dasharray="4,3"/>
+                <!-- Net posts -->
+                <circle cx="160" cy="14" r="4" fill="#E5553B"/>
+                <circle cx="160" cy="186" r="4" fill="#E5553B"/>
+                <!-- Player 1 (left side) -->
+                <circle cx="80" cy="100" r="8" fill="#E5553B"/>
+                <path d="M80 108 L80 128 M70 115 L90 115 M80 128 L73 145 M80 128 L87 145" stroke="#E5553B" stroke-width="2.5" stroke-linecap="round"/>
+                <!-- Racket player 1 -->
+                <ellipse cx="96" cy="108" rx="7" ry="5" fill="none" stroke="white" stroke-width="2" transform="rotate(-30 96 108)"/>
+                <line x1="90" y1="113" x2="96" y2="108" stroke="white" stroke-width="2"/>
+                <!-- Player 2 (right side) -->
+                <circle cx="240" cy="100" r="8" fill="#F59E0B"/>
+                <path d="M240 108 L240 128 M230 115 L250 115 M240 128 L233 145 M240 128 L247 145" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round"/>
+                <!-- Racket player 2 -->
+                <ellipse cx="224" cy="108" rx="7" ry="5" fill="none" stroke="white" stroke-width="2" transform="rotate(30 224 108)"/>
+                <line x1="230" y1="113" x2="224" y2="108" stroke="white" stroke-width="2"/>
+                <!-- Ball in motion -->
+                <circle cx="158" cy="85" r="5" fill="#E5553B"/>
+                <circle cx="158" cy="85" r="5" fill="none" stroke="white" stroke-width="1"/>
+                <!-- Ball trail -->
+                <line x1="145" y1="92" x2="154" y2="87" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+                <line x1="137" y1="97" x2="143" y2="93" stroke="white" stroke-width="1" stroke-linecap="round" opacity="0.3"/>
+                <!-- Score display -->
+                <rect x="125" y="155" width="70" height="20" rx="4" fill="#1A1F36" opacity="0.8"/>
+                <text x="160" y="169" text-anchor="middle" fill="white" font-size="10" font-family="monospace" font-weight="bold">6-4 · 7-5</text>
+              </svg>
+              <!-- Stats overlaid on corners -->
+              <div class="absolute -top-3 -left-3 bg-white rounded-2xl px-4 py-2 shadow-lg border border-gray-100">
+                <div class="font-display text-xl font-extrabold text-coral">12</div>
+                <div class="text-xs text-muted font-medium">niveles</div>
               </div>
-              <div class="card p-6 text-center space-y-1 mt-8">
-                <div class="font-display text-4xl font-extrabold text-teal">3</div>
-                <div class="text-sm font-medium text-muted">Divisiones</div>
-              </div>
-              <div class="card p-6 text-center space-y-1">
-                <div class="font-display text-4xl font-extrabold text-amber">∞</div>
-                <div class="text-sm font-medium text-muted">Torneos</div>
-              </div>
-              <div class="card p-6 text-center space-y-1 mt-8">
-                <div class="font-display text-4xl font-extrabold text-navy">1-7</div>
-                <div class="text-sm font-medium text-muted">Valoración</div>
+              <div class="absolute -bottom-3 -right-3 bg-white rounded-2xl px-4 py-2 shadow-lg border border-gray-100">
+                <div class="font-display text-xl font-extrabold text-teal">1.0–7.0</div>
+                <div class="text-xs text-muted font-medium">valoración</div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LIVE STATS BAR -->
+    <section class="py-8 bg-navy/5 border-y border-navy/10">
+      <div class="max-w-7xl mx-auto px-6 lg:px-8">
+        <div class="grid grid-cols-3 gap-8 text-center">
+          <div>
+            <div class="font-display text-3xl sm:text-4xl font-extrabold text-coral">
+              {totalPlayers}
+            </div>
+            <div class="text-xs sm:text-sm text-muted font-medium mt-1">Jugadores registrados</div>
+          </div>
+          <div>
+            <div class="font-display text-3xl sm:text-4xl font-extrabold text-teal">
+              {totalMatches}
+            </div>
+            <div class="text-xs sm:text-sm text-muted font-medium mt-1">Partidos jugados</div>
+          </div>
+          <div>
+            <div class="font-display text-3xl sm:text-4xl font-extrabold text-amber">
+              {totalTournaments}
+            </div>
+            <div class="text-xs sm:text-sm text-muted font-medium mt-1">Torneos creados</div>
           </div>
         </div>
       </div>
@@ -172,21 +291,22 @@ const porQueUnirse = [
             </h2>
             <div class="space-y-5 text-muted leading-relaxed">
               <p>
-                Score Padel nació con el propósito de <span class="text-navy font-medium"
-                  >organizar y estandarizar las competiciones</span
-                >, jerarquizar a los jugadores y proporcionar una plataforma global donde cada
+                Score Padel es <span class="text-navy font-medium"
+                  >la respuesta a la necesidad de transformar la escena del pádel</span
+                >. Nacimos con el propósito de organizar y estandarizar las competiciones,
+                jerarquizar a los jugadores y proporcionar una plataforma global donde cada
                 deportista cuente su propia historia de éxito.
               </p>
               <p>
-                Cada jugador podrá tener una clasificación de acuerdo con su <span
-                  class="text-navy font-medium"
-                  >nivel de destreza, experiencia deportiva, años de práctica, estado actual de
-                  competencia</span
-                > e historia competitiva en pádel y otros deportes de raqueta.
+                Somos el impulso que eleva el pádel, ofreciendo <span class="text-navy font-medium"
+                  >orden, sentido y comunidad</span
+                > a la escena amateur y profesional apasionada por este deporte.
               </p>
               <p>
-                Somos el impulso que eleva el pádel, ofreciendo orden, sentido y comunidad a la
-                escena amateur y profesional apasionada por este deporte.
+                Nuestra misión trasciende el simple juego: <span class="text-navy font-medium"
+                  >empoderamos a cada jugador</span
+                > brindándole la oportunidad de identificarse en su nivel y trazar sus propios
+                caminos de progreso en cada evento, con visibilidad internacional.
               </p>
             </div>
           </div>
@@ -497,11 +617,60 @@ const porQueUnirse = [
         </div>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
           {
-            porQueUnirse.map((v) => (
-              <div class="card-hover p-8">
+            porQueUnirse.map((v, i) => (
+              <div class={`card-hover p-8 ${i === 4 ? 'md:col-span-2 lg:col-span-1' : ''}`}>
+                <div
+                  class={`w-12 h-12 rounded-2xl flex items-center justify-center mb-5 bg-${v.color}/10`}
+                >
+                  <svg
+                    class={`w-6 h-6 text-${v.color}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.75"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" d={v.icon} />
+                  </svg>
+                </div>
                 <h3 class="font-display text-base font-bold text-navy mb-3">{v.titulo}</h3>
                 <p class="text-sm text-muted leading-relaxed">{v.desc}</p>
               </div>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="py-24 bg-white">
+      <div class="max-w-3xl mx-auto px-6 lg:px-8">
+        <div class="text-center mb-16">
+          <span
+            class="inline-block text-xs font-bold text-teal uppercase tracking-[0.2em] mb-4 bg-teal/10 px-3 py-1 rounded-full"
+            >Preguntas frecuentes</span
+          >
+          <h2 class="font-display text-3xl sm:text-4xl font-extrabold tracking-tight text-navy">
+            Todo lo que necesitas saber
+          </h2>
+        </div>
+        <div class="space-y-3">
+          {
+            faqs.map((faq, i) => (
+              <details class="group card overflow-hidden">
+                <summary class="flex items-center justify-between cursor-pointer px-6 py-5 text-sm font-bold text-navy hover:text-coral transition-colors list-none">
+                  {faq.q}
+                  <svg
+                    class="w-4 h-4 text-muted group-open:rotate-180 transition-transform shrink-0 ml-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                <div class="px-6 pb-5 text-sm text-muted leading-relaxed">{faq.a}</div>
+              </details>
             ))
           }
         </div>

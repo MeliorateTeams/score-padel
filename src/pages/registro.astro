@@ -7,8 +7,10 @@ const error = Astro.url.searchParams.get('error')
 const errorMsg: Record<string, string> = {
   campos: 'Todos los campos son obligatorios.',
   password: 'La contraseña debe tener al menos 8 caracteres.',
+  password_weak: 'La contraseña debe incluir mayúsculas, minúsculas y números.',
   email: 'Solo se permiten cuentas de Gmail, Outlook, Hotmail, Yahoo o iCloud.',
   existe: 'Ya existe una cuenta con ese email.',
+  edad: 'Debes confirmar que tienes 14 años o más.',
   privacidad: 'Debes aceptar la política de privacidad.',
   server: 'Error del servidor. Inténtalo de nuevo.',
 }
@@ -79,7 +81,22 @@ const errorMsg: Record<string, string> = {
             autocomplete="new-password"
             class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral focus:ring-2 focus:ring-coral/10 transition-all"
           />
-          <p class="text-xs text-muted/50 mt-1">Mínimo 8 caracteres</p>
+          <p class="text-xs text-muted/50 mt-1">
+            Mínimo 8 caracteres, con mayúsculas, minúsculas y números
+          </p>
+        </div>
+        <div class="flex items-start gap-2">
+          <input
+            type="checkbox"
+            id="age"
+            name="age"
+            required
+            class="mt-0.5 h-4 w-4 rounded border-gray-300 text-coral focus:ring-coral/20"
+          />
+          <label for="age" class="text-xs text-muted leading-relaxed">
+            Confirmo que tengo 14 años o más. (Los menores de 14 años requieren consentimiento
+            parental según LOPD Art. 7.)
+          </label>
         </div>
         <div class="flex items-start gap-2">
           <input
@@ -94,6 +111,8 @@ const errorMsg: Record<string, string> = {
               href="/politica-privacidad"
               target="_blank"
               class="text-coral hover:underline">Política de Privacidad</a
+            > y el <a href="/aviso-legal" target="_blank" class="text-coral hover:underline"
+              >Aviso Legal</a
             >.
           </label>
         </div>

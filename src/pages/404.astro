@@ -1,0 +1,38 @@
+---
+import Layout from '../layouts/Layout.astro'
+---
+
+<Layout title="Página no encontrada — Score Padel">
+  <div class="min-h-screen flex items-center justify-center px-6 bg-bg">
+    <div class="text-center max-w-md">
+      <div class="w-20 h-20 rounded-3xl bg-coral/10 flex items-center justify-center mx-auto mb-6">
+        <span class="font-display text-4xl font-black text-coral">404</span>
+      </div>
+      <h1 class="font-display text-2xl font-bold text-navy mb-2">Página no encontrada</h1>
+      <p class="text-sm text-muted mb-8">
+        La página que buscas no existe o ha sido movida. Comprueba la dirección e inténtalo de
+        nuevo.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-3 justify-center">
+        <a
+          href="/"
+          class="px-6 py-2.5 bg-coral text-white text-sm font-semibold rounded-full hover:bg-coral-dark transition-colors shadow-sm"
+        >
+          Ir al inicio
+        </a>
+        <a
+          href="/app"
+          class="px-6 py-2.5 bg-white text-navy text-sm font-semibold rounded-full border border-gray-200 hover:border-coral/30 hover:text-coral transition-colors"
+        >
+          Dashboard
+        </a>
+      </div>
+      <div class="mt-12 flex items-center justify-center gap-2 text-muted/40">
+        <img src="/favicon.svg" alt="" class="w-6 h-6 opacity-40" />
+        <span class="font-display text-xs font-semibold"
+          >Score<span class="text-coral/40">Padel</span></span
+        >
+      </div>
+    </div>
+  </div>
+</Layout>

@@ -29,12 +29,80 @@ if (Astro.request.method === 'POST' && user.role !== 'guest') {
         .prepare('INSERT INTO tournament_players (tournament_id, user_id) VALUES (?, ?)')
         .bind(id, user.id)
         .run()
+      // Notify tournament creator
+      const nId = crypto.randomUUID()
+      await db
+        .prepare(
+          'INSERT INTO notifications (id, user_id, type, message, link) VALUES (?, ?, ?, ?, ?)',
+        )
+        .bind(
+          nId,
+          (tournament as any).creator_id,
+          'tournament',
+          `${user.name} se ha inscrito en ${(tournament as any).name}`,
+          `/app/torneos/${id}`,
+        )
+        .run()
     } catch {}
   } else if (action === 'leave') {
     await db
       .prepare('DELETE FROM tournament_players WHERE tournament_id = ? AND user_id = ?')
       .bind(id, user.id)
       .run()
+  } else if (action === 'generate-matches') {
+    const isCreator = (tournament as any).creator_id === user.id
+    const isAdmin = user.role === 'admin'
+    if (isCreator || isAdmin) {
+      // Get all tournament players sorted by rating
+      const tPlayers = await db
+        .prepare(
+          `SELECT u.id, u.name, p.rating FROM tournament_players tp
+           JOIN users u ON tp.user_id = u.id
+           LEFT JOIN profiles p ON u.id = p.user_id
+           WHERE tp.tournament_id = ? ORDER BY p.rating DESC`,
+        )
+        .bind(id)
+        .all()
+      const pList = tPlayers.results ?? []
+      if (pList.length >= 4) {
+        // Generate round-robin pairs by rating proximity
+        const pairs: any[][] = []
+        const used = new Set<number>()
+        for (let i = 0; i < pList.length - 1; i++) {
+          if (used.has(i)) continue
+          for (let j = i + 1; j < pList.length; j++) {
+            if (used.has(j)) continue
+            pairs.push([pList[i], pList[j]])
+            used.add(i)
+            used.add(j)
+            break
+          }
+        }
+        // Create matches from pairs (team1 vs team2)
+        for (let i = 0; i < pairs.length - 1; i += 2) {
+          const team1 = pairs[i]
+          const team2 = pairs[i + 1]
+          if (team1 && team2) {
+            const matchId = crypto.randomUUID()
+            await db
+              .prepare(
+                `INSERT INTO matches (id, tournament_id, team1_player1, team1_player2, team2_player1, team2_player2, team1_games, team2_games, status, recorded_by)
+                 VALUES (?, ?, ?, ?, ?, ?, 0, 0, 'pending', ?)`,
+              )
+              .bind(
+                matchId,
+                id,
+                (team1[0] as any).id,
+                (team1[1] as any).id,
+                (team2[0] as any).id,
+                (team2[1] as any).id,
+                user.id,
+              )
+              .run()
+          }
+        }
+      }
+    }
   } else if (action === 'delete') {
     const isCreator = (tournament as any).creator_id === user.id
     const isAdmin = user.role === 'admin'
@@ -56,6 +124,54 @@ if (Astro.request.method === 'POST' && user.role !== 'guest') {
       // Delete tournament
       await db.prepare('DELETE FROM tournaments WHERE id = ?').bind(id).run()
       return Astro.redirect('/app/torneos')
+    }
+  } else if (action === 'close-registration') {
+    const isCreator = (tournament as any).creator_id === user.id
+    const isAdmin = user.role === 'admin'
+    if (isCreator || isAdmin) {
+      await db.prepare("UPDATE tournaments SET status = 'closed' WHERE id = ?").bind(id).run()
+    }
+  } else if (action === 'reopen') {
+    const isCreator = (tournament as any).creator_id === user.id
+    const isAdmin = user.role === 'admin'
+    if (isCreator || isAdmin) {
+      await db.prepare("UPDATE tournaments SET status = 'open' WHERE id = ?").bind(id).run()
+    }
+  } else if (action === 'declare-winner') {
+    const isCreator = (tournament as any).creator_id === user.id
+    const isAdmin = user.role === 'admin'
+    const winnerId = form.get('winner_id')?.toString()
+    if ((isCreator || isAdmin) && winnerId) {
+      await db
+        .prepare(
+          "UPDATE tournaments SET status = 'finished', description = description || ? WHERE id = ?",
+        )
+        .bind(`\n\n🏆 Ganador: ${winnerId}`, id)
+        .run()
+      // Notify all tournament players
+      const tpList = await db
+        .prepare('SELECT user_id FROM tournament_players WHERE tournament_id = ?')
+        .bind(id)
+        .all()
+      const winnerUser = await db
+        .prepare('SELECT name FROM users WHERE id = ?')
+        .bind(winnerId)
+        .first()
+      for (const tp of (tpList.results ?? []) as any[]) {
+        const nId = crypto.randomUUID()
+        await db
+          .prepare(
+            'INSERT INTO notifications (id, user_id, type, message, link) VALUES (?, ?, ?, ?, ?)',
+          )
+          .bind(
+            nId,
+            tp.user_id,
+            'tournament',
+            `${(tournament as any).name} ha finalizado. Ganador: ${(winnerUser as any)?.name ?? 'Desconocido'}`,
+            `/app/torneos/${id}`,
+          )
+          .run()
+      }
     }
   }
 }
@@ -117,10 +233,18 @@ const tournamentMatches = await db
             'text-xs font-medium px-2.5 py-1 rounded-full',
             (tournament as any).status === 'open'
               ? 'bg-teal/10 text-teal'
-              : 'bg-muted/10 text-muted',
+              : (tournament as any).status === 'finished'
+                ? 'bg-amber/10 text-amber-700'
+                : 'bg-muted/10 text-muted',
           ]}
         >
-          {(tournament as any).status === 'open' ? 'Abierto' : 'Cerrado'}
+          {
+            (tournament as any).status === 'open'
+              ? 'Abierto'
+              : (tournament as any).status === 'finished'
+                ? '🏆 Finalizado'
+                : 'Cerrado'
+          }
         </span>
       </div>
 
@@ -164,75 +288,223 @@ const tournamentMatches = await db
 
       {
         ((tournament as any).creator_id === user.id || user.role === 'admin') && (
-          <form
-            method="POST"
-            onsubmit="return confirm('¿Eliminar este torneo? Esta acción no se puede deshacer.')"
-            class="mt-4"
-          >
-            <input type="hidden" name="action" value="delete" />
-            <button
-              type="submit"
-              class="inline-flex items-center gap-1.5 px-4 py-2 text-xs text-red-500 border border-red-500/20 rounded-xl hover:bg-red-500/10 transition-colors"
-            >
-              <svg
-                class="w-3.5 h-3.5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
+          <div class="mt-4 flex flex-wrap gap-2">
+            {(tournament as any).status === 'open' && (
+              <form method="POST" class="inline">
+                <input type="hidden" name="action" value="close-registration" />
+                <button
+                  type="submit"
+                  class="inline-flex items-center gap-1.5 px-4 py-2 text-xs text-amber-700 border border-amber/20 rounded-xl hover:bg-amber/10 transition-colors"
+                >
+                  <svg
+                    class="w-3.5 h-3.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
+                    />
+                  </svg>
+                  Cerrar inscripciones
+                </button>
+              </form>
+            )}
+            {(tournament as any).status === 'closed' && (
+              <form method="POST" class="inline">
+                <input type="hidden" name="action" value="reopen" />
+                <button
+                  type="submit"
+                  class="inline-flex items-center gap-1.5 px-4 py-2 text-xs text-teal border border-teal/20 rounded-xl hover:bg-teal/10 transition-colors"
+                >
+                  <svg
+                    class="w-3.5 h-3.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
+                    />
+                  </svg>
+                  Reabrir inscripciones
+                </button>
+              </form>
+            )}
+            {(tournament as any).status !== 'finished' && (players.results?.length ?? 0) > 0 && (
+              <form
+                method="POST"
+                class="inline-flex items-center gap-1.5"
+                onsubmit="return confirm('¿Declarar ganador y finalizar torneo?')"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-                />
-              </svg>
-              Eliminar torneo
-            </button>
-          </form>
+                <input type="hidden" name="action" value="declare-winner" />
+                <select
+                  name="winner_id"
+                  required
+                  class="text-xs px-2 py-2 border border-gray-200 rounded-xl bg-white"
+                >
+                  <option value="">Ganador...</option>
+                  {players.results?.map((p: any) => (
+                    <option value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+                <button
+                  type="submit"
+                  class="inline-flex items-center gap-1 px-3 py-2 text-xs text-amber-700 border border-amber/20 rounded-xl hover:bg-amber/10 transition-colors font-semibold"
+                >
+                  🏆 Finalizar
+                </button>
+              </form>
+            )}
+            <form
+              method="POST"
+              onsubmit="return confirm('¿Eliminar este torneo? Esta acción no se puede deshacer.')"
+              class="inline"
+            >
+              <input type="hidden" name="action" value="delete" />
+              <button
+                type="submit"
+                class="inline-flex items-center gap-1.5 px-4 py-2 text-xs text-red-500 border border-red-500/20 rounded-xl hover:bg-red-500/10 transition-colors"
+              >
+                <svg
+                  class="w-3.5 h-3.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                  />
+                </svg>
+                Eliminar torneo
+              </button>
+            </form>
+          </div>
         )
       }
 
       <!-- Partidos del torneo -->
       <div class="mt-8">
-        <h2 class="font-display text-base font-bold text-navy mb-4">Partidos del torneo</h2>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-display text-base font-bold text-navy">Partidos del torneo</h2>
+          {
+            ((tournament as any).creator_id === user.id || user.role === 'admin') &&
+              (players.results?.length ?? 0) >= 4 && (
+                <form method="POST">
+                  <input type="hidden" name="action" value="generate-matches" />
+                  <button
+                    type="submit"
+                    class="px-4 py-2 bg-teal text-white text-xs font-semibold rounded-full hover:bg-teal/90 transition-colors flex items-center gap-1.5"
+                  >
+                    <svg
+                      class="w-3.5 h-3.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"
+                      />
+                    </svg>
+                    Generar emparejamientos
+                  </button>
+                </form>
+              )
+          }
+        </div>
         {
           (tournamentMatches.results?.length ?? 0) === 0 ? (
             <p class="text-sm text-muted">Aún no se han registrado partidos en este torneo.</p>
           ) : (
             <div class="space-y-2">
-              {tournamentMatches.results?.map((m: any) => (
-                <div class="flex items-center justify-between p-3 rounded-xl bg-surface-2 border border-gray-100">
-                  <div class="flex items-center gap-3">
-                    <span
-                      class:list={[
-                        'w-2 h-2 rounded-full',
-                        m.team1_games > m.team2_games ? 'bg-teal' : 'bg-red-400',
-                      ]}
-                    />
-                    <div>
-                      <div class="text-sm text-navy">
-                        {m.t1_name} <span class="text-muted">vs</span> {m.t2_name}
-                      </div>
-                      <div class="text-xs text-muted mt-0.5">
-                        {new Date(m.created_at).toLocaleDateString('es', {
-                          day: 'numeric',
-                          month: 'short',
-                        })}
+              {tournamentMatches.results?.map((m: any) => {
+                const isPending = m.status === 'pending'
+                const sets = (() => {
+                  try {
+                    return JSON.parse(m.set_scores || '[]')
+                  } catch {
+                    return []
+                  }
+                })()
+                return (
+                  <div class="flex items-center justify-between p-3 rounded-xl bg-surface-2 border border-gray-100">
+                    <div class="flex items-center gap-3">
+                      {isPending ? (
+                        <span class="w-2 h-2 rounded-full bg-amber-400" />
+                      ) : (
+                        <span
+                          class:list={[
+                            'w-2 h-2 rounded-full',
+                            m.team1_games > m.team2_games ? 'bg-teal' : 'bg-red-400',
+                          ]}
+                        />
+                      )}
+                      <div>
+                        <div class="text-sm text-navy">
+                          {m.t1_name} <span class="text-muted">vs</span> {m.t2_name}
+                        </div>
+                        <div class="flex items-center gap-2 mt-0.5">
+                          <span class="text-xs text-muted">
+                            {new Date(m.created_at).toLocaleDateString('es', {
+                              day: 'numeric',
+                              month: 'short',
+                            })}
+                          </span>
+                          {isPending && (
+                            <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
+                              Pendiente
+                            </span>
+                          )}
+                          {sets.length > 0 && (
+                            <div class="flex gap-1">
+                              {sets.map((s: any) => (
+                                <span class="text-[10px] font-mono bg-white px-1 py-0.5 rounded border border-gray-200 text-navy/70">
+                                  {s.team1}-{s.team2}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
+                    <div class="text-sm font-display font-semibold">
+                      {isPending ? (
+                        <span class="text-muted">–</span>
+                      ) : (
+                        <>
+                          <span
+                            class:list={[
+                              m.team1_games > m.team2_games ? 'text-coral' : 'text-navy',
+                            ]}
+                          >
+                            {m.team1_games}
+                          </span>
+                          <span class="text-muted mx-1">-</span>
+                          <span
+                            class:list={[
+                              m.team2_games > m.team1_games ? 'text-coral' : 'text-navy',
+                            ]}
+                          >
+                            {m.team2_games}
+                          </span>
+                        </>
+                      )}
+                    </div>
                   </div>
-                  <div class="text-sm font-display font-semibold">
-                    <span class:list={[m.team1_games > m.team2_games ? 'text-coral' : 'text-navy']}>
-                      {m.team1_games}
-                    </span>
-                    <span class="text-muted mx-1">-</span>
-                    <span class:list={[m.team2_games > m.team1_games ? 'text-coral' : 'text-navy']}>
-                      {m.team2_games}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )
         }

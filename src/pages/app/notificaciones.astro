@@ -1,0 +1,203 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro'
+
+const user = (Astro.locals as any).user
+if (!user) return Astro.redirect('/login')
+
+const db = (Astro.locals as any).db
+
+// Handle mark as read / mark all read
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData()
+  const action = form.get('action')?.toString()
+  if (action === 'read-all') {
+    await db.prepare('UPDATE notifications SET read = 1 WHERE user_id = ?').bind(user.id).run()
+  } else if (action === 'delete-all') {
+    await db.prepare('DELETE FROM notifications WHERE user_id = ?').bind(user.id).run()
+  }
+}
+
+const notifications = await db
+  .prepare('SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 50')
+  .bind(user.id)
+  .all()
+
+// Mark all as read on page visit
+await db
+  .prepare('UPDATE notifications SET read = 1 WHERE user_id = ? AND read = 0')
+  .bind(user.id)
+  .run()
+---
+
+<AppLayout title="Notificaciones" user={user}>
+  <div class="max-w-2xl mx-auto space-y-6">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-coral/10 flex items-center justify-center">
+          <svg
+            class="w-5 h-5 text-coral"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
+            ></path>
+          </svg>
+        </div>
+        <div>
+          <h1 class="font-display text-xl font-bold text-navy">Notificaciones</h1>
+          <p class="text-xs text-muted">Actividad reciente en tu cuenta.</p>
+        </div>
+      </div>
+      {
+        (notifications.results?.length ?? 0) > 0 && (
+          <form method="POST">
+            <input type="hidden" name="action" value="delete-all" />
+            <button type="submit" class="text-xs text-muted hover:text-red-500 transition-colors">
+              Borrar todo
+            </button>
+          </form>
+        )
+      }
+    </div>
+
+    <!-- Browser notification toggle -->
+    <div class="card p-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-amber/10 flex items-center justify-center">
+          <svg
+            class="w-4 h-4 text-amber"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+            ><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
+            ></path></svg
+          >
+        </div>
+        <div>
+          <div class="text-sm font-medium text-navy">Notificaciones del navegador</div>
+          <div id="notif-status" class="text-[11px] text-muted">Comprobando...</div>
+        </div>
+      </div>
+      <button
+        id="btn-notif-toggle"
+        type="button"
+        class="px-4 py-1.5 text-xs font-semibold rounded-full transition-colors bg-coral text-white hover:bg-coral-dark"
+      >
+        Activar
+      </button>
+    </div>
+
+    {
+      (notifications.results?.length ?? 0) === 0 ? (
+        <div class="card p-12 text-center space-y-3">
+          <div class="w-14 h-14 rounded-2xl bg-coral/10 flex items-center justify-center mx-auto">
+            <svg
+              class="w-7 h-7 text-coral"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
+              />
+            </svg>
+          </div>
+          <p class="text-sm text-muted">No tienes notificaciones.</p>
+        </div>
+      ) : (
+        <div class="card p-0 overflow-hidden divide-y divide-gray-100">
+          {notifications.results?.map((n: any) => (
+            <a
+              href={n.link || '#'}
+              class:list={[
+                'flex items-start gap-3 px-5 py-4 hover:bg-gray-50/50 transition-colors',
+                !n.read && 'bg-coral/5',
+              ]}
+            >
+              <div
+                class:list={[
+                  'w-2 h-2 rounded-full mt-1.5 shrink-0',
+                  n.type === 'match'
+                    ? 'bg-teal'
+                    : n.type === 'tournament'
+                      ? 'bg-amber'
+                      : 'bg-coral',
+                ]}
+              />
+              <div class="flex-1 min-w-0">
+                <p class="text-sm text-navy">{n.message}</p>
+                <p class="text-[11px] text-muted mt-1">
+                  {new Date(n.created_at).toLocaleDateString('es-ES', {
+                    day: 'numeric',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </p>
+              </div>
+            </a>
+          ))}
+        </div>
+      )
+    }
+  </div>
+
+  <script>
+    const btn = document.getElementById('btn-notif-toggle') as HTMLButtonElement
+    const status = document.getElementById('notif-status')!
+    function updateUI() {
+      if (!('Notification' in window)) {
+        status.textContent = 'Tu navegador no soporta notificaciones.'
+        btn.classList.add('hidden')
+        return
+      }
+      const perm = Notification.permission
+      if (perm === 'granted') {
+        status.textContent = 'Activadas — recibirás alertas del navegador.'
+        btn.textContent = 'Desactivar'
+        btn.classList.remove('bg-coral')
+        btn.classList.add('bg-gray-200', 'text-navy')
+      } else if (perm === 'denied') {
+        status.textContent = 'Bloqueadas — habilítalas en ajustes del navegador.'
+        btn.classList.add('hidden')
+      } else {
+        status.textContent = 'Desactivadas — no recibirás alertas del navegador.'
+        btn.textContent = 'Activar'
+        btn.classList.remove('bg-gray-200', 'text-navy')
+        btn.classList.add('bg-coral')
+      }
+    }
+    updateUI()
+    btn.addEventListener('click', async () => {
+      if (Notification.permission === 'granted') {
+        localStorage.setItem('sp-notif', 'off')
+        status.textContent = 'Desactivadas manualmente. Recarga para reactivar.'
+        btn.textContent = 'Reactivar'
+        btn.classList.remove('bg-gray-200', 'text-navy')
+        btn.classList.add('bg-coral')
+        return
+      }
+      const result = await Notification.requestPermission()
+      if (result === 'granted') {
+        localStorage.removeItem('sp-notif')
+        new Notification('Score Padel', {
+          body: '¡Notificaciones activadas! Te avisaremos de partidos, retos y torneos.',
+          icon: '/favicon.svg',
+        })
+      }
+      updateUI()
+    })
+  </script>
+</AppLayout>

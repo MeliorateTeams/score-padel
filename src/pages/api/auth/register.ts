@@ -9,9 +9,18 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
   const name = form.get('name')?.toString().trim()
   const email = form.get('email')?.toString().trim().toLowerCase()
   const password = form.get('password')?.toString()
+  const age = form.get('age')
   const privacy = form.get('privacy')
 
   if (!name || !email || !password) {
+    return new Response(null, {
+      status: 303,
+      headers: { Location: new URL('/registro?error=campos', request.url).toString() },
+    })
+  }
+
+  // Enforce input length limits to prevent DoS / oversized payloads
+  if (name.length > 100 || email.length > 254 || password.length > 128) {
     return new Response(null, {
       status: 303,
       headers: { Location: new URL('/registro?error=campos', request.url).toString() },
@@ -37,6 +46,13 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
     })
   }
 
+  if (!age) {
+    return new Response(null, {
+      status: 303,
+      headers: { Location: new URL('/registro?error=edad', request.url).toString() },
+    })
+  }
+
   if (!privacy) {
     return new Response(null, {
       status: 303,
@@ -50,13 +66,21 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
     })
   }
 
+  // Password complexity: at least 1 uppercase, 1 lowercase, 1 digit
+  if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
+    return new Response(null, {
+      status: 303,
+      headers: { Location: new URL('/registro?error=password_weak', request.url).toString() },
+    })
+  }
+
   try {
     const userId = await createUser(db, email, password, name)
     const token = await createSession(db, userId)
     cookies.set('session', token, {
       httpOnly: true,
       secure: true,
-      sameSite: 'lax',
+      sameSite: 'strict',
       path: '/',
       maxAge: 72 * 3600,
     })

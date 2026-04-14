@@ -2,6 +2,7 @@
 import AppLayout from '../../layouts/AppLayout.astro'
 import { getProfile, updateProfile } from '../../lib/db'
 import { calculateInitialRating } from '../../lib/rating'
+import { verifyPassword, hashPassword } from '../../lib/auth'
 
 const user = (Astro.locals as any).user
 if (!user) return Astro.redirect('/login')
@@ -9,21 +10,136 @@ if (user.role === 'guest') return Astro.redirect('/app?error=guest')
 
 const db = (Astro.locals as any).db
 let message = ''
+let messageType = 'success'
+
+// Sanitize text input: strip HTML tags, limit length
+function sanitize(input: string, maxLen = 200): string {
+  return input
+    .replace(/<[^>]*>/g, '')
+    .trim()
+    .slice(0, maxLen)
+}
 
 if (Astro.request.method === 'POST') {
   const form = await Astro.request.formData()
-  const experienceYears = parseInt(form.get('experience_years')?.toString() ?? '0') || 0
-  const racquetSports = form.get('racquet_sports')?.toString() ?? ''
+  const action = form.get('action')?.toString()
+
+  if (action === 'delete-account') {
+    // RGPD Art. 17: Derecho de supresión — borrar todos los datos del usuario
+    await db.prepare('DELETE FROM sessions WHERE user_id = ?').bind(user.id).run()
+    await db.prepare('DELETE FROM notifications WHERE user_id = ?').bind(user.id).run()
+    await db.prepare('DELETE FROM rating_history WHERE user_id = ?').bind(user.id).run()
+    await db.prepare('DELETE FROM match_confirmations WHERE user_id = ?').bind(user.id).run()
+    await db
+      .prepare('DELETE FROM challenges WHERE challenger_id = ? OR challenged_id = ?')
+      .bind(user.id, user.id)
+      .run()
+    await db.prepare('DELETE FROM tournament_players WHERE user_id = ?').bind(user.id).run()
+    await db.prepare('DELETE FROM profiles WHERE user_id = ?').bind(user.id).run()
+    await db.prepare('DELETE FROM users WHERE id = ?').bind(user.id).run()
+    Astro.cookies.delete('session', { path: '/' })
+    return Astro.redirect('/?deleted=1')
+  }
+
+  if (action === 'export-data') {
+    // RGPD Art. 20: Derecho a la portabilidad — export personal data as JSON
+    const profileData = await db
+      .prepare('SELECT * FROM profiles WHERE user_id = ?')
+      .bind(user.id)
+      .first()
+    const userData = await db
+      .prepare('SELECT id, name, email, role, created_at FROM users WHERE id = ?')
+      .bind(user.id)
+      .first()
+    const matches = await db
+      .prepare(
+        `
+      SELECT m.* FROM matches m
+      WHERE m.team1_player1 = ? OR m.team1_player2 = ? OR m.team2_player1 = ? OR m.team2_player2 = ?
+    `,
+      )
+      .bind(user.id, user.id, user.id, user.id)
+      .all()
+    const ratings = await db
+      .prepare('SELECT * FROM rating_history WHERE user_id = ? ORDER BY created_at DESC')
+      .bind(user.id)
+      .all()
+
+    const exportData = {
+      exportDate: new Date().toISOString(),
+      user: userData,
+      profile: profileData,
+      matches: matches.results ?? [],
+      ratingHistory: ratings.results ?? [],
+    }
+
+    return new Response(JSON.stringify(exportData, null, 2), {
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Content-Disposition': `attachment; filename="mis_datos_scorepadel.json"`,
+      },
+    })
+  }
+
+  if (action === 'change-password') {
+    const currentPass = form.get('current_password')?.toString() ?? ''
+    const newPass = form.get('new_password')?.toString() ?? ''
+    const confirmPass = form.get('confirm_password')?.toString() ?? ''
+
+    if (!currentPass || !newPass || !confirmPass) {
+      message = 'Todos los campos de contraseña son obligatorios.'
+      messageType = 'error'
+    } else if (newPass.length < 8) {
+      message = 'La nueva contraseña debe tener al menos 8 caracteres.'
+      messageType = 'error'
+    } else if (!/[A-Z]/.test(newPass) || !/[a-z]/.test(newPass) || !/[0-9]/.test(newPass)) {
+      message = 'La contraseña debe incluir mayúsculas, minúsculas y números.'
+      messageType = 'error'
+    } else if (newPass !== confirmPass) {
+      message = 'Las contraseñas no coinciden.'
+      messageType = 'error'
+    } else {
+      const row = await db
+        .prepare('SELECT password_hash FROM users WHERE id = ?')
+        .bind(user.id)
+        .first()
+      const valid = row ? await verifyPassword(currentPass, (row as any).password_hash) : false
+      if (!valid) {
+        message = 'La contraseña actual es incorrecta.'
+        messageType = 'error'
+      } else {
+        const newHash = await hashPassword(newPass)
+        await db
+          .prepare('UPDATE users SET password_hash = ? WHERE id = ?')
+          .bind(newHash, user.id)
+          .run()
+        message = 'Contraseña cambiada correctamente.'
+      }
+    }
+  }
+
+  const experienceYears = Math.max(
+    0,
+    Math.min(50, parseInt(form.get('experience_years')?.toString() ?? '0') || 0),
+  )
+  const racquetSports = sanitize(form.get('racquet_sports')?.toString() ?? '', 100)
   const birthDate = form.get('birth_date')?.toString() ?? ''
   const gender = form.get('gender')?.toString() ?? ''
 
+  // Validate gender option
+  const validGenders = ['', 'masculino', 'femenino', 'otro']
+  const safeGender = validGenders.includes(gender) ? gender : ''
+
+  // Validate birth_date format (YYYY-MM-DD)
+  const safeBirthDate = /^\d{4}-\d{2}-\d{2}$/.test(birthDate) ? birthDate : ''
+
   await updateProfile(db, user.id, {
-    bio: form.get('bio')?.toString() ?? '',
-    location: form.get('location')?.toString() ?? '',
+    bio: sanitize(form.get('bio')?.toString() ?? '', 500),
+    location: sanitize(form.get('location')?.toString() ?? '', 100),
     experience_years: experienceYears,
     racquet_sports: racquetSports,
-    birth_date: birthDate,
-    gender: gender,
+    birth_date: safeBirthDate,
+    gender: safeGender,
   })
 
   // Si el jugador no tiene partidos, ajustar rating inicial según perfil
@@ -120,7 +236,7 @@ const ratingLevel = (r: number) => {
   <div class="max-w-3xl mx-auto space-y-8">
     {
       message && (
-        <div class="bg-teal/10 border border-teal/20 text-teal text-xs p-3 rounded-xl">
+        <div data-toast={messageType === 'error' ? 'error' : 'success'} class="hidden">
           {message}
         </div>
       )
@@ -520,5 +636,159 @@ const ratingLevel = (r: number) => {
         </button>
       </div>
     </form>
+
+    <!-- Cambiar contraseña -->
+    <div class="card p-6 space-y-5">
+      <h2
+        class="font-display text-sm font-bold text-navy uppercase tracking-wider flex items-center gap-2"
+      >
+        <svg
+          class="w-4 h-4 text-coral"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
+          ></path>
+        </svg>
+        Cambiar contraseña
+      </h2>
+      <form method="POST" class="space-y-4">
+        <input type="hidden" name="action" value="change-password" />
+        <div>
+          <label for="current_password" class="text-xs font-medium text-muted block mb-1.5"
+            >Contraseña actual</label
+          >
+          <input
+            type="password"
+            id="current_password"
+            name="current_password"
+            required
+            autocomplete="current-password"
+            class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy focus:outline-none focus:border-coral/50 transition-colors"
+          />
+        </div>
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label for="new_password" class="text-xs font-medium text-muted block mb-1.5"
+              >Nueva contraseña</label
+            >
+            <input
+              type="password"
+              id="new_password"
+              name="new_password"
+              required
+              minlength="8"
+              autocomplete="new-password"
+              class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy focus:outline-none focus:border-coral/50 transition-colors"
+            />
+            <p class="text-[10px] text-muted/60 mt-1">
+              Mín. 8 caracteres, mayúsculas, minúsculas y números
+            </p>
+          </div>
+          <div>
+            <label for="confirm_password" class="text-xs font-medium text-muted block mb-1.5"
+              >Confirmar contraseña</label
+            >
+            <input
+              type="password"
+              id="confirm_password"
+              name="confirm_password"
+              required
+              minlength="8"
+              autocomplete="new-password"
+              class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy focus:outline-none focus:border-coral/50 transition-colors"
+            />
+          </div>
+        </div>
+        <div class="flex justify-end">
+          <button
+            type="submit"
+            class="px-6 py-2 bg-navy text-white text-xs font-semibold rounded-full hover:bg-navy/90 transition-colors"
+          >
+            Cambiar contraseña
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- RGPD: Privacidad y datos personales -->
+    <div class="card p-6 space-y-5 border-red-200">
+      <h2
+        class="font-display text-sm font-bold text-navy uppercase tracking-wider flex items-center gap-2"
+      >
+        <svg
+          class="w-4 h-4 text-coral"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
+          ></path>
+        </svg>
+        Privacidad y datos personales
+      </h2>
+      <p class="text-xs text-muted">
+        Conforme al RGPD, tienes derecho a exportar y eliminar tus datos personales.
+      </p>
+
+      <div class="flex flex-wrap gap-3">
+        <form method="POST">
+          <input type="hidden" name="action" value="export-data" />
+          <button
+            type="submit"
+            class="px-5 py-2 bg-teal/10 text-teal text-xs font-semibold rounded-full hover:bg-teal/20 transition-colors flex items-center gap-2"
+          >
+            <svg
+              class="w-3.5 h-3.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
+              ></path>
+            </svg>
+            Descargar mis datos (JSON)
+          </button>
+        </form>
+        <form
+          method="POST"
+          onsubmit="return confirm('⚠️ ¿Estás seguro? Se eliminarán TODOS tus datos permanentemente. Esta acción no se puede deshacer.')"
+        >
+          <input type="hidden" name="action" value="delete-account" />
+          <button
+            type="submit"
+            class="px-5 py-2 bg-red-50 text-red-600 text-xs font-semibold rounded-full hover:bg-red-100 transition-colors border border-red-200 flex items-center gap-2"
+          >
+            <svg
+              class="w-3.5 h-3.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+              ></path>
+            </svg>
+            Eliminar mi cuenta
+          </button>
+        </form>
+      </div>
+    </div>
   </div>
 </AppLayout>

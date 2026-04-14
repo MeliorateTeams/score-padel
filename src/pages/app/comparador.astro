@@ -1,0 +1,157 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro'
+
+const user = (Astro.locals as any).user
+if (!user) return Astro.redirect('/login')
+
+const db = (Astro.locals as any).db
+const p1Id = Astro.url.searchParams.get('p1') || ''
+const p2Id = Astro.url.searchParams.get('p2') || ''
+
+let player1: any = null
+let player2: any = null
+let h2hData: any[] = []
+
+const allPlayers = await db.prepare(`
+  SELECT u.id, u.name FROM users u WHERE u.role != 'guest' ORDER BY u.name
+`).all()
+
+if (p1Id && p2Id && p1Id !== p2Id) {
+  const q = `SELECT u.id, u.name, p.rating, p.matches_played, p.matches_won, p.location, p.experience_years
+    FROM users u LEFT JOIN profiles p ON u.id = p.user_id WHERE u.id = ?`
+  player1 = await db.prepare(q).bind(p1Id).first()
+  player2 = await db.prepare(q).bind(p2Id).first()
+
+  if (player1 && player2) {
+    const h2h = await db.prepare(`
+      SELECT m.team1_games, m.team2_games, m.set_scores, m.created_at,
+        m.team1_player1, m.team1_player2, m.team2_player1, m.team2_player2
+      FROM matches m
+      WHERE (m.team1_player1 = ? OR m.team1_player2 = ? OR m.team2_player1 = ? OR m.team2_player2 = ?)
+        AND (m.team1_player1 = ? OR m.team1_player2 = ? OR m.team2_player1 = ? OR m.team2_player2 = ?)
+      ORDER BY m.created_at DESC LIMIT 20
+    `).bind(p1Id, p1Id, p1Id, p1Id, p2Id, p2Id, p2Id, p2Id).all()
+    h2hData = (h2h.results ?? []) as any[]
+  }
+}
+
+const ratingLevel = (r: number) => {
+  if (r < 2.0) return 'Iniciación'
+  if (r < 3.0) return 'Desarrollo'
+  if (r < 4.0) return 'Intermedio'
+  if (r < 5.0) return 'Avanzado'
+  if (r < 6.0) return 'Competitivo'
+  return 'Élite'
+}
+
+// Calculate H2H stats
+let p1Wins = 0, p2Wins = 0, draws = 0
+for (const m of h2hData) {
+  const p1Team1 = m.team1_player1 === p1Id || m.team1_player2 === p1Id
+  const p2Team1 = m.team1_player1 === p2Id || m.team1_player2 === p2Id
+  if (p1Team1 && p2Team1) continue // same team
+  const p1Won = p1Team1 ? m.team1_games > m.team2_games : m.team2_games > m.team1_games
+  if (m.team1_games === m.team2_games) draws++
+  else if (p1Won) p1Wins++
+  else p2Wins++
+}
+---
+
+<AppLayout title="Comparador" user={user}>
+  <div class="max-w-2xl mx-auto space-y-6">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-teal/10 flex items-center justify-center">
+        <svg class="w-5 h-5 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg>
+      </div>
+      <div>
+        <h1 class="font-display text-xl font-bold text-navy">Comparador de jugadores</h1>
+        <p class="text-xs text-muted">Compara estadísticas lado a lado.</p>
+      </div>
+    </div>
+
+    <form class="card p-5">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-xs text-muted block mb-1">Jugador 1</label>
+          <select name="p1" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white">
+            <option value="">Seleccionar...</option>
+            {allPlayers.results?.map((p: any) => (
+              <option value={p.id} selected={p.id === p1Id}>{p.name}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label class="text-xs text-muted block mb-1">Jugador 2</label>
+          <select name="p2" class="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white">
+            <option value="">Seleccionar...</option>
+            {allPlayers.results?.map((p: any) => (
+              <option value={p.id} selected={p.id === p2Id}>{p.name}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="mt-4 w-full py-2.5 bg-teal text-white text-sm font-semibold rounded-xl hover:bg-teal/90 transition-colors">Comparar</button>
+    </form>
+
+    {player1 && player2 && (
+      <div class="space-y-4">
+        <!-- Rating comparison -->
+        <div class="card p-6">
+          <div class="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <a href={`/app/jugadores/${player1.id}`} class="text-sm font-bold text-navy hover:text-coral transition-colors">{player1.name}</a>
+              <div class="font-display text-3xl font-extrabold text-coral mt-1">{Number(player1.rating || 1).toFixed(1)}</div>
+              <div class="text-[10px] text-muted">{ratingLevel(player1.rating || 1)}</div>
+            </div>
+            <div class="flex items-center justify-center">
+              <span class="text-lg font-display font-bold text-muted">VS</span>
+            </div>
+            <div>
+              <a href={`/app/jugadores/${player2.id}`} class="text-sm font-bold text-navy hover:text-coral transition-colors">{player2.name}</a>
+              <div class="font-display text-3xl font-extrabold text-teal mt-1">{Number(player2.rating || 1).toFixed(1)}</div>
+              <div class="text-[10px] text-muted">{ratingLevel(player2.rating || 1)}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats comparison -->
+        <div class="card overflow-hidden">
+          {[
+            { label: 'Partidos', v1: player1.matches_played ?? 0, v2: player2.matches_played ?? 0 },
+            { label: 'Victorias', v1: player1.matches_won ?? 0, v2: player2.matches_won ?? 0 },
+            { label: 'Win Rate', v1: (player1.matches_played ?? 0) > 0 ? Math.round(((player1.matches_won ?? 0) / (player1.matches_played ?? 1)) * 100) + '%' : '0%', v2: (player2.matches_played ?? 0) > 0 ? Math.round(((player2.matches_won ?? 0) / (player2.matches_played ?? 1)) * 100) + '%' : '0%' },
+            { label: 'Experiencia', v1: (player1.experience_years || 0) + ' años', v2: (player2.experience_years || 0) + ' años' },
+            { label: 'Ubicación', v1: player1.location || '—', v2: player2.location || '—' },
+          ].map((row: any, i: number) => (
+            <div class:list={['grid grid-cols-3 text-sm py-3 px-5', i % 2 === 0 ? 'bg-gray-50/50' : '']}>
+              <div class="text-right font-medium text-navy">{row.v1}</div>
+              <div class="text-center text-xs text-muted self-center">{row.label}</div>
+              <div class="font-medium text-navy">{row.v2}</div>
+            </div>
+          ))}
+        </div>
+
+        <!-- H2H -->
+        {(p1Wins + p2Wins + draws) > 0 && (
+          <div class="card p-6">
+            <h2 class="text-sm font-bold text-navy mb-4 text-center">Historial directo</h2>
+            <div class="grid grid-cols-3 gap-3 text-center mb-4">
+              <div class="p-3 rounded-xl bg-coral/10">
+                <div class="font-display text-2xl font-extrabold text-coral">{p1Wins}</div>
+                <div class="text-[10px] text-muted">{player1.name}</div>
+              </div>
+              <div class="p-3 rounded-xl bg-gray-100">
+                <div class="font-display text-2xl font-extrabold text-muted">{draws}</div>
+                <div class="text-[10px] text-muted">Empates</div>
+              </div>
+              <div class="p-3 rounded-xl bg-teal/10">
+                <div class="font-display text-2xl font-extrabold text-teal">{p2Wins}</div>
+                <div class="text-[10px] text-muted">{player2.name}</div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+</AppLayout>

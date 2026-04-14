@@ -17,6 +17,7 @@ if (Astro.request.method === 'POST') {
   const partner_email = form.get('partner_email')?.toString().trim().toLowerCase()
   const opponent2_email = form.get('opponent2_email')?.toString().trim().toLowerCase()
   const tournament_id = form.get('tournament_id')?.toString() || null
+  const notes = form.get('notes')?.toString().trim().slice(0, 500) || ''
 
   // Parse set scores
   const sets: { team1: number; team2: number }[] = []
@@ -78,7 +79,7 @@ if (Astro.request.method === 'POST') {
         const matchId = generateId()
         await db
           .prepare(
-            'INSERT INTO matches (id, tournament_id, team1_player1, team1_player2, team2_player1, team2_player2, team1_games, team2_games, set_scores, recorded_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO matches (id, tournament_id, team1_player1, team1_player2, team2_player1, team2_player2, team1_games, team2_games, set_scores, notes, recorded_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
           )
           .bind(
             matchId,
@@ -90,6 +91,7 @@ if (Astro.request.method === 'POST') {
             team1_games,
             team2_games,
             JSON.stringify(sets),
+            notes,
             user.id,
           )
           .run()
@@ -98,6 +100,39 @@ if (Astro.request.method === 'POST') {
         const team2 = [opponent.id, opponent2Id!]
 
         await calculateAndUpdateRatings(db, matchId, team1, team2, team1_games, team2_games)
+
+        // Create match confirmations (recorder auto-confirmed)
+        const allPlayerIds = [user.id, partnerId!, opponent.id, opponent2Id!]
+        for (const pid of allPlayerIds) {
+          await db
+            .prepare(
+              'INSERT INTO match_confirmations (match_id, user_id, confirmed) VALUES (?, ?, ?)',
+            )
+            .bind(matchId, pid, pid === user.id ? 1 : 0)
+            .run()
+        }
+
+        // Create notifications for all players except the recorder
+        const setsStr = sets.map((s) => `${s.team1}-${s.team2}`).join(', ')
+        const otherPlayers = [partnerId!, opponent.id, opponent2Id!].filter(
+          (pid) => pid !== user.id,
+        )
+        for (const pid of otherPlayers) {
+          const nId = crypto.randomUUID()
+          await db
+            .prepare(
+              'INSERT INTO notifications (id, user_id, type, message, link) VALUES (?, ?, ?, ?, ?)',
+            )
+            .bind(
+              nId,
+              pid,
+              'match',
+              `${user.name} ha registrado un partido: ${setsStr}`,
+              '/app/partidos',
+            )
+            .run()
+        }
+
         message = '¡Partido registrado! Las valoraciones se han actualizado.'
       }
     }
@@ -435,6 +470,35 @@ const tournaments = await db
           </div>
         )
       }
+
+      <!-- Notas -->
+      <div class="card p-6 space-y-4">
+        <h2
+          class="font-display text-sm font-bold text-navy uppercase tracking-wider flex items-center gap-2"
+        >
+          <svg
+            class="w-4 h-4 text-coral"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+            ><path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 011.037-.443 48.282 48.282 0 005.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"
+            ></path></svg
+          >
+          Notas (opcional)
+        </h2>
+        <textarea
+          id="notes"
+          name="notes"
+          rows="2"
+          maxlength="500"
+          placeholder="Superficie, comentarios, condiciones del partido..."
+          class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors resize-none"
+        ></textarea>
+      </div>
 
       <div class="flex justify-end">
         <button

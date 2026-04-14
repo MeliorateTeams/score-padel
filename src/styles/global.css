@@ -25,6 +25,17 @@
   --font-display: 'Outfit', 'DM Sans', system-ui, sans-serif;
 }
 
+/* Dark mode overrides */
+html.dark {
+  --color-bg: #0F1117;
+  --color-surface: #1A1D2B;
+  --color-surface-2: #242837;
+  --color-text: #E5E7EB;
+  --color-muted: #9CA3AF;
+  --color-navy: #F1F5F9;
+  color-scheme: dark;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
@@ -32,6 +43,29 @@
   body {
     @apply bg-bg text-text antialiased;
     font-family: var(--font-sans);
+  }
+  /* Focus-visible rings for accessibility */
+  :focus-visible {
+    outline: 2px solid var(--color-coral);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  /* Skip-to-content link */
+  .sr-only:focus {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 9999;
+    padding: 0.75rem 1.25rem;
+    background: var(--color-coral);
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-radius: 0.75rem;
+    clip: auto;
+    width: auto;
+    height: auto;
+    overflow: visible;
   }
 }
 
@@ -49,9 +83,40 @@
 .card {
   @apply bg-surface rounded-2xl border border-gray-100 shadow-sm;
 }
+html.dark .card {
+  border-color: #2D3148;
+}
 
 .card-hover {
   @apply bg-surface rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200;
+}
+html.dark .card-hover {
+  border-color: #2D3148;
+}
+
+/* Dark mode overrides for hardcoded bg-white sections */
+html.dark section.bg-white,
+html.dark .bg-white {
+  background-color: var(--color-surface) !important;
+}
+html.dark nav.bg-white,
+html.dark nav .bg-white,
+html.dark .border-gray-100 {
+  border-color: #2D3148;
+}
+html.dark .bg-gray-50\/50,
+html.dark .hover\:bg-gray-50\/50:hover {
+  background-color: rgba(36, 40, 55, 0.5);
+}
+html.dark .bg-navy {
+  background-color: #0A0C14 !important;
+}
+html.dark .dark-nav {
+  background-color: rgba(26, 29, 43, 0.9) !important;
+  border-color: #2D3148;
+}
+html.dark .divide-gray-100 > :not(:last-child) {
+  border-color: #2D3148;
 }
 
 @keyframes slide-up {
@@ -62,10 +127,80 @@
   animation: slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.fade-in {
+  animation: fade-in 0.4s ease-out both;
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+.scale-in {
+  animation: scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Staggered card animations */
+.stagger > * {
+  animation: slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 50ms; }
+.stagger > *:nth-child(3) { animation-delay: 100ms; }
+.stagger > *:nth-child(4) { animation-delay: 150ms; }
+.stagger > *:nth-child(5) { animation-delay: 200ms; }
+.stagger > *:nth-child(6) { animation-delay: 250ms; }
+.stagger > *:nth-child(7) { animation-delay: 300ms; }
+.stagger > *:nth-child(8) { animation-delay: 350ms; }
+.stagger > *:nth-child(9) { animation-delay: 400ms; }
+.stagger > *:nth-child(n+10) { animation-delay: 450ms; }
+
+/* Toast animations */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(-1rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes toast-out {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-1rem); }
+}
+.toast-enter {
+  animation: toast-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.toast-exit {
+  animation: toast-out 0.25s ease-in both;
+}
+
 @keyframes pulse-soft {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.6; }
 }
 .pulse-soft {
   animation: pulse-soft 2s ease-in-out infinite;
+}
+
+/* Smooth page content entrance */
+.page-enter {
+  animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Micro-interactions */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px -5px rgb(0 0 0 / 0.1);
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

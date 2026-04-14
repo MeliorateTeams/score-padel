@@ -5,27 +5,198 @@ const user = (Astro.locals as any).user
 if (!user) return Astro.redirect('/login')
 
 const db = (Astro.locals as any).db
+const isAdmin = user.role === 'admin'
+
+// Handle DELETE action
+let deleteMsg = ''
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData()
+  const action = form.get('action')
+  const matchId = form.get('match_id')
+
+  if (action === 'delete' && matchId) {
+    // Verify ownership or admin
+    const match = await db.prepare('SELECT * FROM matches WHERE id = ?').bind(matchId).first()
+    if (
+      match &&
+      (isAdmin ||
+        match.team1_player1 === user.id ||
+        match.team1_player2 === user.id ||
+        match.team2_player1 === user.id ||
+        match.team2_player2 === user.id)
+    ) {
+      const players = [
+        match.team1_player1,
+        match.team1_player2,
+        match.team2_player1,
+        match.team2_player2,
+      ].filter(Boolean)
+      const isTeam1Win = match.team1_games > match.team2_games
+      const winners = isTeam1Win
+        ? [match.team1_player1, match.team1_player2]
+        : [match.team2_player1, match.team2_player2]
+
+      // Delete rating history entries for this match (by timestamp match)
+      await db.prepare('DELETE FROM rating_history WHERE match_id = ?').bind(matchId).run()
+
+      // Decrement match counts and recalculate from last rating_history entry
+      for (const pid of players) {
+        if (!pid) continue
+        const won = winners.includes(pid)
+        await db
+          .prepare(
+            `UPDATE profiles SET matches_played = MAX(0, matches_played - 1), matches_won = MAX(0, matches_won - ${won ? 1 : 0}) WHERE user_id = ?`,
+          )
+          .bind(pid)
+          .run()
+        // Restore rating from last history entry or reset to default
+        const lastEntry = await db
+          .prepare(
+            'SELECT new_rating FROM rating_history WHERE user_id = ? ORDER BY created_at DESC LIMIT 1',
+          )
+          .bind(pid)
+          .first()
+        if (lastEntry) {
+          await db
+            .prepare('UPDATE profiles SET rating = ? WHERE user_id = ?')
+            .bind(lastEntry.new_rating, pid)
+            .run()
+        }
+      }
+
+      await db.prepare('DELETE FROM matches WHERE id = ?').bind(matchId).run()
+      deleteMsg = 'Partido eliminado correctamente.'
+    }
+  }
+
+  if (action === 'confirm' && matchId) {
+    await db
+      .prepare('UPDATE match_confirmations SET confirmed = 1 WHERE match_id = ? AND user_id = ?')
+      .bind(matchId, user.id)
+      .run()
+    deleteMsg = 'Partido confirmado.'
+  }
+  if (action === 'reject' && matchId) {
+    await db
+      .prepare('UPDATE match_confirmations SET confirmed = -1 WHERE match_id = ? AND user_id = ?')
+      .bind(matchId, user.id)
+      .run()
+    deleteMsg = 'Has disputado este resultado.'
+  }
+}
+
+// Get confirmation status for user's matches
+const confirmations = await db
+  .prepare(
+    `
+  SELECT mc.match_id,
+    SUM(CASE WHEN mc.confirmed = 1 THEN 1 ELSE 0 END) as confirmed_count,
+    COUNT(*) as total,
+    MAX(CASE WHEN mc.user_id = ? THEN mc.confirmed ELSE NULL END) as my_status
+  FROM match_confirmations mc
+  WHERE mc.match_id IN (
+    SELECT m.id FROM matches m
+    WHERE m.team1_player1 = ? OR m.team1_player2 = ? OR m.team2_player1 = ? OR m.team2_player2 = ?
+  )
+  GROUP BY mc.match_id
+`,
+  )
+  .bind(user.id, user.id, user.id, user.id, user.id)
+  .all()
+
+const confMap = new Map<string, any>()
+for (const c of (confirmations.results ?? []) as any[]) {
+  confMap.set(c.match_id, c)
+}
+
+const pagina = Math.max(1, parseInt(Astro.url.searchParams.get('page') ?? '1'))
+const porPagina = 15
+const filterFrom = Astro.url.searchParams.get('from') ?? ''
+const filterTo = Astro.url.searchParams.get('to') ?? ''
+const filterResult = Astro.url.searchParams.get('result') ?? ''
+
+// Build dynamic WHERE clause for filters
+let extraWhere = ''
+const extraBinds: string[] = []
+if (filterFrom) {
+  extraWhere += ` AND m.created_at >= ?`
+  extraBinds.push(filterFrom + 'T00:00:00')
+}
+if (filterTo) {
+  extraWhere += ` AND m.created_at <= ?`
+  extraBinds.push(filterTo + 'T23:59:59')
+}
+if (filterResult === 'win') {
+  extraWhere += ` AND ((m.team1_player1 = ? OR m.team1_player2 = ?) AND m.team1_games > m.team2_games OR (m.team2_player1 = ? OR m.team2_player2 = ?) AND m.team2_games > m.team1_games)`
+  extraBinds.push(user.id, user.id, user.id, user.id)
+} else if (filterResult === 'loss') {
+  extraWhere += ` AND ((m.team1_player1 = ? OR m.team1_player2 = ?) AND m.team1_games < m.team2_games OR (m.team2_player1 = ? OR m.team2_player2 = ?) AND m.team2_games < m.team1_games)`
+  extraBinds.push(user.id, user.id, user.id, user.id)
+} else if (filterResult === 'draw') {
+  extraWhere += ` AND m.team1_games = m.team2_games`
+}
+
+const baseWhere = `(m.team1_player1 = ? OR m.team1_player2 = ? OR m.team2_player1 = ? OR m.team2_player2 = ?)`
+const baseBinds = [user.id, user.id, user.id, user.id]
+
+const totalResult = await db
+  .prepare(`SELECT COUNT(*) as total FROM matches m WHERE ${baseWhere}${extraWhere}`)
+  .bind(...baseBinds, ...extraBinds)
+  .first()
+const totalPartidos = (totalResult as any)?.total ?? 0
+const totalPaginas = Math.max(1, Math.ceil(totalPartidos / porPagina))
+const offsetPartidos = (pagina - 1) * porPagina
+
 const matches = await db
   .prepare(
     `
   SELECT m.*,
     u1.name as t1p1_name, u2.name as t2p1_name,
+    u3.name as t1p2_name, u4.name as t2p2_name,
     p1.rating as t1p1_rating, p2.rating as t2p1_rating
   FROM matches m
   JOIN users u1 ON m.team1_player1 = u1.id
   JOIN users u2 ON m.team2_player1 = u2.id
+  LEFT JOIN users u3 ON m.team1_player2 = u3.id
+  LEFT JOIN users u4 ON m.team2_player2 = u4.id
   LEFT JOIN profiles p1 ON m.team1_player1 = p1.user_id
   LEFT JOIN profiles p2 ON m.team2_player1 = p2.user_id
-  WHERE m.team1_player1 = ? OR m.team2_player1 = ?
-  ORDER BY m.created_at DESC LIMIT 50
+  WHERE ${baseWhere}${extraWhere}
+  ORDER BY m.created_at DESC LIMIT ${porPagina} OFFSET ${offsetPartidos}
 `,
   )
-  .bind(user.id, user.id)
+  .bind(...baseBinds, ...extraBinds)
   .all()
+
+function buildMatchPageUrl(p: number) {
+  const u = new URL(Astro.url)
+  u.searchParams.set('page', String(p))
+  if (filterFrom) u.searchParams.set('from', filterFrom)
+  if (filterTo) u.searchParams.set('to', filterTo)
+  if (filterResult) u.searchParams.set('result', filterResult)
+  return u.pathname + u.search
+}
+
+// Pre-compute pagination numbers with ellipsis
+const matchPageNumbers: (number | null)[] = []
+const allMatchPages = Array.from({ length: totalPaginas }, (_, i) => i + 1).filter(
+  (p) => p === 1 || p === totalPaginas || Math.abs(p - pagina) <= 2,
+)
+for (let i = 0; i < allMatchPages.length; i++) {
+  if (i > 0 && allMatchPages[i] - allMatchPages[i - 1] > 1) matchPageNumbers.push(null)
+  matchPageNumbers.push(allMatchPages[i])
+}
 ---
 
 <AppLayout title="Mis partidos" user={user}>
   <div class="max-w-3xl mx-auto space-y-6">
+    {
+      deleteMsg && (
+        <div data-toast="success" class="hidden">
+          {deleteMsg}
+        </div>
+      )
+    }
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-coral/10 flex items-center justify-center">
@@ -58,6 +229,72 @@ const matches = await db
         Nuevo partido
       </a>
     </div>
+
+    <!-- Filtros -->
+    <form method="GET" class="card p-4 flex flex-wrap items-end gap-3">
+      <div class="flex-1 min-w-[120px]">
+        <label
+          for="from"
+          class="text-[10px] font-semibold text-muted uppercase tracking-wider block mb-1"
+          >Desde</label
+        >
+        <input
+          type="date"
+          id="from"
+          name="from"
+          value={filterFrom}
+          class="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-navy focus:outline-none focus:border-coral/50 transition-colors"
+        />
+      </div>
+      <div class="flex-1 min-w-[120px]">
+        <label
+          for="to"
+          class="text-[10px] font-semibold text-muted uppercase tracking-wider block mb-1"
+          >Hasta</label
+        >
+        <input
+          type="date"
+          id="to"
+          name="to"
+          value={filterTo}
+          class="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-navy focus:outline-none focus:border-coral/50 transition-colors"
+        />
+      </div>
+      <div class="flex-1 min-w-[120px]">
+        <label
+          for="result"
+          class="text-[10px] font-semibold text-muted uppercase tracking-wider block mb-1"
+          >Resultado</label
+        >
+        <select
+          id="result"
+          name="result"
+          class="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-navy focus:outline-none focus:border-coral/50 transition-colors"
+        >
+          <option value="">Todos</option>
+          <option value="win" selected={filterResult === 'win'}>Victorias</option>
+          <option value="loss" selected={filterResult === 'loss'}>Derrotas</option>
+          <option value="draw" selected={filterResult === 'draw'}>Empates</option>
+        </select>
+      </div>
+      <div class="flex gap-2">
+        <button
+          type="submit"
+          class="px-4 py-1.5 bg-coral text-white text-xs font-semibold rounded-lg hover:bg-coral-dark transition-colors"
+          >Filtrar</button
+        >
+        {
+          (filterFrom || filterTo || filterResult) && (
+            <a
+              href="/app/partidos"
+              class="px-4 py-1.5 bg-gray-100 text-navy text-xs font-semibold rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              Limpiar
+            </a>
+          )
+        }
+      </div>
+    </form>
 
     {
       (matches.results?.length ?? 0) === 0 ? (
@@ -101,64 +338,211 @@ const matches = await db
       ) : (
         <div class="card p-0 overflow-hidden divide-y divide-gray-100">
           {matches.results?.map((m: any) => {
-            const isTeam1 = m.team1_player1 === user.id
+            const isTeam1 = m.team1_player1 === user.id || m.team1_player2 === user.id
             const won = isTeam1 ? m.team1_games > m.team2_games : m.team2_games > m.team1_games
             const draw = m.team1_games === m.team2_games
+            const conf = confMap.get(m.id)
+            const myConfStatus = conf?.my_status ?? null
+            const confirmedCount = conf?.confirmed_count ?? 0
+            const totalConf = conf?.total ?? 0
             return (
-              <div class="flex items-center justify-between px-5 py-4 hover:bg-gray-50/50 transition-colors">
-                <div class="flex items-center gap-3.5">
-                  <div
-                    class:list={[
-                      'w-2.5 h-2.5 rounded-full shrink-0',
-                      won ? 'bg-teal' : draw ? 'bg-amber-400' : 'bg-red-400',
-                    ]}
-                  />
-                  <div>
-                    <div class="text-sm font-medium text-navy">
-                      {m.t1p1_name} <span class="text-muted font-normal">vs</span> {m.t2p1_name}
-                    </div>
-                    <div class="text-[11px] text-muted mt-0.5">
-                      {new Date(m.created_at).toLocaleDateString('es', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
+              <div class="px-5 py-4 hover:bg-gray-50/50 transition-colors">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3.5">
+                    <div
+                      class:list={[
+                        'w-2.5 h-2.5 rounded-full shrink-0',
+                        won ? 'bg-teal' : draw ? 'bg-amber-400' : 'bg-red-400',
+                      ]}
+                    />
+                    <div>
+                      <div class="text-sm font-medium text-navy">
+                        {m.t1p1_name}
+                        {m.t1p2_name ? (
+                          <span class="text-muted/70 font-normal"> &amp; {m.t1p2_name}</span>
+                        ) : (
+                          ''
+                        )}
+                        <span class="text-muted font-normal mx-1">vs</span>
+                        {m.t2p1_name}
+                        {m.t2p2_name ? (
+                          <span class="text-muted/70 font-normal"> &amp; {m.t2p2_name}</span>
+                        ) : (
+                          ''
+                        )}
+                      </div>
+                      <div class="flex items-center gap-2 mt-0.5">
+                        <span class="text-[11px] text-muted">
+                          {new Date(m.created_at).toLocaleDateString('es', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
+                        </span>
+                        {m.set_scores && (
+                          <span class="text-[11px] font-mono text-muted/70">{m.set_scores}</span>
+                        )}
+                        {m.notes && (
+                          <span class="text-[11px] text-muted/60 italic truncate max-w-[180px]">
+                            💬 {m.notes}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
+                  <div class="flex items-center gap-3">
+                    <div class="text-right">
+                      <div class="text-base font-display font-bold tracking-tight">
+                        <span
+                          class:list={[
+                            m.team1_games > m.team2_games ? 'text-coral' : 'text-navy/60',
+                          ]}
+                        >
+                          {m.team1_games}
+                        </span>
+                        <span class="text-muted/40 mx-1.5">–</span>
+                        <span
+                          class:list={[
+                            m.team2_games > m.team1_games ? 'text-coral' : 'text-navy/60',
+                          ]}
+                        >
+                          {m.team2_games}
+                        </span>
+                      </div>
+                    </div>
+                    <span
+                      class:list={[
+                        'text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full',
+                        won
+                          ? 'bg-teal/10 text-teal'
+                          : draw
+                            ? 'bg-amber-400/10 text-amber-600'
+                            : 'bg-red-400/10 text-red-500',
+                      ]}
+                    >
+                      {won ? 'Victoria' : draw ? 'Empate' : 'Derrota'}
+                    </span>
+                    <form
+                      method="POST"
+                      class="inline"
+                      onsubmit="return confirm('¿Eliminar este partido? Se revertirán las valoraciones.')"
+                    >
+                      <input type="hidden" name="action" value="delete" />
+                      <input type="hidden" name="match_id" value={m.id} />
+                      <button
+                        type="submit"
+                        class="p-1.5 text-muted/50 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
+                        title="Eliminar partido"
+                      >
+                        <svg
+                          class="w-3.5 h-3.5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                          />
+                        </svg>
+                      </button>
+                    </form>
+                  </div>
                 </div>
-                <div class="text-right flex items-center gap-3">
-                  <div>
-                    <div class="text-base font-display font-bold tracking-tight">
+                {totalConf > 0 && (
+                  <div class="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-[10px] text-muted">Confirmaciones:</span>
                       <span
-                        class:list={[m.team1_games > m.team2_games ? 'text-coral' : 'text-navy/60']}
+                        class:list={[
+                          'text-[10px] font-semibold px-1.5 py-0.5 rounded-full',
+                          confirmedCount === totalConf
+                            ? 'bg-teal/10 text-teal'
+                            : 'bg-amber/10 text-amber-700',
+                        ]}
                       >
-                        {m.team1_games}
-                      </span>
-                      <span class="text-muted/40 mx-1.5">–</span>
-                      <span
-                        class:list={[m.team2_games > m.team1_games ? 'text-coral' : 'text-navy/60']}
-                      >
-                        {m.team2_games}
+                        {confirmedCount}/{totalConf}
                       </span>
                     </div>
+                    {myConfStatus === 0 && (
+                      <div class="flex gap-1.5">
+                        <form method="POST" class="inline">
+                          <input type="hidden" name="action" value="confirm" />
+                          <input type="hidden" name="match_id" value={m.id} />
+                          <button
+                            type="submit"
+                            class="px-2.5 py-1 text-[10px] font-semibold bg-teal/10 text-teal rounded-full hover:bg-teal/20 transition-colors"
+                          >
+                            Confirmar
+                          </button>
+                        </form>
+                        <form method="POST" class="inline">
+                          <input type="hidden" name="action" value="reject" />
+                          <input type="hidden" name="match_id" value={m.id} />
+                          <button
+                            type="submit"
+                            class="px-2.5 py-1 text-[10px] font-semibold bg-red-500/10 text-red-500 rounded-full hover:bg-red-500/20 transition-colors"
+                          >
+                            Disputar
+                          </button>
+                        </form>
+                      </div>
+                    )}
+                    {myConfStatus === 1 && (
+                      <span class="text-[10px] text-teal font-medium">✓ Confirmado</span>
+                    )}
+                    {myConfStatus === -1 && (
+                      <span class="text-[10px] text-red-500 font-medium">✗ Disputado</span>
+                    )}
                   </div>
-                  <span
-                    class:list={[
-                      'text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full',
-                      won
-                        ? 'bg-teal/10 text-teal'
-                        : draw
-                          ? 'bg-amber-400/10 text-amber-600'
-                          : 'bg-red-400/10 text-red-500',
-                    ]}
-                  >
-                    {won ? 'Victoria' : draw ? 'Empate' : 'Derrota'}
-                  </span>
-                </div>
+                )}
               </div>
             )
           })}
         </div>
+      )
+    }
+
+    {
+      totalPaginas > 1 && (
+        <nav class="flex items-center justify-center gap-2 mt-6" aria-label="Paginación">
+          {pagina > 1 && (
+            <a
+              href={buildMatchPageUrl(pagina - 1)}
+              class="px-3.5 py-2 text-sm font-medium text-navy bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+            >
+              ← Anterior
+            </a>
+          )}
+          {matchPageNumbers.map((p) =>
+            p === null ? (
+              <span class="px-2 text-muted text-sm">…</span>
+            ) : (
+              <a
+                href={buildMatchPageUrl(p)}
+                class:list={[
+                  'w-9 h-9 flex items-center justify-center text-sm font-medium rounded-xl transition-colors',
+                  p === pagina
+                    ? 'bg-coral text-white'
+                    : 'bg-white border border-gray-200 text-navy hover:bg-gray-50',
+                ]}
+                aria-current={p === pagina ? 'page' : undefined}
+              >
+                {p}
+              </a>
+            ),
+          )}
+          {pagina < totalPaginas && (
+            <a
+              href={buildMatchPageUrl(pagina + 1)}
+              class="px-3.5 py-2 text-sm font-medium text-navy bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+            >
+              Siguiente →
+            </a>
+          )}
+        </nav>
       )
     }
   </div>

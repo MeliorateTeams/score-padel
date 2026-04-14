@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /app/admin/
+Disallow: /app/
+
+Sitemap: https://scorepadel.padelzone.workers.dev/sitemap.xml

@@ -40,7 +40,14 @@ const nextLevel = ratingLevel(nextThreshold)
 const recentMatches = await db
   .prepare(
     `
-  SELECT m.*, m.created_at as match_date FROM matches m
+  SELECT m.*, m.created_at as match_date,
+    u1.name as t1p1_name, u2.name as t2p1_name,
+    u3.name as t1p2_name, u4.name as t2p2_name
+  FROM matches m
+  LEFT JOIN users u1 ON m.team1_player1 = u1.id
+  LEFT JOIN users u2 ON m.team2_player1 = u2.id
+  LEFT JOIN users u3 ON m.team1_player2 = u3.id
+  LEFT JOIN users u4 ON m.team2_player2 = u4.id
   WHERE m.team1_player1 = ? OR m.team1_player2 = ? OR m.team2_player1 = ? OR m.team2_player2 = ?
   ORDER BY m.created_at DESC LIMIT 5
 `,
@@ -52,11 +59,85 @@ const ratingHist = await db
   .prepare(
     `
   SELECT old_rating, new_rating, created_at FROM rating_history
-  WHERE user_id = ? ORDER BY created_at DESC LIMIT 10
+  WHERE user_id = ? ORDER BY created_at DESC LIMIT 20
 `,
   )
   .bind(user.id)
   .all()
+
+// Streak calculation
+let streak = 0
+let streakType = ''
+for (const m of (recentMatches.results ?? []) as any[]) {
+  const isTeam1 = m.team1_player1 === user.id || m.team1_player2 === user.id
+  const won = isTeam1 ? m.team1_games > m.team2_games : m.team2_games > m.team1_games
+  const currentT = won ? 'W' : 'L'
+  if (!streakType) streakType = currentT
+  if (currentT === streakType) streak++
+  else break
+}
+
+// Win rate
+const matchesPlayed = profile?.matches_played ?? 0
+const matchesWon = profile?.matches_won ?? 0
+const winRate = matchesPlayed > 0 ? Math.round((matchesWon / matchesPlayed) * 100) : 0
+
+// Pending challenges
+const pendingChallenges = await db
+  .prepare(
+    `SELECT c.*, u.name as challenger_name FROM challenges c
+     JOIN users u ON c.challenger_id = u.id
+     WHERE c.challenged_id = ? AND c.status = 'pending'
+     ORDER BY c.created_at DESC LIMIT 5`,
+  )
+  .bind(user.id)
+  .all()
+
+// Upcoming tournaments
+const upcomingTournaments = await db
+  .prepare(
+    `SELECT t.id, t.name, t.location, t.event_date, t.status,
+       (SELECT COUNT(*) FROM tournament_players tp WHERE tp.tournament_id = t.id) as player_count
+     FROM tournament_players tp2
+     JOIN tournaments t ON tp2.tournament_id = t.id
+     WHERE tp2.user_id = ? AND t.status = 'open'
+     ORDER BY t.event_date ASC LIMIT 3`,
+  )
+  .bind(user.id)
+  .all()
+
+// Badges
+const wr = matchesPlayed > 0 ? (matchesWon / matchesPlayed) * 100 : 0
+const ratingGain =
+  (ratingHist.results?.length ?? 0) > 0
+    ? Number((ratingHist.results as any[])[0].new_rating) -
+      Number((ratingHist.results as any[])[(ratingHist.results as any[]).length - 1].old_rating)
+    : 0
+const bestStreak = (() => {
+  let best = 0,
+    cur = 0
+  for (const m of (recentMatches.results ?? []) as any[]) {
+    const isT1 = m.team1_player1 === user.id || m.team1_player2 === user.id
+    const won = isT1 ? m.team1_games > m.team2_games : m.team2_games > m.team1_games
+    if (won) {
+      cur++
+      if (cur > best) best = cur
+    } else cur = 0
+  }
+  return best
+})()
+const tournamentsCount = upcomingTournaments.results?.length ?? 0
+const badges = [
+  { icon: '⚡', name: 'Primer partido', earned: matchesPlayed >= 1 },
+  { icon: '🏆', name: 'Primera victoria', earned: matchesWon >= 1 },
+  { icon: '🔥', name: '10 Victorias', earned: matchesWon >= 10 },
+  { icon: '💎', name: '25 Victorias', earned: matchesWon >= 25 },
+  { icon: '🎯', name: 'Precisión 60%+', earned: matchesPlayed >= 10 && wr >= 60 },
+  { icon: '🔥', name: 'Racha de 5', earned: bestStreak >= 5 },
+  { icon: '🏅', name: 'Torneísta', earned: tournamentsCount >= 1 },
+  { icon: '📈', name: 'En ascenso +1.0', earned: ratingGain >= 1.0 },
+]
+const earnedBadges = badges.filter((b) => b.earned)
 
 const isGuest = user.role === 'guest'
 const isAdmin = user.role === 'admin'
@@ -103,7 +184,7 @@ const errorParam = Astro.url.searchParams.get('error')
   }
 
   <!-- Stats grid -->
-  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+  <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8 stagger">
     <div class="card p-6">
       <div class="text-xs text-muted font-medium mb-2">Tu valoración</div>
       <div class="font-display text-3xl font-extrabold text-coral">{rating}</div>
@@ -117,7 +198,7 @@ const errorParam = Astro.url.searchParams.get('error')
       </div>
     </div>
     <div class="card p-6">
-      <div class="text-xs text-muted font-medium mb-2">Partidos jugados</div>
+      <div class="text-xs text-muted font-medium mb-2">Partidos</div>
       <div class="font-display text-3xl font-extrabold text-navy">
         {profile?.matches_played ?? 0}
       </div>
@@ -126,10 +207,24 @@ const errorParam = Astro.url.searchParams.get('error')
       <div class="text-xs text-muted font-medium mb-2">Victorias</div>
       <div class="font-display text-3xl font-extrabold text-teal">{profile?.matches_won ?? 0}</div>
       <div class="text-xs text-muted mt-1">
+        {matchesPlayed > 0 ? `${winRate}% win rate` : 'Sin partidos'}
+      </div>
+    </div>
+    <div class="card p-6">
+      <div class="text-xs text-muted font-medium mb-2">Racha actual</div>
+      <div
+        class="font-display text-3xl font-extrabold"
+        class:list={[streakType === 'W' ? 'text-teal' : streak > 0 ? 'text-red-500' : 'text-navy']}
+      >
+        {streak > 0 ? `${streak}${streakType}` : '—'}
+      </div>
+      <div class="text-xs text-muted mt-1">
         {
-          (profile?.matches_played ?? 0) > 0
-            ? `${Math.round(((profile?.matches_won ?? 0) / (profile?.matches_played ?? 1)) * 100)}% win rate`
-            : 'Sin partidos aún'
+          streakType === 'W'
+            ? 'Victorias seguidas'
+            : streakType === 'L'
+              ? 'Derrotas seguidas'
+              : 'Juega tu primer partido'
         }
       </div>
     </div>
@@ -186,7 +281,87 @@ const errorParam = Astro.url.searchParams.get('error')
     </a>
   </div>
 
-  <!-- Recent matches -->
+  <!-- Badges earned -->
+  {
+    earnedBadges.length > 0 && (
+      <div class="flex flex-wrap gap-2 mb-8">
+        {earnedBadges.map((b) => (
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-full text-xs font-medium text-amber-700">
+            <span>{b.icon}</span>
+            {b.name}
+          </span>
+        ))}
+      </div>
+    )
+  }
+
+  <!-- Pending challenges -->
+  {
+    (pendingChallenges.results?.length ?? 0) > 0 && (
+      <div class="card p-5 mb-6 border-l-4 border-l-amber-400">
+        <h2 class="font-display text-sm font-bold text-navy uppercase tracking-wider mb-3 flex items-center gap-2">
+          <span>⚔️</span> Retos pendientes
+        </h2>
+        <div class="space-y-2">
+          {(pendingChallenges.results as any[]).map((c: any) => (
+            <a
+              href={`/app/jugadores/${c.challenger_id}`}
+              class="flex items-center justify-between p-3 rounded-xl bg-amber-50 hover:bg-amber-100 transition-colors"
+            >
+              <div class="text-sm text-navy font-medium">{c.challenger_name} te ha retado</div>
+              <div class="flex items-center gap-2">
+                {c.proposed_date && (
+                  <span class="text-[11px] text-muted">
+                    {new Date(c.proposed_date).toLocaleDateString('es', {
+                      day: 'numeric',
+                      month: 'short',
+                    })}
+                  </span>
+                )}
+                <span class="text-coral text-xs font-semibold">Ver →</span>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  <!-- Upcoming tournaments -->
+  {
+    (upcomingTournaments.results?.length ?? 0) > 0 && (
+      <div class="card p-5 mb-6">
+        <h2 class="font-display text-sm font-bold text-navy uppercase tracking-wider mb-3 flex items-center gap-2">
+          <span>🏆</span> Tus próximos torneos
+        </h2>
+        <div class="space-y-2">
+          {(upcomingTournaments.results as any[]).map((t: any) => (
+            <a
+              href={`/app/torneos/${t.id}`}
+              class="flex items-center justify-between p-3 rounded-xl bg-surface-2 border border-gray-100 hover:border-coral/30 transition-colors"
+            >
+              <div>
+                <div class="text-sm font-medium text-navy">{t.name}</div>
+                <div class="text-[11px] text-muted">
+                  {t.location} · {t.player_count} jugadores
+                </div>
+              </div>
+              {t.event_date && (
+                <span class="text-xs text-muted">
+                  {new Date(t.event_date).toLocaleDateString('es', {
+                    day: 'numeric',
+                    month: 'short',
+                  })}
+                </span>
+              )}
+            </a>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  <!-- Recent matches with names -->
   <div class="card p-6">
     <h2 class="font-display text-base font-bold text-navy mb-4">Partidos recientes</h2>
     {
@@ -200,16 +375,60 @@ const errorParam = Astro.url.searchParams.get('error')
         </p>
       ) : (
         <div class="space-y-2">
-          {recentMatches.results?.map((m: any) => (
-            <div class="flex items-center justify-between p-3 rounded-xl bg-surface-2 border border-gray-100">
-              <div class="text-sm text-navy">
-                Equipo 1 ({m.team1_games}g) vs Equipo 2 ({m.team2_games}g)
+          {recentMatches.results?.map((m: any) => {
+            const isTeam1 = m.team1_player1 === user.id || m.team1_player2 === user.id
+            const won = isTeam1 ? m.team1_games > m.team2_games : m.team2_games > m.team1_games
+            const draw = m.team1_games === m.team2_games
+            return (
+              <div class="flex items-center justify-between p-3 rounded-xl bg-surface-2 border border-gray-100">
+                <div class="flex items-center gap-3">
+                  <div
+                    class:list={[
+                      'w-2 h-2 rounded-full shrink-0',
+                      won ? 'bg-teal' : draw ? 'bg-amber-400' : 'bg-red-400',
+                    ]}
+                  />
+                  <div>
+                    <div class="text-sm text-navy">
+                      <span class:list={[isTeam1 ? 'font-semibold' : '']}>
+                        {m.t1p1_name}
+                        {m.t1p2_name ? ` & ${m.t1p2_name}` : ''}
+                      </span>
+                      <span class="text-muted mx-1.5">vs</span>
+                      <span class:list={[!isTeam1 ? 'font-semibold' : '']}>
+                        {m.t2p1_name}
+                        {m.t2p2_name ? ` & ${m.t2p2_name}` : ''}
+                      </span>
+                    </div>
+                    {m.notes && (
+                      <div class="text-[11px] text-muted/70 mt-0.5 italic">"{m.notes}"</div>
+                    )}
+                  </div>
+                </div>
+                <div class="flex items-center gap-3 shrink-0">
+                  <span class="font-display text-sm font-bold">
+                    <span
+                      class:list={[m.team1_games > m.team2_games ? 'text-coral' : 'text-navy/50']}
+                    >
+                      {m.team1_games}
+                    </span>
+                    <span class="text-muted/40 mx-1">–</span>
+                    <span
+                      class:list={[m.team2_games > m.team1_games ? 'text-coral' : 'text-navy/50']}
+                    >
+                      {m.team2_games}
+                    </span>
+                  </span>
+                  <span class="text-[10px] text-muted">
+                    {new Date(m.match_date).toLocaleDateString('es', {
+                      day: 'numeric',
+                      month: 'short',
+                    })}
+                  </span>
+                </div>
               </div>
-              <div class="text-xs text-muted">
-                {new Date(m.match_date).toLocaleDateString('es')}
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )
     }
@@ -220,7 +439,58 @@ const errorParam = Astro.url.searchParams.get('error')
     (ratingHist.results?.length ?? 0) > 0 && (
       <div class="card p-6 mt-6">
         <h2 class="font-display text-base font-bold text-navy mb-4">Evolución de valoración</h2>
-        <div class="space-y-2">
+        {(() => {
+          const points = (ratingHist.results ?? []).map((h: any) => Number(h.new_rating)).reverse()
+          if (points.length < 2) return null
+          const min = Math.min(...points) - 0.1
+          const max = Math.max(...points) + 0.1
+          const range = max - min || 1
+          const w = 400
+          const h = 120
+          const coords = points.map((v: number, i: number) => {
+            const x = (i / (points.length - 1)) * w
+            const y = h - ((v - min) / range) * h
+            return `${x},${y}`
+          })
+          const polyline = coords.join(' ')
+          const areaPath = `M0,${h} ${coords.map((c: string, i: number) => `L${c}`).join(' ')} L${w},${h} Z`
+          return (
+            <div class="overflow-hidden">
+              <svg viewBox={`-10 -10 ${w + 20} ${h + 30}`} class="w-full h-32">
+                <defs>
+                  <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#E5553B" stop-opacity="0.2" />
+                    <stop offset="100%" stop-color="#E5553B" stop-opacity="0" />
+                  </linearGradient>
+                </defs>
+                <path d={areaPath} fill="url(#chartGrad)" />
+                <polyline
+                  points={polyline}
+                  fill="none"
+                  stroke="#E5553B"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                {points.map((v: number, i: number) => {
+                  const x = (i / (points.length - 1)) * w
+                  const y = h - ((v - min) / range) * h
+                  return (
+                    <circle cx={x} cy={y} r="3.5" fill="white" stroke="#E5553B" stroke-width="2" />
+                  )
+                })}
+                {/* Y-axis labels */}
+                <text x="-8" y="8" text-anchor="end" class="text-[10px]" fill="#6B7280">
+                  {max.toFixed(1)}
+                </text>
+                <text x="-8" y={h + 4} text-anchor="end" class="text-[10px]" fill="#6B7280">
+                  {min.toFixed(1)}
+                </text>
+              </svg>
+            </div>
+          )
+        })()}
+        <div class="space-y-2 mt-2">
           {ratingHist.results?.map((h: any) => (
             <div class="flex items-center justify-between p-3 rounded-xl bg-surface-2 border border-gray-100">
               <div class="text-sm">
@@ -244,4 +514,42 @@ const errorParam = Astro.url.searchParams.get('error')
       </div>
     )
   }
+
+  <!-- Quick links -->
+  <div class="grid sm:grid-cols-3 gap-3 mt-6">
+    <a
+      href="/app/ranking"
+      class="card p-4 hover:border-amber/30 transition-colors flex items-center gap-3"
+    >
+      <span class="text-lg">⭐</span>
+      <div>
+        <div class="text-sm font-semibold text-navy">Ranking semanal</div>
+        <div class="text-[10px] text-muted">Jugador de la semana</div>
+      </div>
+    </a>
+    <a
+      href="/app/comparador"
+      class="card p-4 hover:border-teal/30 transition-colors flex items-center gap-3"
+    >
+      <span class="text-lg">⚔️</span>
+      <div>
+        <div class="text-sm font-semibold text-navy">Comparador</div>
+        <div class="text-[10px] text-muted">Compara dos jugadores</div>
+      </div>
+    </a>
+    {
+      !isGuest && (
+        <a
+          href="/api/export?type=partidos"
+          class="card p-4 hover:border-coral/30 transition-colors flex items-center gap-3"
+        >
+          <span class="text-lg">📥</span>
+          <div>
+            <div class="text-sm font-semibold text-navy">Exportar datos</div>
+            <div class="text-[10px] text-muted">Descargar partidos CSV</div>
+          </div>
+        </a>
+      )
+    }
+  </div>
 </AppLayout>
