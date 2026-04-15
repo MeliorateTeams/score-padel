@@ -154,8 +154,7 @@
     }
   }
 
-  /** @param {string} id */
-  function setActiveLink(id) {
+  function setActiveLink(id: string) {
     sectionLinks.forEach((link) => {
       const isActive = link.getAttribute('href') === `#${id}`
       link.classList.toggle('nav-active', isActive)
