@@ -94,12 +94,14 @@ if (user) {
               >
                 Dashboard
               </a>
-              <a
-                href="/app/torneos"
-                class="px-3 py-1.5 text-xs font-medium text-muted hover:text-coral rounded-full hover:bg-coral/5 transition-all"
-              >
-                Torneos
-              </a>
+              {!isGuest && (
+                <a
+                  href="/app/partidos/registrar"
+                  class="px-3 py-1.5 text-xs font-medium text-muted hover:text-coral rounded-full hover:bg-coral/5 transition-all"
+                >
+                  Crear Partido
+                </a>
+              )}
               {!isGuest && (
                 <a
                   href="/app/partidos"
@@ -108,11 +110,25 @@ if (user) {
                   Partidos
                 </a>
               )}
+              {isAdmin && (
+                <a
+                  href="/app/torneos"
+                  class="px-3 py-1.5 text-xs font-medium text-muted hover:text-coral rounded-full hover:bg-coral/5 transition-all"
+                >
+                  Torneos
+                </a>
+              )}
               <a
                 href="/app/jugadores"
                 class="px-3 py-1.5 text-xs font-medium text-muted hover:text-coral rounded-full hover:bg-coral/5 transition-all"
               >
                 Jugadores
+              </a>
+              <a
+                href="/app/canchas"
+                class="px-3 py-1.5 text-xs font-medium text-muted hover:text-coral rounded-full hover:bg-coral/5 transition-all"
+              >
+                Canchas
               </a>
               <a
                 href="/app/clasificacion"
@@ -197,12 +213,14 @@ if (user) {
               >
                 Dashboard
               </a>
-              <a
-                href="/app/torneos"
-                class="block px-3 py-2 text-sm font-medium text-muted hover:text-coral rounded-lg hover:bg-coral/5 transition-all"
-              >
-                Torneos
-              </a>
+              {!isGuest && (
+                <a
+                  href="/app/partidos/registrar"
+                  class="block px-3 py-2 text-sm font-medium text-muted hover:text-coral rounded-lg hover:bg-coral/5 transition-all"
+                >
+                  Crear Partido
+                </a>
+              )}
               {!isGuest && (
                 <a
                   href="/app/partidos"
@@ -211,11 +229,25 @@ if (user) {
                   Partidos
                 </a>
               )}
+              {isAdmin && (
+                <a
+                  href="/app/torneos"
+                  class="block px-3 py-2 text-sm font-medium text-muted hover:text-coral rounded-lg hover:bg-coral/5 transition-all"
+                >
+                  Torneos
+                </a>
+              )}
               <a
                 href="/app/jugadores"
                 class="block px-3 py-2 text-sm font-medium text-muted hover:text-coral rounded-lg hover:bg-coral/5 transition-all"
               >
                 Jugadores
+              </a>
+              <a
+                href="/app/canchas"
+                class="block px-3 py-2 text-sm font-medium text-muted hover:text-coral rounded-lg hover:bg-coral/5 transition-all"
+              >
+                Canchas
               </a>
               <a
                 href="/app/clasificacion"

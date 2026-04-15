@@ -1,0 +1,474 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro'
+
+const user = (Astro.locals as any).user
+if (!user) return Astro.redirect('/login')
+---
+
+<AppLayout title="Canchas de pádel" user={user}>
+  <div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-coral/10 flex items-center justify-center">
+        <svg
+          class="w-5 h-5 text-coral"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"></path>
+        </svg>
+      </div>
+      <div>
+        <h1 class="font-display text-xl font-bold text-navy">Canchas de pádel</h1>
+        <p class="text-xs text-muted">Encuentra pistas cerca de ti con OpenStreetMap.</p>
+      </div>
+    </div>
+
+    <!-- Search controls -->
+    <div class="card p-5">
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button
+          id="btn-locate"
+          class="inline-flex items-center gap-2 px-5 py-2.5 bg-coral text-white text-sm font-semibold rounded-full hover:bg-coral-dark transition-colors shadow-sm"
+        >
+          <svg
+            class="w-4 h-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
+            ></path>
+          </svg>
+          Usar mi ubicación
+        </button>
+        <div class="flex-1 relative">
+          <svg
+            class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted/50"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+            ></path>
+          </svg>
+          <input
+            type="text"
+            id="search-city"
+            placeholder="Buscar por ciudad (ej: Madrid, Valencia...)"
+            class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-full text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
+          />
+        </div>
+        <button
+          id="btn-search"
+          class="inline-flex items-center gap-2 px-5 py-2.5 border-2 border-coral/30 text-coral text-sm font-semibold rounded-full hover:bg-coral/5 transition-colors"
+        >
+          Buscar
+        </button>
+      </div>
+      <div id="search-status" class="mt-3 text-xs text-muted hidden"></div>
+    </div>
+
+    <!-- Map container -->
+    <div class="card overflow-hidden" style="height: 520px;">
+      <div id="map" class="w-full h-full"></div>
+    </div>
+
+    <!-- Results list -->
+    <div id="results-panel" class="hidden">
+      <h2
+        class="font-display text-sm font-bold text-navy uppercase tracking-wider mb-3 flex items-center gap-2"
+      >
+        <svg
+          class="w-4 h-4 text-coral"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
+          ></path>
+        </svg>
+        <span id="results-count">0</span> pistas encontradas
+      </h2>
+      <div id="results-list" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3"></div>
+    </div>
+  </div>
+
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <script is:inline src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+  <script is:inline>
+    ;(function () {
+      // Initialize map centered on Spain
+      const map = L.map('map').setView([40.4168, -3.7038], 6)
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19,
+      }).addTo(map)
+
+      const markersLayer = L.layerGroup().addTo(map)
+      let userMarker = null
+
+      const statusEl = document.getElementById('search-status')
+      const resultsPanel = document.getElementById('results-panel')
+      const resultsList = document.getElementById('results-list')
+      const resultsCount = document.getElementById('results-count')
+
+      function setStatus(msg, isError) {
+        statusEl.textContent = msg
+        statusEl.classList.remove('hidden', 'text-red-500', 'text-muted')
+        statusEl.classList.add(isError ? 'text-red-500' : 'text-muted')
+      }
+
+      // Custom padel marker icon
+      const padelIcon = L.divIcon({
+        html: '<div style="background:#FF6A00;width:28px;height:28px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg></div>',
+        className: '',
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+        popupAnchor: [0, -16],
+      })
+
+      const userIcon = L.divIcon({
+        html: '<div style="background:#0D9488;width:32px;height:32px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="5"/></svg></div>',
+        className: '',
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+      })
+
+      // Query Overpass API for padel courts
+      async function searchPadel(lat, lon, radius) {
+        radius = radius || 15000 // 15km default
+        setStatus('Buscando pistas de pádel cerca...', false)
+
+        const query = `
+          [out:json][timeout:25];
+          (
+            node["sport"="padel"](around:${radius},${lat},${lon});
+            way["sport"="padel"](around:${radius},${lat},${lon});
+            relation["sport"="padel"](around:${radius},${lat},${lon});
+            node["leisure"="pitch"]["sport"="padel"](around:${radius},${lat},${lon});
+            way["leisure"="pitch"]["sport"="padel"](around:${radius},${lat},${lon});
+            node["name"~"[Pp][aá]del"](around:${radius},${lat},${lon});
+            way["name"~"[Pp][aá]del"](around:${radius},${lat},${lon});
+          );
+          out center body;
+        `
+
+        try {
+          const res = await fetch('https://overpass-api.de/api/interpreter', {
+            method: 'POST',
+            body: 'data=' + encodeURIComponent(query),
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          })
+
+          if (!res.ok) throw new Error('Error en la API de Overpass')
+          const data = await res.json()
+
+          markersLayer.clearLayers()
+          const courts = []
+
+          for (const el of data.elements) {
+            const elLat = el.lat || (el.center && el.center.lat)
+            const elLon = el.lon || (el.center && el.center.lon)
+            if (!elLat || !elLon) continue
+
+            const name = (el.tags && el.tags.name) || 'Pista de pádel'
+            const address = el.tags && (el.tags['addr:street'] || el.tags['addr:city'] || '')
+            const surface = el.tags && el.tags.surface ? el.tags.surface : ''
+            const access = el.tags && el.tags.access ? el.tags.access : ''
+            const phone = el.tags && el.tags.phone ? el.tags.phone : ''
+            const website = el.tags && el.tags.website ? el.tags.website : ''
+            const operator = el.tags && el.tags.operator ? el.tags.operator : ''
+
+            // Distance from user
+            const dist = getDistanceKm(lat, lon, elLat, elLon)
+
+            courts.push({
+              name,
+              address,
+              surface,
+              access,
+              phone,
+              website,
+              operator,
+              lat: elLat,
+              lon: elLon,
+              dist,
+            })
+
+            let popup = '<div style="font-family:system-ui;min-width:180px;">'
+            popup +=
+              '<strong style="color:#1a2332;font-size:13px;">' + escapeHtml(name) + '</strong>'
+            if (address)
+              popup +=
+                '<br><span style="color:#888;font-size:11px;">📍 ' + escapeHtml(address) + '</span>'
+            if (operator)
+              popup +=
+                '<br><span style="color:#888;font-size:11px;">🏢 ' +
+                escapeHtml(operator) +
+                '</span>'
+            if (surface)
+              popup +=
+                '<br><span style="color:#888;font-size:11px;">🏓 ' +
+                escapeHtml(capitalise(surface)) +
+                '</span>'
+            if (phone)
+              popup +=
+                '<br><span style="font-size:11px;">📞 <a href="tel:' +
+                escapeHtml(phone) +
+                '" style="color:#FF6A00">' +
+                escapeHtml(phone) +
+                '</a></span>'
+            if (website)
+              popup +=
+                '<br><span style="font-size:11px;">🌐 <a href="' +
+                escapeHtml(website) +
+                '" target="_blank" rel="noopener" style="color:#FF6A00">Sitio web</a></span>'
+            popup +=
+              '<br><span style="color:#0D9488;font-size:11px;font-weight:600;">' +
+              dist.toFixed(1) +
+              ' km</span>'
+            popup += '</div>'
+
+            L.marker([elLat, elLon], { icon: padelIcon }).addTo(markersLayer).bindPopup(popup)
+          }
+
+          // Sort by distance
+          courts.sort(function (a, b) {
+            return a.dist - b.dist
+          })
+
+          // Update results panel
+          renderResults(courts)
+
+          if (courts.length === 0) {
+            setStatus(
+              'No se encontraron pistas en un radio de ' +
+                radius / 1000 +
+                ' km. Prueba con una zona más amplia.',
+              true,
+            )
+            // Try larger radius
+            if (radius < 50000) {
+              setStatus('Buscando en un radio más amplio (50 km)...', false)
+              return searchPadel(lat, lon, 50000)
+            }
+          } else {
+            setStatus(
+              courts.length +
+                ' pista' +
+                (courts.length !== 1 ? 's' : '') +
+                ' encontrada' +
+                (courts.length !== 1 ? 's' : '') +
+                ' en un radio de ' +
+                radius / 1000 +
+                ' km.',
+              false,
+            )
+          }
+        } catch (err) {
+          setStatus('Error al buscar pistas: ' + err.message, true)
+        }
+      }
+
+      function renderResults(courts) {
+        resultsCount.textContent = courts.length
+        resultsList.innerHTML = ''
+
+        if (courts.length === 0) {
+          resultsPanel.classList.add('hidden')
+          return
+        }
+
+        resultsPanel.classList.remove('hidden')
+
+        courts.forEach(function (c) {
+          const card = document.createElement('div')
+          card.className =
+            'card p-4 cursor-pointer hover:border-coral/30 hover:shadow-md transition-all'
+          card.addEventListener('click', function () {
+            map.setView([c.lat, c.lon], 16)
+          })
+
+          let html =
+            '<div class="font-display text-sm font-bold text-navy mb-1">' +
+            escapeHtml(c.name) +
+            '</div>'
+          if (c.address)
+            html += '<div class="text-xs text-muted mb-1">📍 ' + escapeHtml(c.address) + '</div>'
+          if (c.operator)
+            html += '<div class="text-xs text-muted mb-1">🏢 ' + escapeHtml(c.operator) + '</div>'
+
+          const details = []
+          if (c.surface) details.push(capitalise(c.surface))
+          if (c.access)
+            details.push(
+              c.access === 'yes' || c.access === 'public'
+                ? 'Pública'
+                : c.access === 'private'
+                  ? 'Privada'
+                  : c.access,
+            )
+          if (details.length)
+            html += '<div class="text-xs text-muted/70 mb-1">' + details.join(' · ') + '</div>'
+
+          html += '<div class="text-xs font-semibold text-teal">' + c.dist.toFixed(1) + ' km</div>'
+
+          if (c.phone || c.website) {
+            html += '<div class="flex gap-2 mt-2">'
+            if (c.phone)
+              html +=
+                '<a href="tel:' +
+                escapeHtml(c.phone) +
+                '" class="text-xs text-coral hover:underline" onclick="event.stopPropagation()">📞 Llamar</a>'
+            if (c.website)
+              html +=
+                '<a href="' +
+                escapeHtml(c.website) +
+                '" target="_blank" rel="noopener" class="text-xs text-coral hover:underline" onclick="event.stopPropagation()">🌐 Web</a>'
+            html += '</div>'
+          }
+
+          card.innerHTML = html
+          resultsList.appendChild(card)
+        })
+      }
+
+      function getDistanceKm(lat1, lon1, lat2, lon2) {
+        var R = 6371
+        var dLat = (lat2 - lat1) * (Math.PI / 180)
+        var dLon = (lon2 - lon1) * (Math.PI / 180)
+        var a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(lat1 * (Math.PI / 180)) *
+            Math.cos(lat2 * (Math.PI / 180)) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2)
+        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+        return R * c
+      }
+
+      function escapeHtml(str) {
+        var d = document.createElement('div')
+        d.textContent = str
+        return d.innerHTML
+      }
+
+      function capitalise(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1)
+      }
+
+      // Geolocation button
+      document.getElementById('btn-locate').addEventListener('click', function () {
+        if (!navigator.geolocation) {
+          setStatus('Tu navegador no soporta geolocalización.', true)
+          return
+        }
+
+        setStatus('Obteniendo tu ubicación...', false)
+        this.disabled = true
+        var btn = this
+
+        navigator.geolocation.getCurrentPosition(
+          function (pos) {
+            btn.disabled = false
+            var lat = pos.coords.latitude
+            var lon = pos.coords.longitude
+
+            if (userMarker) map.removeLayer(userMarker)
+            userMarker = L.marker([lat, lon], { icon: userIcon })
+              .addTo(map)
+              .bindPopup('Tu ubicación')
+              .openPopup()
+            map.setView([lat, lon], 13)
+
+            searchPadel(lat, lon, 15000)
+          },
+          function (err) {
+            btn.disabled = false
+            setStatus('No se pudo obtener tu ubicación: ' + err.message, true)
+          },
+          { enableHighAccuracy: true, timeout: 10000 },
+        )
+      })
+
+      // City search with Nominatim
+      var searchInput = document.getElementById('search-city')
+      var searchBtn = document.getElementById('btn-search')
+
+      async function searchCity() {
+        var city = searchInput.value.trim()
+        if (!city) return
+
+        setStatus('Buscando "' + city + '"...', false)
+
+        try {
+          var res = await fetch(
+            'https://nominatim.openstreetmap.org/search?format=json&q=' +
+              encodeURIComponent(city) +
+              '&limit=1&accept-language=es',
+            {
+              headers: { 'User-Agent': 'ScorePadel/1.0' },
+            },
+          )
+          var results = await res.json()
+
+          if (results.length === 0) {
+            setStatus('No se encontró la ciudad "' + city + '".', true)
+            return
+          }
+
+          var lat = parseFloat(results[0].lat)
+          var lon = parseFloat(results[0].lon)
+
+          if (userMarker) map.removeLayer(userMarker)
+          userMarker = L.marker([lat, lon], { icon: userIcon })
+            .addTo(map)
+            .bindPopup(results[0].display_name)
+            .openPopup()
+          map.setView([lat, lon], 13)
+
+          searchPadel(lat, lon, 15000)
+        } catch (err) {
+          setStatus('Error al buscar ciudad: ' + err.message, true)
+        }
+      }
+
+      searchBtn.addEventListener('click', searchCity)
+      searchInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault()
+          searchCity()
+        }
+      })
+    })()
+  </script>
+</AppLayout>
