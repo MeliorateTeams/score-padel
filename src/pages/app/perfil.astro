@@ -113,46 +113,54 @@ if (Astro.request.method === 'POST') {
           .prepare('UPDATE users SET password_hash = ? WHERE id = ?')
           .bind(newHash, user.id)
           .run()
-        message = 'Contraseña cambiada correctamente.'
+        // Invalidar todas las sesiones excepto la actual
+        const currentSession = Astro.cookies.get('session')?.value
+        if (currentSession) {
+          await db.prepare('DELETE FROM sessions WHERE user_id = ? AND id != ?').bind(user.id, currentSession).run()
+        }
+        message = 'Contraseña cambiada correctamente. Todas las demás sesiones han sido cerradas.'
       }
     }
   }
 
-  const experienceYears = Math.max(
-    0,
-    Math.min(50, parseInt(form.get('experience_years')?.toString() ?? '0') || 0),
-  )
-  const racquetSports = sanitize(form.get('racquet_sports')?.toString() ?? '', 100)
-  const birthDate = form.get('birth_date')?.toString() ?? ''
-  const gender = form.get('gender')?.toString() ?? ''
+  // Profile update - solo se ejecuta si no es otra acción específica
+  if (!action || action === 'update-profile') {
+    const experienceYears = Math.max(
+      0,
+      Math.min(50, parseInt(form.get('experience_years')?.toString() ?? '0') || 0),
+    )
+    const racquetSports = sanitize(form.get('racquet_sports')?.toString() ?? '', 100)
+    const birthDate = form.get('birth_date')?.toString() ?? ''
+    const gender = form.get('gender')?.toString() ?? ''
 
-  // Validate gender option
-  const validGenders = ['', 'masculino', 'femenino', 'otro']
-  const safeGender = validGenders.includes(gender) ? gender : ''
+    // Validate gender option
+    const validGenders = ['', 'masculino', 'femenino', 'otro']
+    const safeGender = validGenders.includes(gender) ? gender : ''
 
-  // Validate birth_date format (YYYY-MM-DD)
-  const safeBirthDate = /^\d{4}-\d{2}-\d{2}$/.test(birthDate) ? birthDate : ''
+    // Validate birth_date format (YYYY-MM-DD)
+    const safeBirthDate = /^\d{4}-\d{2}-\d{2}$/.test(birthDate) ? birthDate : ''
 
-  await updateProfile(db, user.id, {
-    bio: sanitize(form.get('bio')?.toString() ?? '', 500),
-    location: sanitize(form.get('location')?.toString() ?? '', 100),
-    experience_years: experienceYears,
-    racquet_sports: racquetSports,
-    birth_date: safeBirthDate,
-    gender: safeGender,
-  })
+    await updateProfile(db, user.id, {
+      bio: sanitize(form.get('bio')?.toString() ?? '', 500),
+      location: sanitize(form.get('location')?.toString() ?? '', 100),
+      experience_years: experienceYears,
+      racquet_sports: racquetSports,
+      birth_date: safeBirthDate,
+      gender: safeGender,
+    })
 
-  // Si el jugador no tiene partidos, ajustar rating inicial según perfil
-  const currentProfile = await getProfile(db, user.id)
-  if (currentProfile && currentProfile.matches_played === 0) {
-    const initialRating = calculateInitialRating(experienceYears, racquetSports)
-    await db
-      .prepare("UPDATE profiles SET rating = ?, updated_at = datetime('now') WHERE user_id = ?")
-      .bind(initialRating, user.id)
-      .run()
+    // Si el jugador no tiene partidos, ajustar rating inicial según perfil
+    const currentProfile = await getProfile(db, user.id)
+    if (currentProfile && currentProfile.matches_played === 0) {
+      const initialRating = calculateInitialRating(experienceYears, racquetSports)
+      await db
+        .prepare("UPDATE profiles SET rating = ?, updated_at = datetime('now') WHERE user_id = ?")
+        .bind(initialRating, user.id)
+        .run()
+    }
+
+    message = 'Perfil actualizado correctamente.'
   }
-
-  message = 'Perfil actualizado correctamente.'
 }
 
 const profile = await getProfile(db, user.id)

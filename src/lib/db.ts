@@ -66,7 +66,7 @@ export async function getSession(db: D1Database, token: string): Promise<User | 
       `
     SELECT u.id, u.email, u.name, u.role, u.created_at FROM sessions s
     JOIN users u ON s.user_id = u.id
-    WHERE s.id = ? AND s.expires_at > datetime('now')
+    WHERE s.id = ? AND s.expires_at > datetime('now') AND u.role != 'suspended'
   `,
     )
     .bind(token)

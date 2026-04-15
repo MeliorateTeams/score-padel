@@ -4,7 +4,7 @@ import { loginUser, createSession } from '../../../lib/db'
 
 async function verifyTurnstile(token: string, ip: string): Promise<boolean> {
   const secret = (env as any).TURNSTILE_SECRET
-  if (!secret) return true // si no hay secret configurado, no bloqueamos
+  if (!secret) return false // fail-closed: sin secret configurado, denegar
   const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

@@ -34,8 +34,11 @@ if (Astro.request.method === 'POST' && user.role !== 'guest') {
           .prepare('SELECT id FROM users WHERE email = ?')
           .bind(partner_email)
           .first()) as { id: string } | null
-        const alreadyIn = players.results?.some((p: any) => p.id === user.id) ?? false
-        if (partner && partner.id !== user.id && !alreadyIn) {
+        const alreadyInCheck = await db
+          .prepare('SELECT 1 FROM tournament_players WHERE tournament_id = ? AND user_id = ?')
+          .bind(id, user.id)
+          .first()
+        if (partner && partner.id !== user.id && !alreadyInCheck) {
           try {
             await db
               .prepare('INSERT INTO tournament_players (tournament_id, user_id) VALUES (?, ?)')

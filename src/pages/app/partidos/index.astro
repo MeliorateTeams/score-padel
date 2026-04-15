@@ -15,15 +15,13 @@ if (Astro.request.method === 'POST') {
   const matchId = form.get('match_id')
 
   if (action === 'delete' && matchId) {
-    // Verify ownership or admin
+    // Only admin or original recorder (within 24h) can delete
     const match = await db.prepare('SELECT * FROM matches WHERE id = ?').bind(matchId).first()
+    const isRecorder = match?.recorded_by === user.id
+    const isRecent = match?.created_at && (Date.now() - new Date(match.created_at as string).getTime()) < 86400000
     if (
       match &&
-      (isAdmin ||
-        match.team1_player1 === user.id ||
-        match.team1_player2 === user.id ||
-        match.team2_player1 === user.id ||
-        match.team2_player2 === user.id)
+      (isAdmin || (isRecorder && isRecent))
     ) {
       const players = [
         match.team1_player1,

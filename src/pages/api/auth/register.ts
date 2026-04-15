@@ -4,7 +4,7 @@ import { createUser, createSession } from '../../../lib/db'
 
 async function verifyTurnstile(token: string, ip: string): Promise<boolean> {
   const secret = (env as any).TURNSTILE_SECRET
-  if (!secret) return true
+  if (!secret) return false // fail-closed: sin secret, denegar
   const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -41,6 +41,9 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
       headers: { Location: new URL('/registro?error=campos', request.url).toString() },
     })
   }
+
+  // Sanitize name: strip HTML tags
+  const safeName = name.replace(/<[^>]*>/g, '').trim()
 
   // Enforce input length limits to prevent DoS / oversized payloads
   if (name.length > 100 || email.length > 254 || password.length > 128) {
@@ -98,7 +101,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
   }
 
   try {
-    const userId = await createUser(db, email, password, name)
+    const userId = await createUser(db, email, password, safeName)
     const token = await createSession(db, userId)
     cookies.set('session', token, {
       httpOnly: true,

@@ -39,11 +39,28 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
   // Delete all user data in order (respecting foreign key logic)
   await db.prepare('DELETE FROM sessions WHERE user_id = ?').bind(user.id).run()
   await db.prepare('DELETE FROM notifications WHERE user_id = ?').bind(user.id).run()
+  await db.prepare('DELETE FROM rating_history WHERE user_id = ?').bind(user.id).run()
+  await db.prepare('DELETE FROM match_confirmations WHERE user_id = ?').bind(user.id).run()
   await db
-    .prepare(
-      `DELETE FROM matches WHERE team1_player1 = ? OR team1_player2 = ? OR team2_player1 = ? OR team2_player2 = ?`,
-    )
-    .bind(user.id, user.id, user.id, user.id)
+    .prepare('DELETE FROM challenges WHERE challenger_id = ? OR challenged_id = ?')
+    .bind(user.id, user.id)
+    .run()
+  // Anonymize match participation instead of deleting (preserve other players' history)
+  await db
+    .prepare('UPDATE matches SET team1_player1 = NULL WHERE team1_player1 = ?')
+    .bind(user.id)
+    .run()
+  await db
+    .prepare('UPDATE matches SET team1_player2 = NULL WHERE team1_player2 = ?')
+    .bind(user.id)
+    .run()
+  await db
+    .prepare('UPDATE matches SET team2_player1 = NULL WHERE team2_player1 = ?')
+    .bind(user.id)
+    .run()
+  await db
+    .prepare('UPDATE matches SET team2_player2 = NULL WHERE team2_player2 = ?')
+    .bind(user.id)
     .run()
   await db
     .prepare('DELETE FROM tournament_players WHERE user_id = ?')

@@ -20,9 +20,12 @@ if (Astro.request.method === 'POST' && user.role === 'admin') {
     createErr = 'Rellena nombre, email y contraseña.'
   } else if (password.length < 8) {
     createErr = 'La contraseña debe tener mínimo 8 caracteres.'
+  } else if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
+    createErr = 'La contraseña debe incluir mayúsculas, minúsculas y números.'
   } else {
+    const safeName = (name ?? '').replace(/<[^>]*>/g, '').trim()
     try {
-      await createUser(db, email, password, name)
+      await createUser(db, email, password, safeName)
       createMsg = `Jugador "${name}" creado correctamente.`
     } catch (e: any) {
       if (e.message?.includes('UNIQUE')) {

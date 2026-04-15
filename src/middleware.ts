@@ -54,15 +54,16 @@ export const onRequest = defineMiddleware(async (context, next) => {
   if (['POST', 'PUT', 'DELETE'].includes(context.request.method)) {
     const origin = context.request.headers.get('origin')
     const host = context.request.headers.get('host')
-    if (origin && host) {
-      try {
-        const originHost = new URL(origin).host
-        if (originHost !== host) {
-          return new Response('Forbidden – origen no permitido', { status: 403 })
-        }
-      } catch {
-        return new Response('Forbidden – origen inválido', { status: 403 })
+    if (!origin || !host) {
+      return new Response('Forbidden – falta cabecera Origin', { status: 403 })
+    }
+    try {
+      const originHost = new URL(origin).host
+      if (originHost !== host) {
+        return new Response('Forbidden – origen no permitido', { status: 403 })
       }
+    } catch {
+      return new Response('Forbidden – origen inválido', { status: 403 })
     }
   }
 
@@ -93,11 +94,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
     'Content-Security-Policy',
     [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
-      "style-src 'self' 'unsafe-inline'",
+      "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://unpkg.com",
+      "style-src 'self' 'unsafe-inline' https://unpkg.com",
       "font-src 'self'",
-      "img-src 'self' data: blob:",
-      "connect-src 'self' https://challenges.cloudflare.com",
+      "img-src 'self' data: blob: https://*.tile.openstreetmap.org",
+      "connect-src 'self' https://challenges.cloudflare.com https://overpass-api.de https://nominatim.openstreetmap.org",
       'frame-src https://challenges.cloudflare.com',
       "frame-ancestors 'none'",
       "base-uri 'self'",

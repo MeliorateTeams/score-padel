@@ -13,10 +13,19 @@ export async function hashPassword(password: string): Promise<string> {
 
 export async function verifyPassword(password: string, stored: string): Promise<boolean> {
   const [saltHex, hashHex] = stored.split(':')
+  if (!saltHex || !hashHex) return false
   const salt = fromHex(saltHex)
   const key = await deriveKey(password, salt)
   const hash = await crypto.subtle.exportKey('raw', key)
-  return toHex(new Uint8Array(hash)) === hashHex
+  // Constant-time comparison to prevent timing attacks
+  const a = new Uint8Array(hash)
+  const b = fromHex(hashHex)
+  if (a.length !== b.length) return false
+  let diff = 0
+  for (let i = 0; i < a.length; i++) {
+    diff |= a[i] ^ b[i]
+  }
+  return diff === 0
 }
 
 async function deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey> {

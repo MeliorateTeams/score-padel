@@ -74,7 +74,19 @@ export const GET: APIRoute = async ({ locals, url }) => {
   } else if (type === 'torneo') {
     const tid = url.searchParams.get('tid')
     if (!tid) return new Response('Missing tournament id', { status: 400 })
-    const t = await db.prepare('SELECT name FROM tournaments WHERE id = ?').bind(tid).first()
+    // Only admin or tournament participant/creator can export
+    const t = (await db
+      .prepare('SELECT name, creator_id FROM tournaments WHERE id = ?')
+      .bind(tid)
+      .first()) as any
+    if (!t) return new Response('Tournament not found', { status: 404 })
+    const isParticipant = await db
+      .prepare('SELECT 1 FROM tournament_players WHERE tournament_id = ? AND user_id = ?')
+      .bind(tid, user.id)
+      .first()
+    if (user.role !== 'admin' && t.creator_id !== user.id && !isParticipant) {
+      return new Response('Forbidden', { status: 403 })
+    }
     filename = `torneo_${(t as any)?.name || 'export'}.csv`.replace(/[^a-zA-Z0-9._-]/g, '_')
     csv = 'Fecha,Equipo 1,Equipo 2,Games Eq1,Games Eq2,Estado\n'
     const rows = await db
