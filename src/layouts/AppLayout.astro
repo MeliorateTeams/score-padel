@@ -28,7 +28,9 @@ if (user) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/icon.png" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#FF6A00" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -59,7 +61,7 @@ if (user) {
               href="/app"
               class="flex items-center gap-1.5 font-display font-bold text-base tracking-tight text-navy"
             >
-              <img src="/favicon.svg" alt="Score Padel" class="w-9 h-9" />
+              <img src="/icon.png" alt="Score Padel" class="w-9 h-9" />
               Score<span class="text-coral">Padel</span>
             </a>
             {/* Quick search */}
@@ -319,7 +321,7 @@ if (user) {
           localStorage.setItem(key, String(now))
           new Notification('Score Padel', {
             body: `Tienes ${unreadCount} notificación${unreadCount > 1 ? 'es' : ''} sin leer`,
-            icon: '/favicon.svg',
+            icon: '/icon.png',
             tag: 'sp-unread',
           })
         }
