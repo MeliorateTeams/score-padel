@@ -3,7 +3,7 @@
 ---
 
 <nav
-  class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100 dark-nav"
+  class="fixed top-0 left-0 right-0 z-50 backdrop-blur-md shadow-sm border-b border-white/20 dark-nav"
 >
   <div class="max-w-7xl mx-auto px-6 lg:px-8">
     <div class="flex items-center justify-between h-16">
@@ -67,7 +67,10 @@
   </div>
 
   <!-- Mobile menu -->
-  <div id="mobile-menu" class="hidden md:hidden border-t border-gray-100 bg-white shadow-lg">
+  <div
+    id="mobile-menu"
+    class="hidden md:hidden border-t border-white/15 bg-sky-dark/95 backdrop-blur-md shadow-lg"
+  >
     <div class="px-6 py-4 space-y-1">
       <a
         href="#quienes-somos"
@@ -125,7 +128,6 @@
     if (!nav) return
     if (window.scrollY > 50) {
       nav.classList.add('nav-scrolled')
-      nav.classList.remove('bg-white/80')
       logo?.classList.remove('text-navy')
       logo?.classList.add('text-white')
       desktopLinks?.forEach((l) => {
@@ -136,7 +138,6 @@
       mobileBtn?.classList.add('text-white')
     } else {
       nav.classList.remove('nav-scrolled')
-      nav.classList.add('bg-white/80')
       logo?.classList.add('text-navy')
       logo?.classList.remove('text-white')
       desktopLinks?.forEach((l) => {
