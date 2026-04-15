@@ -107,6 +107,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   )
   response.headers.set('X-Permitted-Cross-Domain-Policies', 'none')
   response.headers.set('Cross-Origin-Opener-Policy', 'same-origin')
+  response.headers.set('Cross-Origin-Resource-Policy', 'same-origin')
 
   return response
 })
