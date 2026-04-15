@@ -145,31 +145,31 @@
 .bg-navy { background-color: var(--color-navy) !important; }
 
 /* ─── Deep zone (bottom sections on dark blue gradient) ─── */
-.deep-zone .text-navy { color: #C8E2FA !important; }
-.deep-zone .text-muted { color: #7BAED4 !important; }
-.deep-zone .text-text { color: #A0CCE8 !important; }
+.deep-zone .text-navy { color: #E8F4FD !important; }
+.deep-zone .text-muted { color: #99C7E5 !important; }
+.deep-zone .text-text { color: #BDD9EE !important; }
 .deep-zone .card,
 .deep-zone .card-hover {
-  background: rgba(15,34,64,0.50) !important;
-  border-color: rgba(120,180,230,0.18) !important;
+  background: rgba(15,34,64,0.55) !important;
+  border-color: rgba(120,180,230,0.20) !important;
 }
 .deep-zone .card-hover:hover {
-  background: rgba(15,34,64,0.65) !important;
-  border-color: rgba(255,106,0,0.45) !important;
+  background: rgba(15,34,64,0.70) !important;
+  border-color: rgba(255,106,0,0.50) !important;
 }
 .deep-zone .border-gray-100 { border-color: rgba(120,180,230,0.15) !important; }
 .deep-zone .bg-gray-50 { background-color: rgba(15,34,64,0.30) !important; }
 .deep-zone .bg-white { background-color: rgba(15,34,64,0.35) !important; }
 .deep-zone .text-navy\/10 { color: rgba(120,180,230,0.20) !important; }
-.deep-zone details summary { color: #C8E2FA !important; }
-.deep-zone details div { color: #7BAED4 !important; }
+.deep-zone details summary { color: #E8F4FD !important; }
+.deep-zone details div { color: #99C7E5 !important; }
 .deep-zone .bg-coral\/5,
 .deep-zone .bg-teal\/5,
 .deep-zone [class*="bg-amber/5"] { background-color: rgba(15,34,64,0.35) !important; }
 .deep-zone .border-coral\/10,
 .deep-zone .border-teal\/10,
 .deep-zone [class*="border-amber/10"] { border-color: rgba(120,180,230,0.15) !important; }
-.deep-zone .text-white\/60 { color: #7BAED4 !important; }
+.deep-zone .text-white\/60 { color: #99C7E5 !important; }
 .deep-zone .border-white\/20 { border-color: rgba(120,180,230,0.25) !important; }
 
 /* ─── Animations ─── */
