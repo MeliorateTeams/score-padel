@@ -11,8 +11,9 @@ let totalPlayers = 0,
   totalTournaments = 0
 let recentPublicMatches: any[] = []
 let upcomingPublicTournaments: any[] = []
+let carouselImages: any[] = []
 if (db) {
-  const [p, m, t, matches, tournaments] = await Promise.all([
+  const [p, m, t, matches, tournaments, carousel] = await Promise.all([
     db.prepare('SELECT COUNT(*) as c FROM users WHERE role != ?').bind('guest').first(),
     db.prepare('SELECT COUNT(*) as c FROM matches').first(),
     db.prepare('SELECT COUNT(*) as c FROM tournaments').first(),
@@ -43,12 +44,18 @@ if (db) {
     `,
       )
       .all(),
+    db
+      .prepare(
+        `SELECT id, image_url, alt_text FROM carousel_images WHERE active = 1 ORDER BY sort_order ASC`,
+      )
+      .all(),
   ])
   totalPlayers = p?.c ?? 0
   totalMatches = m?.c ?? 0
   totalTournaments = t?.c ?? 0
   recentPublicMatches = (matches.results ?? []) as any[]
   upcomingPublicTournaments = (tournaments.results ?? []) as any[]
+  carouselImages = (carousel.results ?? []) as any[]
 }
 
 const faqs = [
@@ -208,232 +215,100 @@ const porQueUnirse = [
       <div class="absolute top-20 right-0 w-125 h-125 bg-coral/8 rounded-full blur-[120px]"></div>
       <div class="absolute bottom-0 left-0 w-100 h-100 bg-teal/6 rounded-full blur-[100px]"></div>
       <div class="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 w-full">
-        <div class="grid lg:grid-cols-2 gap-16 items-center">
-          <div>
-            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-coral/10 mb-8">
-              <span class="w-2 h-2 rounded-full bg-coral pulse-soft"></span>
-              <span class="text-xs font-semibold text-coral tracking-wide uppercase"
-                >Plataforma activa</span
-              >
-            </div>
-            <h1
-              class="font-display text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.05] mb-6 text-navy"
+        <div class="max-w-3xl mx-auto text-center">
+          <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-coral/10 mb-6">
+            <span class="w-2 h-2 rounded-full bg-coral pulse-soft"></span>
+            <span class="text-xs font-semibold text-coral tracking-wide uppercase"
+              >Plataforma activa</span
             >
-              Eleva tu juego.<br />
-              <span class="text-gradient">Forja tu legado.</span>
-            </h1>
-            <p class="text-lg text-muted max-w-xl leading-relaxed mb-4">
-              Score Padel organiza, estandariza y jerarquiza las competiciones de pádel a nivel
-              mundial. Una valoración numérica basada en datos, no en opiniones.
-            </p>
-            <p class="text-base text-muted/80 max-w-xl leading-relaxed mb-10">
-              Únete a la comunidad global. Cada partido cuenta tu historia.
-            </p>
-            <div class="flex flex-wrap gap-3">
-              <a
-                href="/registro"
-                class="px-7 py-3.5 bg-coral text-white text-sm font-semibold rounded-full hover:bg-coral-dark transition-colors shadow-lg shadow-coral/25"
-              >
-                Crear cuenta gratis
-              </a>
-              <a
-                href="#como-funciona"
-                class="px-7 py-3.5 border-2 border-navy/10 text-navy text-sm font-semibold rounded-full hover:border-coral hover:text-coral transition-all"
-              >
-                Descubre cómo funciona
-              </a>
-            </div>
           </div>
-          <!-- Hero: Player Dashboard Card (professional app mockup) -->
-          <div class="hidden lg:flex items-center justify-center">
-            <div class="relative w-full max-w-[400px]">
-              <!-- Ambient glow blobs -->
-              <div
-                class="absolute -top-16 -right-16 w-72 h-72 bg-coral/15 rounded-full blur-[80px] pointer-events-none"
-              >
-              </div>
-              <div
-                class="absolute -bottom-8 -left-8 w-56 h-56 bg-teal/12 rounded-full blur-[60px] pointer-events-none"
-              >
-              </div>
+          <h1
+            class="font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.1] mb-4 text-navy"
+          >
+            Eleva tu juego.<br />
+            <span class="text-gradient">Forja tu legado.</span>
+          </h1>
+          <p class="text-base text-muted max-w-xl mx-auto leading-relaxed mb-3">
+            Score Padel organiza, estandariza y jerarquiza las competiciones de pádel a nivel
+            mundial. Una valoración numérica basada en datos, no en opiniones.
+          </p>
+          <p class="text-sm text-muted/80 max-w-xl mx-auto leading-relaxed mb-8">
+            Únete a la comunidad global. Cada partido cuenta tu historia.
+          </p>
+          <div class="flex flex-wrap justify-center gap-3 mb-12">
+            <a
+              href="/registro"
+              class="px-7 py-3.5 bg-coral text-white text-sm font-semibold rounded-full hover:bg-coral-dark transition-colors shadow-lg shadow-coral/25"
+            >
+              Crear cuenta gratis
+            </a>
+            <a
+              href="#como-funciona"
+              class="px-7 py-3.5 border-2 border-navy/10 text-navy text-sm font-semibold rounded-full hover:border-coral hover:text-coral transition-all"
+            >
+              Descubre cómo funciona
+            </a>
+          </div>
 
-              <!-- Main card -->
+          <!-- Image Carousel -->
+          {
+            carouselImages.length > 0 && (
               <div
-                class="relative bg-white rounded-[28px] p-6 border border-gray-200 shadow-[0_32px_80px_-12px_rgba(0,0,0,0.12)] hero-card-float"
+                class="carousel-container relative overflow-hidden rounded-2xl shadow-xl max-w-2xl mx-auto"
+                id="hero-carousel"
               >
-                <!-- App header -->
-                <div class="flex items-center gap-3 mb-5 pb-4 border-b border-gray-100">
-                  <!-- Padel racket SVG icon (real shape with perforations) -->
+                <div
+                  class="carousel-track flex transition-transform duration-500 ease-in-out"
+                  id="carousel-track"
+                >
+                  {carouselImages.map((img: any) => (
+                    <div class="carousel-slide w-full shrink-0">
+                      <img
+                        src={img.image_url}
+                        alt={img.alt_text || 'Score Padel'}
+                        class="w-full h-64 sm:h-80 object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <button
+                  id="carousel-prev"
+                  class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-lg hover:bg-white transition-colors z-10"
+                  aria-label="Anterior"
+                >
                   <svg
-                    viewBox="0 0 28 40"
-                    class="w-7 h-7 shrink-0"
+                    class="w-5 h-5 text-navy"
                     fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true"
-                  >
-                    <!-- Handle with grip wrapping -->
-                    <rect x="11" y="29" width="6" height="10" rx="3" fill="#FF6A00"></rect>
-                    <line
-                      x1="11.5"
-                      y1="31.5"
-                      x2="16.5"
-                      y2="31.5"
-                      stroke="white"
-                      stroke-width="0.9"
-                      opacity="0.35"></line>
-                    <line
-                      x1="11.5"
-                      y1="34"
-                      x2="16.5"
-                      y2="34"
-                      stroke="white"
-                      stroke-width="0.9"
-                      opacity="0.35"></line>
-                    <line
-                      x1="11.5"
-                      y1="36.5"
-                      x2="16.5"
-                      y2="36.5"
-                      stroke="white"
-                      stroke-width="0.9"
-                      opacity="0.35"></line>
-                    <!-- Throat -->
-                    <path
-                      d="M11.5 29 C11.5 26 10 22 9 17 C7 10 9 3.5 14 2.5 C19 3.5 21 10 19 17 C18 22 16.5 26 16.5 29 Z"
-                      fill="#FF6A00"></path>
-                    <!-- Perforation holes (authentic padel racket pattern) -->
-                    <circle cx="12" cy="9" r="1.3" fill="white" opacity="0.28"></circle>
-                    <circle cx="16" cy="8" r="1.3" fill="white" opacity="0.28"></circle>
-                    <circle cx="10.5" cy="14" r="1.3" fill="white" opacity="0.28"></circle>
-                    <circle cx="14" cy="13" r="1.3" fill="white" opacity="0.28"></circle>
-                    <circle cx="17.5" cy="14" r="1.3" fill="white" opacity="0.28"></circle>
-                    <circle cx="11.5" cy="19" r="1.3" fill="white" opacity="0.28"></circle>
-                    <circle cx="16.5" cy="19" r="1.3" fill="white" opacity="0.28"></circle>
-                    <circle cx="14" cy="24" r="1.3" fill="white" opacity="0.28"></circle>
-                  </svg>
-                  <div>
-                    <p class="text-muted text-[10px] uppercase tracking-wider">Score Padel</p>
-                    <p class="text-navy text-sm font-semibold leading-tight">Mi perfil</p>
-                  </div>
-                  <!-- Division badge -->
-                  <div
-                    class="ml-auto flex items-center gap-1.5 px-2.5 py-1 bg-coral/15 rounded-full border border-coral/20"
-                  >
-                    <span class="w-1.5 h-1.5 rounded-full bg-coral pulse-soft"></span>
-                    <span class="text-coral text-[10px] font-bold tracking-wider">DIV B</span>
-                  </div>
-                </div>
-
-                <!-- Big rating number -->
-                <div class="text-center mb-5">
-                  <p class="text-muted text-[10px] uppercase tracking-[0.2em] mb-1">
-                    Valoración actual
-                  </p>
-                  <p
-                    class="font-display text-[84px] font-extrabold text-navy leading-none tracking-tight"
-                  >
-                    4.5
-                  </p>
-                  <p class="text-muted text-sm mt-1.5 font-medium">Jugadores Ingeniosos</p>
-                </div>
-
-                <!-- Sparkline chart -->
-                <div class="mb-4 rounded-2xl bg-gray-50 border border-gray-100 p-4">
-                  <div class="flex items-center justify-between mb-3">
-                    <span class="text-muted text-[11px]">Evolución de valoración</span>
-                    <span class="text-coral text-[11px] font-semibold flex items-center gap-1">
-                      <!-- Up arrow -->
-                      <svg class="w-3 h-3" viewBox="0 0 12 12" fill="none"
-                        ><path
-                          d="M6 9V3M3 6l3-3 3 3"
-                          stroke="currentColor"
-                          stroke-width="1.5"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"></path></svg
-                      >
-                      +0.8 este año
-                    </span>
-                  </div>
-                  <svg viewBox="0 0 240 52" class="w-full overflow-visible" aria-hidden="true">
-                    <defs>
-                      <linearGradient id="chartArea" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="#FF6A00" stop-opacity="0.25"></stop>
-                        <stop offset="100%" stop-color="#FF6A00" stop-opacity="0"></stop>
-                      </linearGradient>
-                    </defs>
-                    <!-- Area fill -->
-                    <path
-                      d="M0 44 C40 42 70 36 100 28 C130 20 165 14 200 9 C220 7 232 5 240 4 L240 52 L0 52 Z"
-                      fill="url(#chartArea)"></path>
-                    <!-- Line -->
-                    <path
-                      d="M0 44 C40 42 70 36 100 28 C130 20 165 14 200 9 C220 7 232 5 240 4"
-                      fill="none"
-                      stroke="#FF6A00"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"></path>
-                    <!-- Data points -->
-                    <circle cx="0" cy="44" r="2.5" fill="#FF6A00" opacity="0.5"></circle>
-                    <circle cx="100" cy="28" r="2.5" fill="#FF6A00" opacity="0.7"></circle>
-                    <circle cx="200" cy="9" r="2.5" fill="#FF6A00" opacity="0.9"></circle>
-                    <!-- Live dot with ping -->
-                    <circle cx="240" cy="4" r="8" fill="#FF6A00" opacity="0.15" class="dot-ping"
-                    ></circle>
-                    <circle cx="240" cy="4" r="4" fill="#FF6A00" stroke="white" stroke-width="1.5"
-                    ></circle>
-                  </svg>
-                </div>
-
-                <!-- Stats row -->
-                <div class="grid grid-cols-3 rounded-2xl border border-gray-100 overflow-hidden">
-                  <div class="text-center py-3.5 px-2">
-                    <p class="font-display text-xl font-extrabold text-navy">24</p>
-                    <p class="text-muted text-[10px] mt-0.5">Partidos</p>
-                  </div>
-                  <div class="text-center py-3.5 px-2 border-x border-gray-100">
-                    <p class="font-display text-xl font-extrabold text-coral">18</p>
-                    <p class="text-muted text-[10px] mt-0.5">Victorias</p>
-                  </div>
-                  <div class="text-center py-3.5 px-2">
-                    <p class="font-display text-xl font-extrabold text-amber">3</p>
-                    <p class="text-muted text-[10px] mt-0.5">Torneos</p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Floating badge: weekly gain -->
-              <div
-                class="absolute -top-4 -right-5 bg-surface rounded-2xl px-3.5 py-2 shadow-xl border border-gray-100 flex items-center gap-2 badge-float-a"
-              >
-                <svg class="w-4 h-4 text-teal shrink-0" fill="none" viewBox="0 0 16 16">
-                  <path
-                    d="M8 12V4M4 8l4-4 4 4"
+                    viewBox="0 0 24 24"
                     stroke="currentColor"
-                    stroke-width="1.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"></path>
-                </svg>
-                <span class="text-xs font-semibold text-navy whitespace-nowrap"
-                  >+0.3 esta semana</span
+                    stroke-width="2"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  id="carousel-next"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-lg hover:bg-white transition-colors z-10"
+                  aria-label="Siguiente"
                 >
+                  <svg
+                    class="w-5 h-5 text-navy"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+                <div
+                  id="carousel-dots"
+                  class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10"
+                />
               </div>
-
-              <!-- Floating badge: world ranking -->
-              <div
-                class="absolute -bottom-4 -left-5 bg-surface rounded-2xl px-3.5 py-2 shadow-xl border border-gray-100 flex items-center gap-2 badge-float-b"
-              >
-                <svg class="w-4 h-4 text-amber shrink-0" fill="currentColor" viewBox="0 0 16 16">
-                  <path
-                    d="M8 1l1.85 3.75 4.15.6-3 2.93.71 4.13L8 10.35 4.29 12.41l.71-4.13L2 5.35l4.15-.6L8 1z"
-                  ></path>
-                </svg>
-                <span class="text-xs font-semibold text-navy whitespace-nowrap"
-                  >Top 15% mundial</span
-                >
-              </div>
-            </div>
-          </div>
+            )
+          }
         </div>
       </div>
     </section>
@@ -780,7 +655,7 @@ const porQueUnirse = [
     </section>
 
     <!-- 9 PASOS: CÓMO FUNCIONA -->
-    <section id="como-funciona" class="py-24 bg-white">
+    <section id="como-funciona" class="py-24">
       <div class="max-w-7xl mx-auto px-6 lg:px-8">
         <div class="max-w-2xl mb-16">
           <span
@@ -915,7 +790,7 @@ const porQueUnirse = [
     </section>
 
     <!-- NIVELES -->
-    <section id="niveles" class="py-24 bg-white">
+    <section id="niveles" class="py-24">
       <div class="max-w-7xl mx-auto px-6 lg:px-8">
         <div class="max-w-2xl mb-16">
           <span
@@ -1043,7 +918,7 @@ const porQueUnirse = [
     </section>
 
     <!-- FAQ -->
-    <section id="faq" class="py-24 bg-white">
+    <section id="faq" class="py-24">
       <div class="max-w-3xl mx-auto px-6 lg:px-8">
         <div class="text-center mb-16">
           <span
@@ -1110,4 +985,51 @@ const porQueUnirse = [
   </div>
   <Footer />
   <CookieBanner />
+
+  <script>
+    // Carousel logic
+    const track = document.getElementById('carousel-track') as HTMLElement | null
+    const dots = document.getElementById('carousel-dots') as HTMLElement | null
+    const prevBtn = document.getElementById('carousel-prev')
+    const nextBtn = document.getElementById('carousel-next')
+
+    if (track && dots) {
+      const slides = track.querySelectorAll('.carousel-slide')
+      const total = slides.length
+      let current = 0
+      let autoTimer: ReturnType<typeof setInterval> | null = null
+
+      // Build dots
+      for (let i = 0; i < total; i++) {
+        const dot = document.createElement('button')
+        dot.className = `w-2.5 h-2.5 rounded-full transition-colors ${i === 0 ? 'bg-white' : 'bg-white/50'}`
+        dot.setAttribute('aria-label', `Imagen ${i + 1}`)
+        dot.addEventListener('click', () => goTo(i))
+        dots.appendChild(dot)
+      }
+
+      function goTo(index: number) {
+        current = ((index % total) + total) % total
+        track!.style.transform = `translateX(-${current * 100}%)`
+        dots!.querySelectorAll('button').forEach((d, i) => {
+          d.className = `w-2.5 h-2.5 rounded-full transition-colors ${i === current ? 'bg-white' : 'bg-white/50'}`
+        })
+      }
+
+      prevBtn?.addEventListener('click', () => {
+        goTo(current - 1)
+        resetAuto()
+      })
+      nextBtn?.addEventListener('click', () => {
+        goTo(current + 1)
+        resetAuto()
+      })
+
+      function resetAuto() {
+        if (autoTimer) clearInterval(autoTimer)
+        autoTimer = setInterval(() => goTo(current + 1), 5000)
+      }
+      resetAuto()
+    }
+  </script>
 </Layout>
