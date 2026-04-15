@@ -3,64 +3,77 @@
 ---
 
 <nav id="main-nav" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
-  <div class="max-w-7xl mx-auto px-6 lg:px-8">
-    <div class="flex items-center justify-between h-16">
-      <a
-        href="/"
-        class="flex items-center gap-2 font-display font-bold text-xl tracking-tight text-navy"
-      >
-        <img src="/favicon.svg" alt="Score Padel" class="w-11 h-11" />
-        Score<span class="text-coral">Padel</span>
-      </a>
+  <div class="nav-progress" aria-hidden="true">
+    <span id="nav-progress-bar" class="nav-progress-bar"></span>
+  </div>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div id="main-nav-shell" class="nav-shell">
+      <div class="flex items-center justify-between h-16 px-2 sm:px-1">
+        <a
+          href="/"
+          class="nav-brand flex items-center gap-2 font-display font-bold text-xl tracking-tight text-navy"
+        >
+          <img src="/favicon.svg" alt="Score Padel" class="w-11 h-11" />
+          Score<span class="text-coral">Padel</span>
+        </a>
 
-      <!-- Desktop -->
-      <div class="hidden md:flex items-center gap-1">
-        <a
-          href="#quienes-somos"
-          class="px-3.5 py-2 text-sm font-medium text-muted hover:text-coral rounded-full hover:bg-coral/5 transition-all"
-          >Quiénes somos</a
+        <!-- Desktop -->
+        <div class="hidden md:flex items-center gap-3">
+          <div
+            class="nav-section-links flex items-center gap-1 rounded-full border border-transparent px-1 py-1"
+          >
+            <a
+              href="#quienes-somos"
+              data-nav-link
+              class="nav-section-link px-3.5 py-2 text-sm font-medium text-muted hover:text-coral rounded-full hover:bg-coral/5 transition-all"
+              >Quiénes somos</a
+            >
+            <a
+              href="#como-funciona"
+              data-nav-link
+              class="nav-section-link px-3.5 py-2 text-sm font-medium text-muted hover:text-coral rounded-full hover:bg-coral/5 transition-all"
+              >Cómo funciona</a
+            >
+            <a
+              href="#niveles"
+              data-nav-link
+              class="nav-section-link px-3.5 py-2 text-sm font-medium text-muted hover:text-coral rounded-full hover:bg-coral/5 transition-all"
+              >Niveles</a
+            >
+            <a
+              href="#ventajas"
+              data-nav-link
+              class="nav-section-link px-3.5 py-2 text-sm font-medium text-muted hover:text-coral rounded-full hover:bg-coral/5 transition-all"
+              >Por qué unirse</a
+            >
+          </div>
+          <a
+            href="/login"
+            class="nav-utility-link px-4 py-2 text-sm font-medium text-navy hover:text-coral transition-colors"
+            >Iniciar sesión</a
+          >
+          <a
+            href="/registro"
+            class="ml-1 px-5 py-2.5 text-sm font-semibold bg-coral text-white rounded-full hover:bg-coral-dark transition-colors shadow-sm"
+            >Crear cuenta</a
+          >
+        </div>
+
+        <!-- Mobile button -->
+        <button
+          id="mobile-menu-btn"
+          class="nav-mobile-toggle md:hidden p-2 text-muted hover:text-coral transition-colors"
+          aria-label="Abrir menú"
         >
-        <a
-          href="#como-funciona"
-          class="px-3.5 py-2 text-sm font-medium text-muted hover:text-coral rounded-full hover:bg-coral/5 transition-all"
-          >Cómo funciona</a
-        >
-        <a
-          href="#niveles"
-          class="px-3.5 py-2 text-sm font-medium text-muted hover:text-coral rounded-full hover:bg-coral/5 transition-all"
-          >Niveles</a
-        >
-        <a
-          href="#ventajas"
-          class="px-3.5 py-2 text-sm font-medium text-muted hover:text-coral rounded-full hover:bg-coral/5 transition-all"
-          >Por qué unirse</a
-        >
-        <a
-          href="/login"
-          class="ml-3 px-4 py-2 text-sm font-medium text-navy hover:text-coral transition-colors"
-          >Iniciar sesión</a
-        >
-        <a
-          href="/registro"
-          class="ml-1 px-5 py-2.5 text-sm font-semibold bg-coral text-white rounded-full hover:bg-coral-dark transition-colors shadow-sm"
-          >Crear cuenta</a
-        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
       </div>
-
-      <!-- Mobile button -->
-      <button
-        id="mobile-menu-btn"
-        class="md:hidden p-2 text-muted hover:text-coral transition-colors"
-        aria-label="Abrir menú"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M4 6h16M4 12h16M4 18h16"></path>
-        </svg>
-      </button>
     </div>
   </div>
 
@@ -72,22 +85,26 @@
     <div class="px-6 py-4 space-y-1">
       <a
         href="#quienes-somos"
-        class="block py-2.5 text-sm font-medium text-muted hover:text-coral transition-colors"
+        data-nav-link
+        class="nav-mobile-link block py-2.5 text-sm font-medium text-muted hover:text-coral transition-colors"
         >Quiénes somos</a
       >
       <a
         href="#como-funciona"
-        class="block py-2.5 text-sm font-medium text-muted hover:text-coral transition-colors"
+        data-nav-link
+        class="nav-mobile-link block py-2.5 text-sm font-medium text-muted hover:text-coral transition-colors"
         >Cómo funciona</a
       >
       <a
         href="#niveles"
-        class="block py-2.5 text-sm font-medium text-muted hover:text-coral transition-colors"
+        data-nav-link
+        class="nav-mobile-link block py-2.5 text-sm font-medium text-muted hover:text-coral transition-colors"
         >Niveles</a
       >
       <a
         href="#ventajas"
-        class="block py-2.5 text-sm font-medium text-muted hover:text-coral transition-colors"
+        data-nav-link
+        class="nav-mobile-link block py-2.5 text-sm font-medium text-muted hover:text-coral transition-colors"
         >Por qué unirse</a
       >
       <a
@@ -107,6 +124,12 @@
 <script>
   const btn = document.getElementById('mobile-menu-btn')
   const menu = document.getElementById('mobile-menu')
+  const nav = document.getElementById('main-nav')
+  const navShell = document.getElementById('main-nav-shell')
+  const progressBar = document.getElementById('nav-progress-bar')
+  const sectionLinks = Array.from(document.querySelectorAll('[data-nav-link]'))
+  const revealNodes = Array.from(document.querySelectorAll('[data-scroll-reveal]'))
+
   btn?.addEventListener('click', () => {
     menu?.classList.toggle('hidden')
   })
@@ -116,37 +139,82 @@
     })
   })
 
-  // Nav: transparent at top, solid on scroll
-  const nav = document.getElementById('main-nav')
-  const logo = nav?.querySelector('a[href="/"]')
-  const desktopLinks = nav?.querySelectorAll('.hidden.md\\:flex a:not([href="/registro"])')
-  const mobileBtn = document.getElementById('mobile-menu-btn')
-
   function updateNav() {
-    if (!nav) return
-    if (window.scrollY > 50) {
-      nav.classList.add('nav-scrolled', 'shadow-md')
-      nav.classList.remove('border-transparent')
-      logo?.classList.remove('text-navy')
-      logo?.classList.add('text-white')
-      desktopLinks?.forEach((l) => {
-        l.classList.remove('text-muted', 'text-navy')
-        l.classList.add('text-white/80')
-      })
-      mobileBtn?.classList.remove('text-muted')
-      mobileBtn?.classList.add('text-white')
-    } else {
-      nav.classList.remove('nav-scrolled', 'shadow-md')
-      nav.classList.add('border-transparent')
-      logo?.classList.add('text-navy')
-      logo?.classList.remove('text-white')
-      desktopLinks?.forEach((l) => {
-        l.classList.add('text-muted', 'text-navy')
-        l.classList.remove('text-white/80')
-      })
-      mobileBtn?.classList.add('text-muted')
-      mobileBtn?.classList.remove('text-white')
+    if (!nav || !navShell) return
+    const scrollTop = window.scrollY
+    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight
+    const progress = scrollHeight > 0 ? Math.min(scrollTop / scrollHeight, 1) : 0
+    const isScrolled = scrollTop > 48
+
+    nav.classList.toggle('nav-scrolled', isScrolled)
+    navShell.classList.toggle('nav-shell-scrolled', isScrolled)
+
+    if (progressBar) {
+      progressBar.style.transform = `scaleX(${progress})`
     }
+  }
+
+  /** @param {string} id */
+  function setActiveLink(id) {
+    sectionLinks.forEach((link) => {
+      const isActive = link.getAttribute('href') === `#${id}`
+      link.classList.toggle('nav-active', isActive)
+      if (isActive) {
+        link.setAttribute('aria-current', 'true')
+      } else {
+        link.removeAttribute('aria-current')
+      }
+    })
+  }
+
+  if ('IntersectionObserver' in window) {
+    const sectionObserver = new IntersectionObserver(
+      (entries) => {
+        const activeEntry = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
+
+        if (activeEntry?.target?.id) {
+          setActiveLink(activeEntry.target.id)
+        }
+      },
+      {
+        rootMargin: '-28% 0px -55% 0px',
+        threshold: [0.15, 0.35, 0.55],
+      },
+    )
+
+    sectionLinks.forEach((link) => {
+      const hash = link.getAttribute('href')
+      if (!hash?.startsWith('#')) return
+      const section = document.querySelector(hash)
+      if (section) sectionObserver.observe(section)
+    })
+
+    revealNodes.forEach((node, index) => {
+      node.classList.add('scroll-reveal')
+      if (node instanceof HTMLElement) {
+        node.style.setProperty('--reveal-delay', `${Math.min(index * 45, 180)}ms`)
+      }
+    })
+
+    const revealObserver = new IntersectionObserver(
+      (entries, observer) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return
+          entry.target.classList.add('is-visible')
+          observer.unobserve(entry.target)
+        })
+      },
+      {
+        rootMargin: '0px 0px -12% 0px',
+        threshold: 0.12,
+      },
+    )
+
+    revealNodes.forEach((node) => revealObserver.observe(node))
+  } else {
+    revealNodes.forEach((node) => node.classList.add('is-visible'))
   }
 
   window.addEventListener('scroll', updateNav, { passive: true })
