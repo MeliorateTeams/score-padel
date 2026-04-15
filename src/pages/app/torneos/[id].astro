@@ -3,6 +3,7 @@ import AppLayout from '../../../layouts/AppLayout.astro'
 
 const user = (Astro.locals as any).user
 if (!user) return Astro.redirect('/login')
+if (user.role === 'guest') return Astro.redirect('/app')
 
 const db = (Astro.locals as any).db
 const { id } = Astro.params
@@ -24,26 +25,59 @@ if (Astro.request.method === 'POST' && user.role !== 'guest') {
   const form = await Astro.request.formData()
   const action = form.get('action')?.toString()
   if (action === 'join') {
-    try {
-      await db
-        .prepare('INSERT INTO tournament_players (tournament_id, user_id) VALUES (?, ?)')
-        .bind(id, user.id)
-        .run()
-      // Notify tournament creator
-      const nId = crypto.randomUUID()
-      await db
-        .prepare(
-          'INSERT INTO notifications (id, user_id, type, message, link) VALUES (?, ?, ?, ?, ?)',
-        )
-        .bind(
-          nId,
-          (tournament as any).creator_id,
-          'tournament',
-          `${user.name} se ha inscrito en ${(tournament as any).name}`,
-          `/app/torneos/${id}`,
-        )
-        .run()
-    } catch {}
+    if (user.role === 'guest') {
+      // guests cannot join
+    } else {
+      const partner_email = form.get('partner_email')?.toString().trim().toLowerCase()
+      if (partner_email) {
+        const partner = (await db
+          .prepare('SELECT id FROM users WHERE email = ?')
+          .bind(partner_email)
+          .first()) as { id: string } | null
+        const alreadyIn = players.results?.some((p: any) => p.id === user.id) ?? false
+        if (partner && partner.id !== user.id && !alreadyIn) {
+          try {
+            await db
+              .prepare('INSERT INTO tournament_players (tournament_id, user_id) VALUES (?, ?)')
+              .bind(id, user.id)
+              .run()
+          } catch {}
+          try {
+            await db
+              .prepare('INSERT INTO tournament_players (tournament_id, user_id) VALUES (?, ?)')
+              .bind(id, partner.id)
+              .run()
+          } catch {}
+          // Notify creator and partner
+          const nId1 = crypto.randomUUID()
+          await db
+            .prepare(
+              'INSERT INTO notifications (id, user_id, type, message, link) VALUES (?, ?, ?, ?, ?)',
+            )
+            .bind(
+              nId1,
+              (tournament as any).creator_id,
+              'tournament',
+              `${user.name} y ${partner_email} se han inscrito en ${(tournament as any).name}`,
+              `/app/torneos/${id}`,
+            )
+            .run()
+          const nId2 = crypto.randomUUID()
+          await db
+            .prepare(
+              'INSERT INTO notifications (id, user_id, type, message, link) VALUES (?, ?, ?, ?, ?)',
+            )
+            .bind(
+              nId2,
+              partner.id,
+              'tournament',
+              `${user.name} te ha inscrito como pareja en el torneo ${(tournament as any).name}`,
+              `/app/torneos/${id}`,
+            )
+            .run()
+        }
+      }
+    }
   } else if (action === 'leave') {
     await db
       .prepare('DELETE FROM tournament_players WHERE tournament_id = ? AND user_id = ?')
@@ -258,9 +292,9 @@ const tournamentMatches = await db
 
       {
         (tournament as any).status === 'open' && (
-          <form method="POST">
+          <>
             {isJoined ? (
-              <>
+              <form method="POST">
                 <input type="hidden" name="action" value="leave" />
                 <button
                   type="submit"
@@ -268,21 +302,37 @@ const tournamentMatches = await db
                 >
                   Abandonar torneo
                 </button>
-              </>
-            ) : !isFull ? (
-              <>
+              </form>
+            ) : isFull ? (
+              <p class="text-sm text-muted">El torneo está completo.</p>
+            ) : user.role === 'guest' ? (
+              <p class="text-sm text-muted">
+                <a href="/registro" class="text-coral hover:underline">Regístrate</a> para inscribirte.
+              </p>
+            ) : (
+              <form method="POST" class="space-y-3">
                 <input type="hidden" name="action" value="join" />
+                <div>
+                  <label for="partner_email" class="block text-xs text-muted mb-1">Email de tu pareja <span class="text-coral">*</span></label>
+                  <input
+                    id="partner_email"
+                    type="email"
+                    name="partner_email"
+                    required
+                    placeholder="pareja@email.com"
+                    class="w-full max-w-xs px-3 py-2 text-sm bg-card border border-border rounded-xl focus:outline-none focus:border-coral"
+                  />
+                  <p class="text-xs text-muted mt-1">El pádel es 2v2 — debes inscribirte con una pareja.</p>
+                </div>
                 <button
                   type="submit"
                   class="px-5 py-2.5 bg-coral text-white text-sm font-semibold rounded-full hover:bg-coral-dark transition-colors"
                 >
-                  Inscribirse
+                  Inscribirse como pareja
                 </button>
-              </>
-            ) : (
-              <p class="text-sm text-muted">El torneo está completo.</p>
+              </form>
             )}
-          </form>
+          </>
         )
       }
 

@@ -9,8 +9,9 @@ if (user.role === 'guest') return Astro.redirect('/app?error=guest')
 const db = (Astro.locals as any).db
 const matchId = Astro.params.id as string
 
-const match = await db.prepare(
-  `SELECT m.*,
+const match = (await db
+  .prepare(
+    `SELECT m.*,
     u1.name as t1p1_name, u1.email as t1p1_email,
     u2.name as t1p2_name, u2.email as t1p2_email,
     u3.name as t2p1_name, u3.email as t2p1_email,
@@ -20,13 +21,20 @@ const match = await db.prepare(
    LEFT JOIN users u2 ON m.team1_player2 = u2.id
    LEFT JOIN users u3 ON m.team2_player1 = u3.id
    LEFT JOIN users u4 ON m.team2_player2 = u4.id
-   WHERE m.id = ?`
-).bind(matchId).first() as any
+   WHERE m.id = ?`,
+  )
+  .bind(matchId)
+  .first()) as any
 
 if (!match) return Astro.redirect('/app/partidos')
 
 // Only players of this match can register result
-const playerIds = [match.team1_player1, match.team1_player2, match.team2_player1, match.team2_player2]
+const playerIds = [
+  match.team1_player1,
+  match.team1_player2,
+  match.team2_player1,
+  match.team2_player2,
+]
 if (!playerIds.includes(user.id) && user.role !== 'admin') return Astro.redirect('/app/partidos')
 
 // Already completed
@@ -54,16 +62,26 @@ if (Astro.request.method === 'POST') {
   } else if (team1_games === 0 && team2_games === 0) {
     error = 'Registra al menos un juego.'
   } else {
-    await db.prepare(
-      'UPDATE matches SET status=?, team1_games=?, team2_games=?, set_scores=?, recorded_by=? WHERE id=?'
-    ).bind('completed', team1_games, team2_games, JSON.stringify(sets), user.id, matchId).run()
+    await db
+      .prepare(
+        'UPDATE matches SET status=?, team1_games=?, team2_games=?, set_scores=?, recorded_by=? WHERE id=?',
+      )
+      .bind('completed', team1_games, team2_games, JSON.stringify(sets), user.id, matchId)
+      .run()
 
     // Create match confirmations
     for (const pid of playerIds.filter(Boolean)) {
-      const existing = await db.prepare('SELECT 1 FROM match_confirmations WHERE match_id=? AND user_id=?').bind(matchId, pid).first()
+      const existing = await db
+        .prepare('SELECT 1 FROM match_confirmations WHERE match_id=? AND user_id=?')
+        .bind(matchId, pid)
+        .first()
       if (!existing) {
-        await db.prepare('INSERT INTO match_confirmations (match_id, user_id, confirmed) VALUES (?, ?, ?)')
-          .bind(matchId, pid, pid === user.id ? 1 : 0).run()
+        await db
+          .prepare(
+            'INSERT INTO match_confirmations (match_id, user_id, confirmed) VALUES (?, ?, ?)',
+          )
+          .bind(matchId, pid, pid === user.id ? 1 : 0)
+          .run()
       }
     }
 
@@ -75,8 +93,18 @@ if (Astro.request.method === 'POST') {
     // Notify other players
     const setsStr = sets.map((s) => `${s.team1}-${s.team2}`).join(', ')
     for (const pid of playerIds.filter((p) => p && p !== user.id)) {
-      await db.prepare('INSERT INTO notifications (id, user_id, type, message, link) VALUES (?, ?, ?, ?, ?)')
-        .bind(crypto.randomUUID(), pid, 'match', `${user.name} registró el resultado: ${setsStr}`, '/app/partidos').run()
+      await db
+        .prepare(
+          'INSERT INTO notifications (id, user_id, type, message, link) VALUES (?, ?, ?, ?, ?)',
+        )
+        .bind(
+          crypto.randomUUID(),
+          pid,
+          'match',
+          `${user.name} registró el resultado: ${setsStr}`,
+          '/app/partidos',
+        )
+        .run()
     }
 
     message = '¡Resultado registrado! Las valoraciones se han actualizado.'
@@ -87,15 +115,41 @@ if (Astro.request.method === 'POST') {
 <AppLayout title="Registrar resultado" user={user}>
   <div class="max-w-xl mx-auto space-y-6">
     <div class="flex items-center gap-3">
-      <a href="/app/partidos" class="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
-        <svg class="w-4 h-4 text-navy" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+      <a
+        href="/app/partidos"
+        class="w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+      >
+        <svg
+          class="w-4 h-4 text-navy"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+          ><path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"></path></svg
+        >
       </a>
       <div class="w-10 h-10 rounded-xl bg-teal/10 flex items-center justify-center">
-        <svg class="w-5 h-5 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0016.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.003 6.003 0 01-5.54 0"/></svg>
+        <svg
+          class="w-5 h-5 text-teal"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+          ><path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0016.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.003 6.003 0 01-5.54 0"
+          ></path></svg
+        >
       </div>
       <div>
         <h1 class="font-display text-xl font-bold text-navy">Registrar resultado</h1>
-        <p class="text-xs text-muted">Introduce los sets del partido para actualizar valoraciones.</p>
+        <p class="text-xs text-muted">
+          Introduce los sets del partido para actualizar valoraciones.
+        </p>
       </div>
     </div>
 
@@ -113,53 +167,130 @@ if (Astro.request.method === 'POST') {
         </div>
       </div>
       {match.location && <p class="text-xs text-muted text-center mt-2">📍 {match.location}</p>}
-      {match.event_date && <p class="text-xs text-muted text-center">{new Date(match.event_date).toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' })}</p>}
+      {
+        match.event_date && (
+          <p class="text-xs text-muted text-center">
+            {new Date(match.event_date).toLocaleDateString('es', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            })}
+          </p>
+        )
+      }
     </div>
 
-    {message && (
-      <div class="flex items-center gap-3 bg-teal/10 border border-teal/20 text-teal text-sm p-4 rounded-xl">
-        <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        {message}
-        <a href="/app/partidos" class="ml-auto text-xs font-semibold underline">Ver partidos</a>
-      </div>
-    )}
-    {error && (
-      <div class="flex items-center gap-3 bg-red-500/10 border border-red-500/20 text-red-500 text-sm p-4 rounded-xl">
-        <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
-        {error}
-      </div>
-    )}
+    {
+      message && (
+        <div class="flex items-center gap-3 bg-teal/10 border border-teal/20 text-teal text-sm p-4 rounded-xl">
+          <svg
+            class="w-5 h-5 shrink-0"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          {message}
+          <a href="/app/partidos" class="ml-auto text-xs font-semibold underline">
+            Ver partidos
+          </a>
+        </div>
+      )
+    }
+    {
+      error && (
+        <div class="flex items-center gap-3 bg-red-500/10 border border-red-500/20 text-red-500 text-sm p-4 rounded-xl">
+          <svg
+            class="w-5 h-5 shrink-0"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+            />
+          </svg>
+          {error}
+        </div>
+      )
+    }
 
-    {!message && (
-      <form method="POST" class="card p-6 space-y-4">
-        <h2 class="font-display text-sm font-bold text-navy uppercase tracking-wider">Resultado por sets</h2>
-        <div class="space-y-3">
-          <div class="grid grid-cols-[1fr_80px_24px_80px] items-center gap-2 px-1">
-            <div></div>
-            <div class="text-[10px] font-semibold text-teal uppercase tracking-wider text-center">Tu equipo</div>
-            <div></div>
-            <div class="text-[10px] font-semibold text-coral uppercase tracking-wider text-center">Rival</div>
-          </div>
-          {[1, 2, 3].map((n) => (
-            <div class="grid grid-cols-[1fr_80px_24px_80px] items-center gap-2">
-              <div class="text-xs font-medium text-navy">Set {n}{n === 1 ? ' *' : ''}</div>
-              <input type="number" name={`set${n}_team1`} min="0" max="7" required={n === 1}
-                class="text-center px-2 py-2 bg-white border border-gray-200 rounded-xl text-sm font-display font-bold text-navy focus:outline-none focus:border-coral/50 transition-colors"/>
-              <span class="text-center text-muted text-xs">–</span>
-              <input type="number" name={`set${n}_team2`} min="0" max="7" required={n === 1}
-                class="text-center px-2 py-2 bg-white border border-gray-200 rounded-xl text-sm font-display font-bold text-navy focus:outline-none focus:border-coral/50 transition-colors"/>
+    {
+      !message && (
+        <form method="POST" class="card p-6 space-y-4">
+          <h2 class="font-display text-sm font-bold text-navy uppercase tracking-wider">
+            Resultado por sets
+          </h2>
+          <div class="space-y-3">
+            <div class="grid grid-cols-[1fr_80px_24px_80px] items-center gap-2 px-1">
+              <div />
+              <div class="text-[10px] font-semibold text-teal uppercase tracking-wider text-center">
+                Tu equipo
+              </div>
+              <div />
+              <div class="text-[10px] font-semibold text-coral uppercase tracking-wider text-center">
+                Rival
+              </div>
             </div>
-          ))}
-        </div>
-        <p class="text-[11px] text-muted/60">* Set 1 obligatorio. Sets 2 y 3 opcionales.</p>
-        <div class="flex justify-end pt-2">
-          <button type="submit"
-            class="px-8 py-2.5 bg-teal text-white text-sm font-semibold rounded-full hover:bg-teal/90 transition-colors shadow-sm flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            Guardar resultado
-          </button>
-        </div>
-      </form>
-    )}
+            {[1, 2, 3].map((n) => (
+              <div class="grid grid-cols-[1fr_80px_24px_80px] items-center gap-2">
+                <div class="text-xs font-medium text-navy">
+                  Set {n}
+                  {n === 1 ? ' *' : ''}
+                </div>
+                <input
+                  type="number"
+                  name={`set${n}_team1`}
+                  min="0"
+                  max="7"
+                  required={n === 1}
+                  class="text-center px-2 py-2 bg-white border border-gray-200 rounded-xl text-sm font-display font-bold text-navy focus:outline-none focus:border-coral/50 transition-colors"
+                />
+                <span class="text-center text-muted text-xs">–</span>
+                <input
+                  type="number"
+                  name={`set${n}_team2`}
+                  min="0"
+                  max="7"
+                  required={n === 1}
+                  class="text-center px-2 py-2 bg-white border border-gray-200 rounded-xl text-sm font-display font-bold text-navy focus:outline-none focus:border-coral/50 transition-colors"
+                />
+              </div>
+            ))}
+          </div>
+          <p class="text-[11px] text-muted/60">* Set 1 obligatorio. Sets 2 y 3 opcionales.</p>
+          <div class="flex justify-end pt-2">
+            <button
+              type="submit"
+              class="px-8 py-2.5 bg-teal text-white text-sm font-semibold rounded-full hover:bg-teal/90 transition-colors shadow-sm flex items-center gap-2"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              Guardar resultado
+            </button>
+          </div>
+        </form>
+      )
+    }
   </div>
 </AppLayout>
