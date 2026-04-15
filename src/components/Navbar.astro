@@ -2,9 +2,7 @@
 
 ---
 
-<nav
-  class="fixed top-0 left-0 right-0 z-50 backdrop-blur-md shadow-sm border-b border-white/20 dark-nav"
->
+<nav id="main-nav" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
   <div class="max-w-7xl mx-auto px-6 lg:px-8">
     <div class="flex items-center justify-between h-16">
       <a
@@ -118,8 +116,8 @@
     })
   })
 
-  // Nav turns black on scroll
-  const nav = document.querySelector('nav')
+  // Nav: transparent at top, solid on scroll
+  const nav = document.getElementById('main-nav')
   const logo = nav?.querySelector('a[href="/"]')
   const desktopLinks = nav?.querySelectorAll('.hidden.md\\:flex a:not([href="/registro"])')
   const mobileBtn = document.getElementById('mobile-menu-btn')
@@ -127,7 +125,8 @@
   function updateNav() {
     if (!nav) return
     if (window.scrollY > 50) {
-      nav.classList.add('nav-scrolled')
+      nav.classList.add('nav-scrolled', 'shadow-md')
+      nav.classList.remove('border-transparent')
       logo?.classList.remove('text-navy')
       logo?.classList.add('text-white')
       desktopLinks?.forEach((l) => {
@@ -137,7 +136,8 @@
       mobileBtn?.classList.remove('text-muted')
       mobileBtn?.classList.add('text-white')
     } else {
-      nav.classList.remove('nav-scrolled')
+      nav.classList.remove('nav-scrolled', 'shadow-md')
+      nav.classList.add('border-transparent')
       logo?.classList.add('text-navy')
       logo?.classList.remove('text-white')
       desktopLinks?.forEach((l) => {
