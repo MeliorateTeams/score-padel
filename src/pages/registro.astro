@@ -13,6 +13,7 @@ const errorMsg: Record<string, string> = {
   edad: 'Debes confirmar que tienes 14 años o más.',
   privacidad: 'Debes aceptar la política de privacidad.',
   server: 'Error del servidor. Inténtalo de nuevo.',
+  captcha: 'Verificación de seguridad fallida. Inténtalo de nuevo.',
 }
 
 const registerHighlights = [
@@ -284,6 +285,11 @@ const registerHighlights = [
                     >.
                   </label>
                 </div>
+                <div
+                  class="cf-turnstile"
+                  data-sitekey="0x4AAAAAAC-Ckm7i94mOfZpc"
+                  data-theme="light"
+                ></div>
                 <button
                   type="submit"
                   class="w-full rounded-full py-3.5 text-sm font-semibold text-white shadow-[0_20px_40px_-20px_rgba(208,79,0,0.9)] transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_24px_50px_-20px_rgba(208,79,0,0.85)]"
@@ -312,4 +318,5 @@ const registerHighlights = [
       </div>
     </div>
   </div>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </AppLayout>
