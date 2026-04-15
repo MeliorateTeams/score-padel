@@ -1,6 +1,16 @@
 import type { APIRoute } from 'astro'
 import { env } from 'cloudflare:workers'
 
+// Constant-time string comparison to prevent timing attacks on secrets
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  let diff = 0
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  }
+  return diff === 0
+}
+
 export const GET: APIRoute = async ({ locals, request }) => {
   const db = (locals as any).db
   if (!db) return new Response('DB unavailable', { status: 500 })
@@ -13,7 +23,7 @@ export const GET: APIRoute = async ({ locals, request }) => {
 
   // Allow access only for admins or with valid cron secret
   if (!user || user.role !== 'admin') {
-    if (!expectedSecret || !cronSecret || cronSecret !== expectedSecret) {
+    if (!expectedSecret || !cronSecret || !timingSafeEqual(cronSecret, expectedSecret)) {
       return new Response('Unauthorized', { status: 401 })
     }
   }

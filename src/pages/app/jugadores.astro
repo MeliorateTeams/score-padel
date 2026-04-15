@@ -58,17 +58,19 @@ let countQuery = `
 const params: any[] = [user.id]
 const countParams: any[] = [user.id]
 
-if (search) {
-  query += ' AND u.name LIKE ?'
-  countQuery += ' AND u.name LIKE ?'
-  params.push(`%${search}%`)
-  countParams.push(`%${search}%`)
+if (search && search.length <= 50) {
+  const safeSearch = search.replace(/%/g, '\\%').replace(/_/g, '\\_')
+  query += " AND u.name LIKE ? ESCAPE '\\'"
+  countQuery += " AND u.name LIKE ? ESCAPE '\\'"
+  params.push(`%${safeSearch}%`)
+  countParams.push(`%${safeSearch}%`)
 }
-if (locationFilter) {
-  query += ' AND p.location LIKE ?'
-  countQuery += ' AND p.location LIKE ?'
-  params.push(`%${locationFilter}%`)
-  countParams.push(`%${locationFilter}%`)
+if (locationFilter && locationFilter.length <= 50) {
+  const safeLoc = locationFilter.replace(/%/g, '\\%').replace(/_/g, '\\_')
+  query += " AND p.location LIKE ? ESCAPE '\\'"
+  countQuery += " AND p.location LIKE ? ESCAPE '\\'"
+  params.push(`%${safeLoc}%`)
+  countParams.push(`%${safeLoc}%`)
 }
 if (divisionFilter === 'C') {
   query += ' AND p.rating < 3.5'

@@ -48,9 +48,9 @@ if (Astro.request.method === 'POST' && user.role !== 'guest') {
     return Astro.redirect('/app/jugadores')
   }
   if (action === 'challenge' && id !== user.id) {
-    const msg = form.get('challenge_msg')?.toString()?.trim() || ''
+    const msg = (form.get('challenge_msg')?.toString()?.trim() || '').replace(/<[^>]*>/g, '').slice(0, 500)
     const date = form.get('challenge_date')?.toString() || ''
-    const loc = form.get('challenge_location')?.toString()?.trim() || ''
+    const loc = (form.get('challenge_location')?.toString()?.trim() || '').replace(/<[^>]*>/g, '').slice(0, 200)
     const cId = crypto.randomUUID()
     await db
       .prepare(

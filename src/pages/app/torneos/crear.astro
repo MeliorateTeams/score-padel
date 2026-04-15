@@ -11,11 +11,11 @@ const db = (Astro.locals as any).db
 
 if (Astro.request.method === 'POST') {
   const form = await Astro.request.formData()
-  const name = form.get('name')?.toString().trim()
-  const description = form.get('description')?.toString() ?? ''
-  const location = form.get('location')?.toString() ?? ''
+  const name = (form.get('name')?.toString().trim() ?? '').replace(/<[^>]*>/g, '').slice(0, 100)
+  const description = (form.get('description')?.toString() ?? '').replace(/<[^>]*>/g, '').slice(0, 2000)
+  const location = (form.get('location')?.toString() ?? '').replace(/<[^>]*>/g, '').slice(0, 200)
   const event_date = form.get('event_date')?.toString()
-  const max_players = parseInt(form.get('max_players')?.toString() ?? '16') || 16
+  const max_players = Math.max(4, Math.min(128, parseInt(form.get('max_players')?.toString() ?? '16') || 16))
 
   if (name && event_date) {
     const id = generateId()

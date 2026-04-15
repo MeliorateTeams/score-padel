@@ -16,7 +16,7 @@ if (Astro.request.method === 'POST') {
   const opponent_email = form.get('opponent_email')?.toString().trim().toLowerCase()
   const partner_email = form.get('partner_email')?.toString().trim().toLowerCase()
   const opponent2_email = form.get('opponent2_email')?.toString().trim().toLowerCase()
-  const tournament_id = form.get('tournament_id')?.toString() || null
+  const tournament_id_raw = form.get('tournament_id')?.toString() || null
   const notes = form.get('notes')?.toString().trim().slice(0, 500) || ''
 
   // Parse set scores
@@ -72,6 +72,20 @@ if (Astro.request.method === 'POST') {
         } else {
           partnerId = partner.id
           opponent2Id = opp2.id
+        }
+      }
+
+      // Validate tournament_id: user must be a participant
+      let tournament_id: string | null = null
+      if (tournament_id_raw && !error) {
+        const inTournament = await db
+          .prepare('SELECT 1 FROM tournament_players WHERE tournament_id = ? AND user_id = ?')
+          .bind(tournament_id_raw, user.id)
+          .first()
+        if (!inTournament) {
+          error = 'No eres participante de este torneo.'
+        } else {
+          tournament_id = tournament_id_raw
         }
       }
 
