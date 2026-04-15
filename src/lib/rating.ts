@@ -5,7 +5,7 @@ import { generateId } from './auth'
 // Configuración Oficial Score Padel v1.0 — Algoritmo de Valoración
 // ═══════════════════════════════════════════════════════════════════════════
 //
-// Escala: 1.0 - 7.0 (valoración continua, no ranking posicional)
+// Escala: 1.0 - 7.0 (valoración continua, no clasificación posicional)
 //
 // Parámetros oficiales:
 //  - Sigmoid scale factor:      1.5   (diff ±3 pts → ~95%/5% expected)

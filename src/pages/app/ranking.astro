@@ -59,7 +59,7 @@ const ratingMovers = await db
 const star = (topWinners.results?.length ?? 0) > 0 ? (topWinners.results![0] as any) : null
 ---
 
-<AppLayout title="Ranking semanal" user={user}>
+<AppLayout title="Destacados de la semana" user={user}>
   <div class="max-w-2xl mx-auto space-y-6">
     <div class="flex items-center gap-3">
       <div class="w-10 h-10 rounded-xl bg-amber/10 flex items-center justify-center">
@@ -78,7 +78,7 @@ const star = (topWinners.results?.length ?? 0) > 0 ? (topWinners.results![0] as 
       </div>
       <div>
         <h1 class="font-display text-xl font-bold text-navy">
-          Ranking {period === 'month' ? 'mensual' : 'semanal'}
+          Destacados {period === 'month' ? 'del mes' : 'de la semana'}
         </h1>
         <p class="text-xs text-muted">Los más activos y los que más suben.</p>
       </div>

@@ -500,6 +500,50 @@ const tournaments = await db
         ></textarea>
       </div>
 
+      <!-- Buscar cancha -->
+      <a
+        href="/app/canchas"
+        target="_blank"
+        class="card p-5 flex items-center gap-3 hover:border-coral/30 transition-colors group"
+      >
+        <div class="w-9 h-9 rounded-xl bg-teal/10 flex items-center justify-center shrink-0">
+          <svg
+            class="w-4.5 h-4.5 text-teal"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
+            ></path>
+          </svg>
+        </div>
+        <div class="flex-1">
+          <div class="text-sm font-bold text-navy">¿Dónde jugar?</div>
+          <div class="text-xs text-muted">Busca pistas de pádel cerca de ti con el mapa.</div>
+        </div>
+        <svg
+          class="w-4 h-4 text-muted group-hover:text-coral transition-colors"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
+          ></path>
+        </svg>
+      </a>
+
       <div class="flex justify-end">
         <button
           type="submit"
