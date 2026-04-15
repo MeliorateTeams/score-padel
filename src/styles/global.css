@@ -188,6 +188,27 @@
 .nav-brand {
   transform-origin: left center;
 }
+#main-nav:not(.nav-scrolled) .nav-brand {
+  color: rgba(255, 255, 255, 0.96) !important;
+  text-shadow: 0 1px 16px rgba(0, 0, 0, 0.35);
+}
+#main-nav:not(.nav-scrolled) .nav-section-links {
+  background: rgba(0, 0, 0, 0.18);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+#main-nav:not(.nav-scrolled) .nav-section-link,
+#main-nav:not(.nav-scrolled) .nav-utility-link,
+#main-nav:not(.nav-scrolled) .nav-mobile-toggle {
+  color: rgba(255, 255, 255, 0.9) !important;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.22);
+}
+#main-nav:not(.nav-scrolled) .nav-section-link:hover,
+#main-nav:not(.nav-scrolled) .nav-utility-link:hover,
+#main-nav:not(.nav-scrolled) .nav-mobile-toggle:hover {
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.12);
+}
 .nav-scrolled .nav-brand {
   color: #fff !important;
   transform: scale(0.985);

@@ -3,6 +3,7 @@ import AppLayout from '../../../layouts/AppLayout.astro'
 
 const user = (Astro.locals as any).user
 if (!user) return Astro.redirect('/login')
+const isAdmin = user.role === 'admin'
 
 const db = (Astro.locals as any).db
 const tournaments = await db
@@ -25,21 +26,33 @@ const tournaments = await db
       <h1 class="font-display text-2xl font-bold mb-1">Torneos</h1>
       <p class="text-sm text-muted">Encuentra o crea competiciones de pádel.</p>
     </div>
-    <a
-      href="/app/torneos/crear"
-      class="px-5 py-2.5 bg-coral text-white text-sm font-semibold rounded-full hover:bg-coral-dark transition-colors"
-    >
-      Crear torneo
-    </a>
+    {
+      isAdmin ? (
+        <a
+          href="/app/torneos/crear"
+          class="px-5 py-2.5 bg-coral text-white text-sm font-semibold rounded-full hover:bg-coral-dark transition-colors"
+        >
+          Crear torneo
+        </a>
+      ) : (
+        <span class="text-xs font-medium text-muted bg-gray-50 border border-gray-100 px-3 py-2 rounded-full">
+          Solo administradores pueden crear torneos
+        </span>
+      )
+    }
   </div>
 
   {
     (tournaments.results?.length ?? 0) === 0 ? (
       <div class="card rounded-xl p-10 text-center">
         <p class="text-muted mb-4">No hay torneos creados aún.</p>
-        <a href="/app/torneos/crear" class="text-coral text-sm hover:underline">
-          Sé el primero en organizar uno
-        </a>
+        {isAdmin ? (
+          <a href="/app/torneos/crear" class="text-coral text-sm hover:underline">
+            Sé el primero en organizar uno
+          </a>
+        ) : (
+          <p class="text-xs text-muted">Un administrador puede abrir el primer torneo.</p>
+        )}
       </div>
     ) : (
       <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
