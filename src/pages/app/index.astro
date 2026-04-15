@@ -352,7 +352,7 @@ const errorParam = Astro.url.searchParams.get('error')
   <div class="grid sm:grid-cols-3 gap-4 mb-8">
     {
       !isGuest && (
-        <a href="/app/torneos/crear" class="card-hover p-5 block">
+        <a href="/app/partidos/registrar" class="card-hover p-5 block">
           <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-xl bg-amber/10 flex items-center justify-center shrink-0">
               <svg
@@ -362,16 +362,12 @@ const errorParam = Astro.url.searchParams.get('error')
                 stroke="currentColor"
                 stroke-width="2"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-4.5A3 3 0 0019.5 11.25h.75a.75.75 0 00.75-.75v-.75a.75.75 0 00-.75-.75H19.5A4.5 4.5 0 0015 4.5H9a4.5 4.5 0 00-4.5 4.5H3.75a.75.75 0 00-.75.75v.75c0 .414.336.75.75.75H4.5A3 3 0 017.5 14.25v4.5"
-                />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
             </div>
             <div>
-              <div class="text-sm font-bold text-navy">Crear torneo</div>
-              <div class="text-xs text-muted">Organiza una competición.</div>
+              <div class="text-sm font-bold text-navy">Crear partido</div>
+              <div class="text-xs text-muted">Registra un nuevo resultado.</div>
             </div>
           </div>
         </a>

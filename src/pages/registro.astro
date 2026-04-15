@@ -14,121 +14,302 @@ const errorMsg: Record<string, string> = {
   privacidad: 'Debes aceptar la política de privacidad.',
   server: 'Error del servidor. Inténtalo de nuevo.',
 }
+
+const registerHighlights = [
+  {
+    value: 'Valoración real',
+    label: 'Obtén tu nivel 1.0–7.0 calculado con cada partido que registres.',
+  },
+  {
+    value: 'Ranking global',
+    label: 'Compara tu posición, sigue tu evolución semanal y descubre rivales.',
+  },
+  {
+    value: 'Torneos y retos',
+    label: 'Crea o únete a competiciones y lanza desafíos a otros jugadores.',
+  },
+]
 ---
 
 <AppLayout title="Crear cuenta">
-  <div class="min-h-screen flex items-center justify-center px-6 bg-bg">
-    <div class="w-full max-w-sm">
+  <div class="relative min-h-screen overflow-hidden bg-[#1f1712]">
+    <div class="absolute inset-0">
+      <img
+        src="/images/hero-padel.png"
+        alt=""
+        role="presentation"
+        class="h-full w-full object-cover object-[68%_center]"
+        loading="eager"
+        decoding="async"
+      />
+    </div>
+    <div
+      class="absolute inset-0"
+      style="background: linear-gradient(115deg, rgba(24,18,14,0.95) 0%, rgba(24,18,14,0.84) 28%, rgba(208,79,0,0.74) 62%, rgba(255,186,8,0.42) 100%);"
+    >
+    </div>
+    <div
+      class="absolute inset-0"
+      style="background: radial-gradient(circle at top left, rgba(255,248,242,0.18), transparent 34%), radial-gradient(circle at 84% 18%, rgba(255,186,8,0.18), transparent 28%);"
+    >
+    </div>
+
+    <div class="relative min-h-screen px-6 py-8 lg:px-8">
       <a
         href="/"
-        class="flex items-center justify-center gap-2 font-display font-bold text-xl tracking-tight mb-10 text-navy"
+        class="absolute left-6 top-6 z-10 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/12 text-white/80 ring-1 ring-white/15 backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white lg:left-8 lg:top-8"
+        aria-label="Volver al inicio"
       >
-        <img src="/favicon.svg" alt="Score Padel" class="w-12 h-12" />
-        Score<span class="text-coral">Padel</span>
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"></path>
+        </svg>
       </a>
+      <div
+        class="mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl items-center gap-10 lg:grid-cols-[1.08fr_0.92fr]"
+      >
+        <section class="hidden lg:flex flex-col justify-center pr-10 text-white">
+          <a href="/" class="mb-10 flex items-center gap-4">
+            <span
+              class="inline-flex h-15 w-15 items-center justify-center rounded-[1.4rem] bg-white/12 ring-1 ring-white/15 backdrop-blur-sm"
+            >
+              <img src="/favicon.svg" alt="Score Padel" class="h-12 w-12" />
+            </span>
+            <span class="font-display text-2xl font-bold tracking-tight text-white">
+              Score<span class="text-[#FFE2B8]">Padel</span>
+            </span>
+          </a>
 
-      <h1 class="font-display text-2xl font-extrabold text-center mb-2 text-navy">
-        Crea tu cuenta
-      </h1>
-      <p class="text-sm text-muted text-center mb-8">
-        Empieza a construir tu historia en el pádel.
-      </p>
-
-      {
-        error && (
-          <div class="bg-red-50 border border-red-200 text-red-600 text-xs p-3 rounded-xl mb-6">
-            {errorMsg[error] || 'Error desconocido.'}
-          </div>
-        )
-      }
-
-      <form method="POST" action="/api/auth/register" class="space-y-4">
-        <div>
-          <label for="name" class="text-xs font-semibold text-navy block mb-1.5"
-            >Nombre completo</label
+          <span
+            class="mb-4 inline-flex w-fit items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/78"
           >
-          <input
-            type="text"
-            id="name"
-            name="name"
-            required
-            autocomplete="name"
-            class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral focus:ring-2 focus:ring-coral/10 transition-all"
-          />
-        </div>
-        <div>
-          <label for="email" class="text-xs font-semibold text-navy block mb-1.5">Email</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            required
-            autocomplete="email"
-            class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral focus:ring-2 focus:ring-coral/10 transition-all"
-          />
-          <p class="text-xs text-muted/50 mt-1">Gmail, Outlook, Hotmail, Yahoo o iCloud</p>
-        </div>
-        <div>
-          <label for="password" class="text-xs font-semibold text-navy block mb-1.5"
-            >Contraseña</label
+            Únete a la comunidad
+          </span>
+
+          <h1
+            class="font-display max-w-2xl text-5xl font-extrabold leading-[1.02] tracking-tight text-white"
           >
-          <input
-            type="password"
-            id="password"
-            name="password"
-            required
-            minlength="8"
-            autocomplete="new-password"
-            class="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral focus:ring-2 focus:ring-coral/10 transition-all"
-          />
-          <p class="text-xs text-muted/50 mt-1">
-            Mínimo 8 caracteres, con mayúsculas, minúsculas y números
+            Crea tu cuenta y empieza a construir tu historia en la pista.
+          </h1>
+          <p class="mt-5 max-w-xl text-base leading-relaxed text-white/72">
+            Es gratis, rápido y seguro. Solo necesitas un email para acceder a tu valoración,
+            ranking, torneos y mucho más.
           </p>
-        </div>
-        <div class="flex items-start gap-2">
-          <input
-            type="checkbox"
-            id="age"
-            name="age"
-            required
-            class="mt-0.5 h-4 w-4 rounded border-gray-300 text-coral focus:ring-coral/20"
-          />
-          <label for="age" class="text-xs text-muted leading-relaxed">
-            Confirmo que tengo 14 años o más. (Los menores de 14 años requieren consentimiento
-            parental según LOPD Art. 7.)
-          </label>
-        </div>
-        <div class="flex items-start gap-2">
-          <input
-            type="checkbox"
-            id="privacy"
-            name="privacy"
-            required
-            class="mt-0.5 h-4 w-4 rounded border-gray-300 text-coral focus:ring-coral/20"
-          />
-          <label for="privacy" class="text-xs text-muted leading-relaxed">
-            He leído y acepto la <a
-              href="/politica-privacidad"
-              target="_blank"
-              class="text-coral hover:underline">Política de Privacidad</a
-            > y el <a href="/aviso-legal" target="_blank" class="text-coral hover:underline"
-              >Aviso Legal</a
-            >.
-          </label>
-        </div>
-        <button
-          type="submit"
-          class="w-full py-3 bg-coral text-white text-sm font-semibold rounded-full hover:bg-coral-dark transition-colors shadow-sm"
-        >
-          Crear cuenta
-        </button>
-      </form>
 
-      <p class="text-xs text-muted text-center mt-6">
-        ¿Ya tienes cuenta? <a href="/login" class="text-coral font-semibold hover:underline"
-          >Inicia sesión</a
-        >
-      </p>
+          <div class="mt-10 grid gap-4 sm:grid-cols-3">
+            {
+              registerHighlights.map((item) => (
+                <div class="rounded-[1.6rem] border border-white/12 bg-white/7 px-5 py-5 backdrop-blur-sm">
+                  <div class="font-display text-lg font-bold text-[#FFE3B8]">{item.value}</div>
+                  <p class="mt-2 text-sm leading-relaxed text-white/70">{item.label}</p>
+                </div>
+              ))
+            }
+          </div>
+        </section>
+
+        <section class="w-full max-w-md lg:ml-auto">
+          <div
+            class="rounded-4xl border border-white/30 bg-white/12 p-2 shadow-[0_36px_90px_-32px_rgba(0,0,0,0.7)] backdrop-blur-xl"
+          >
+            <div
+              class="rounded-[1.6rem] bg-[#fff8f2]/96 p-7 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] sm:p-9"
+            >
+              <a
+                href="/"
+                class="mb-8 flex items-center justify-center gap-3 font-display font-bold text-xl tracking-tight text-navy lg:hidden"
+              >
+                <img src="/favicon.svg" alt="Score Padel" class="h-11 w-11" />
+                Score<span class="text-coral">Padel</span>
+              </a>
+
+              <div class="mb-7 text-center lg:text-left">
+                <p
+                  class="mb-3 inline-flex rounded-full bg-coral/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-coral"
+                >
+                  Únete a la comunidad
+                </p>
+                <h1 class="font-display text-3xl font-extrabold tracking-tight text-navy">
+                  Crea tu cuenta
+                </h1>
+                <p class="mt-2 text-sm leading-relaxed text-muted">
+                  Empieza a construir tu historia en el pádel.
+                </p>
+              </div>
+
+              {
+                error && (
+                  <div class="mb-6 rounded-2xl border border-red-200 bg-red-50/95 px-4 py-3 text-sm text-red-700 shadow-sm">
+                    {errorMsg[error] || 'Error desconocido.'}
+                  </div>
+                )
+              }
+
+              <form method="POST" action="/api/auth/register" class="space-y-3.5">
+                <div>
+                  <label
+                    for="name"
+                    class="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-muted"
+                  >
+                    Nombre completo
+                  </label>
+                  <div class="relative">
+                    <svg
+                      class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-coral/60"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      aria-hidden="true"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+                      ></path>
+                    </svg>
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      required
+                      autocomplete="name"
+                      class="w-full rounded-2xl border border-[#efd2ba] bg-white/90 py-3.5 pl-12 pr-4 text-sm text-navy shadow-[0_10px_30px_-22px_rgba(31,23,18,0.5)] outline-none transition-all placeholder:text-muted/45 focus:border-coral focus:ring-4 focus:ring-coral/10"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label
+                    for="email"
+                    class="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-muted"
+                  >
+                    Email
+                  </label>
+                  <div class="relative">
+                    <svg
+                      class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-coral/60"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      aria-hidden="true"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M21.75 7.5v9A2.25 2.25 0 0119.5 18.75h-15A2.25 2.25 0 012.25 16.5v-9m19.5 0A2.25 2.25 0 0019.5 5.25h-15A2.25 2.25 0 002.25 7.5m19.5 0l-8.69 5.794a1.875 1.875 0 01-2.12 0L2.25 7.5"
+                      ></path>
+                    </svg>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      required
+                      autocomplete="email"
+                      class="w-full rounded-2xl border border-[#efd2ba] bg-white/90 py-3.5 pl-12 pr-4 text-sm text-navy shadow-[0_10px_30px_-22px_rgba(31,23,18,0.5)] outline-none transition-all placeholder:text-muted/45 focus:border-coral focus:ring-4 focus:ring-coral/10"
+                    />
+                  </div>
+                  <p class="mt-1.5 pl-1 text-[11px] text-muted/60">
+                    Gmail, Outlook, Hotmail, Yahoo o iCloud
+                  </p>
+                </div>
+                <div>
+                  <label
+                    for="password"
+                    class="mb-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-muted"
+                  >
+                    Contraseña
+                  </label>
+                  <div class="relative">
+                    <svg
+                      class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-coral/60"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      aria-hidden="true"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M16.5 10.5V7.875a4.5 4.5 0 10-9 0V10.5m-.75 0h10.5A2.25 2.25 0 0119.5 12.75v6A2.25 2.25 0 0117.25 21h-10.5A2.25 2.25 0 014.5 18.75v-6A2.25 2.25 0 016.75 10.5z"
+                      ></path>
+                    </svg>
+                    <input
+                      type="password"
+                      id="password"
+                      name="password"
+                      required
+                      minlength="8"
+                      autocomplete="new-password"
+                      class="w-full rounded-2xl border border-[#efd2ba] bg-white/90 py-3.5 pl-12 pr-4 text-sm text-navy shadow-[0_10px_30px_-22px_rgba(31,23,18,0.5)] outline-none transition-all placeholder:text-muted/45 focus:border-coral focus:ring-4 focus:ring-coral/10"
+                    />
+                  </div>
+                  <p class="mt-1.5 pl-1 text-[11px] text-muted/60">
+                    Mínimo 8 caracteres, con mayúsculas, minúsculas y números
+                  </p>
+                </div>
+                <div class="flex items-start gap-2.5 pt-1">
+                  <input
+                    type="checkbox"
+                    id="age"
+                    name="age"
+                    required
+                    class="mt-0.5 h-4 w-4 rounded border-[#efd2ba] text-coral focus:ring-coral/20 accent-coral"
+                  />
+                  <label for="age" class="text-xs text-muted leading-relaxed">
+                    Confirmo que tengo 14 años o más. (Los menores de 14 años requieren
+                    consentimiento parental según LOPD Art. 7.)
+                  </label>
+                </div>
+                <div class="flex items-start gap-2.5">
+                  <input
+                    type="checkbox"
+                    id="privacy"
+                    name="privacy"
+                    required
+                    class="mt-0.5 h-4 w-4 rounded border-[#efd2ba] text-coral focus:ring-coral/20 accent-coral"
+                  />
+                  <label for="privacy" class="text-xs text-muted leading-relaxed">
+                    He leído y acepto la <a
+                      href="/politica-privacidad"
+                      target="_blank"
+                      class="font-semibold text-coral hover:underline">Política de Privacidad</a
+                    > y el <a
+                      href="/aviso-legal"
+                      target="_blank"
+                      class="font-semibold text-coral hover:underline">Aviso Legal</a
+                    >.
+                  </label>
+                </div>
+                <button
+                  type="submit"
+                  class="w-full rounded-full py-3.5 text-sm font-semibold text-white shadow-[0_20px_40px_-20px_rgba(208,79,0,0.9)] transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_24px_50px_-20px_rgba(208,79,0,0.85)]"
+                  style="background: linear-gradient(135deg, #e85d04 0%, #fb923c 50%, #ffba08 100%);"
+                >
+                  Crear cuenta
+                </button>
+              </form>
+
+              <div
+                class="mt-5 flex flex-col gap-3 border-t border-black/6 pt-4 text-center sm:text-left"
+              >
+                <p class="text-xs text-muted">
+                  ¿Ya tienes cuenta? <a
+                    href="/login"
+                    class="font-semibold text-coral hover:underline">Inicia sesión</a
+                  >
+                </p>
+                <p class="text-xs text-muted/80">
+                  Registro protegido y cifrado. Tus datos siempre bajo tu control.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   </div>
 </AppLayout>

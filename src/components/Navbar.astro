@@ -41,10 +41,16 @@
               >Niveles</a
             >
             <a
+              href="#ranking"
+              data-nav-link
+              class="nav-section-link px-3.5 py-2 text-sm font-medium text-muted hover:text-coral rounded-full hover:bg-coral/5 transition-all"
+              >Ranking</a
+            >
+            <a
               href="#ventajas"
               data-nav-link
               class="nav-section-link px-3.5 py-2 text-sm font-medium text-muted hover:text-coral rounded-full hover:bg-coral/5 transition-all"
-              >Por qué unirse</a
+              >Actividad</a
             >
           </div>
           <a
@@ -102,10 +108,16 @@
         >Niveles</a
       >
       <a
+        href="#ranking"
+        data-nav-link
+        class="nav-mobile-link block py-2.5 text-sm font-medium text-muted hover:text-coral transition-colors"
+        >Ranking</a
+      >
+      <a
         href="#ventajas"
         data-nav-link
         class="nav-mobile-link block py-2.5 text-sm font-medium text-muted hover:text-coral transition-colors"
-        >Por qué unirse</a
+        >Actividad</a
       >
       <a
         href="/login"
@@ -203,6 +215,12 @@
           if (!entry.isIntersecting) return
           entry.target.classList.add('is-visible')
           observer.unobserve(entry.target)
+          // Remove will-change after animation to free GPU memory
+          setTimeout(() => {
+            if (entry.target instanceof HTMLElement) {
+              entry.target.style.willChange = 'auto'
+            }
+          }, 600)
         })
       },
       {
@@ -216,6 +234,19 @@
     revealNodes.forEach((node) => node.classList.add('is-visible'))
   }
 
-  window.addEventListener('scroll', updateNav, { passive: true })
+  let ticking = false
+  window.addEventListener(
+    'scroll',
+    () => {
+      if (!ticking) {
+        ticking = true
+        requestAnimationFrame(() => {
+          updateNav()
+          ticking = false
+        })
+      }
+    },
+    { passive: true },
+  )
   updateNav()
 </script>

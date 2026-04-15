@@ -266,20 +266,48 @@ const badges = [
       Volver a jugadores
     </a>
 
-    <!-- Hero Card -->
+    <!-- Hero Card with integrated stats -->
     <div class="card overflow-hidden">
-      <div class="h-20 bg-gradient-to-r from-coral to-orange-400 relative">
-        <div class="absolute -bottom-8 left-6">
+      <!-- Gradient header -->
+      <div
+        class="h-28 relative"
+        style="background: linear-gradient(135deg, #e85d04 0%, #fb923c 50%, #ffba08 100%);"
+      >
+        <div
+          class="absolute inset-0 opacity-20"
+          style="background: radial-gradient(circle at 80% 30%, rgba(255,255,255,0.3), transparent 50%);"
+        >
+        </div>
+        <div class="absolute -bottom-10 left-6">
           <div
-            class="w-16 h-16 rounded-2xl bg-white shadow-md border-2 border-white flex items-center justify-center"
+            class="w-20 h-20 rounded-2xl bg-white shadow-lg border-4 border-white flex items-center justify-center"
           >
-            <span class="font-display text-2xl font-extrabold text-coral"
+            <span class="font-display text-3xl font-extrabold text-coral"
               >{(player.name as string)?.charAt(0)?.toUpperCase()}</span
             >
           </div>
         </div>
+        <!-- Rating badge (top-right) -->
+        <div class="absolute top-4 right-5 text-right">
+          <div class="font-display text-4xl font-extrabold text-white drop-shadow-sm">
+            {Number(player.rating || 1).toFixed(1)}
+          </div>
+          <div class="text-[11px] text-white/80 font-medium mt-0.5">{level.nombre}</div>
+          <span
+            class:list={[
+              'inline-block mt-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full',
+              level.div === 'A'
+                ? 'bg-white/25 text-white'
+                : level.div === 'B'
+                  ? 'bg-white/20 text-white/90'
+                  : 'bg-white/15 text-white/85',
+            ]}>División {level.div}</span
+          >
+        </div>
       </div>
-      <div class="pt-12 px-6 pb-6">
+
+      <!-- Player info -->
+      <div class="pt-14 px-6 pb-4">
         <div class="flex items-start justify-between">
           <div>
             <h1 class="font-display text-xl font-extrabold text-navy">{player.name}</h1>
@@ -332,59 +360,74 @@ const badges = [
                 )
               }
             </div>
-            {player.bio && <p class="text-sm text-navy/70 mt-3 leading-relaxed">{player.bio}</p>}
+            {
+              player.bio && (
+                <p class="text-sm text-navy/70 mt-3 leading-relaxed max-w-md">{player.bio}</p>
+              )
+            }
           </div>
-          <div class="text-right shrink-0 ml-4">
-            <div class="font-display text-3xl font-extrabold text-coral">
-              {Number(player.rating || 1).toFixed(1)}
+        </div>
+      </div>
+
+      <!-- Integrated stats dashboard -->
+      <div class="border-t border-gray-100">
+        <div class="grid grid-cols-2 sm:grid-cols-4 divide-x divide-gray-100">
+          <div class="py-4 px-4 text-center">
+            <div class="font-display text-2xl font-extrabold text-navy">
+              {player.matches_played ?? 0}
             </div>
-            <div class="text-[11px] text-muted mt-0.5">{level.nombre}</div>
-            <span
+            <div class="text-[10px] text-muted uppercase tracking-wider mt-0.5">Partidos</div>
+          </div>
+          <div class="py-4 px-4 text-center">
+            <div class="font-display text-2xl font-extrabold text-teal">
+              {player.matches_won ?? 0}
+            </div>
+            <div class="text-[10px] text-muted uppercase tracking-wider mt-0.5">Victorias</div>
+          </div>
+          <div class="py-4 px-4 text-center">
+            <div class="font-display text-2xl font-extrabold text-navy">{winRate}%</div>
+            <div class="text-[10px] text-muted uppercase tracking-wider mt-0.5">Win rate</div>
+          </div>
+          <div class="py-4 px-4 text-center">
+            <div
               class:list={[
-                'inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full',
-                level.div === 'A'
-                  ? 'bg-coral/10 text-coral'
-                  : level.div === 'B'
-                    ? 'bg-amber-100 text-amber-700'
-                    : 'bg-blue-100 text-blue-700',
-              ]}>División {level.div}</span
+                'font-display text-2xl font-extrabold',
+                streakType === 'W' ? 'text-teal' : streak > 0 ? 'text-red-500' : 'text-navy',
+              ]}
             >
+              {streak > 0 ? `${streak}${streakType}` : '-'}
+            </div>
+            <div class="text-[10px] text-muted uppercase tracking-wider mt-0.5">Racha</div>
           </div>
         </div>
       </div>
+
+      <!-- Games ratio bar (integrated) -->
+      {
+        gamesWon + gamesLost > 0 && (
+          <div class="border-t border-gray-100 px-6 py-4">
+            <div class="flex items-center justify-between text-xs text-muted mb-2">
+              <span>
+                Games ganados: <span class="font-semibold text-teal">{gamesWon}</span>
+              </span>
+              <span>
+                Games perdidos: <span class="font-semibold text-red-500">{gamesLost}</span>
+              </span>
+            </div>
+            <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden flex">
+              <div
+                class="h-full bg-teal rounded-l-full"
+                style={`width: ${Math.round((gamesWon / (gamesWon + gamesLost)) * 100)}%`}
+              />
+              <div class="h-full bg-red-400 rounded-r-full flex-1" />
+            </div>
+          </div>
+        )
+      }
     </div>
 
-    <!-- Stats -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      <div class="card p-4 text-center">
-        <div class="font-display text-2xl font-extrabold text-navy">
-          {player.matches_played ?? 0}
-        </div>
-        <div class="text-[11px] text-muted mt-0.5">Partidos</div>
-      </div>
-      <div class="card p-4 text-center">
-        <div class="font-display text-2xl font-extrabold text-teal">{player.matches_won ?? 0}</div>
-        <div class="text-[11px] text-muted mt-0.5">Victorias</div>
-      </div>
-      <div class="card p-4 text-center">
-        <div class="font-display text-2xl font-extrabold text-navy">{winRate}%</div>
-        <div class="text-[11px] text-muted mt-0.5">Win rate</div>
-      </div>
-      <div class="card p-4 text-center">
-        <div
-          class:list={[
-            'font-display text-2xl font-extrabold',
-            streakType === 'W' ? 'text-teal' : streak > 0 ? 'text-red-500' : 'text-navy',
-          ]}
-        >
-          {streak > 0 ? `${streak}${streakType}` : '-'}
-        </div>
-        <div class="text-[11px] text-muted mt-0.5">Racha</div>
-      </div>
-    </div>
-
-    <!-- Games ratio bar -->
-    <div class="flex justify-end -mt-3">
+    <!-- Share button -->
+    <div class="flex justify-end -mt-2">
       <button
         id="btn-share-card"
         type="button"
@@ -405,27 +448,6 @@ const badges = [
         Compartir ficha
       </button>
     </div>
-    {
-      gamesWon + gamesLost > 0 && (
-        <div class="card p-4">
-          <div class="flex items-center justify-between text-xs text-muted mb-2">
-            <span>
-              Games ganados: <span class="font-semibold text-teal">{gamesWon}</span>
-            </span>
-            <span>
-              Games perdidos: <span class="font-semibold text-red-500">{gamesLost}</span>
-            </span>
-          </div>
-          <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden flex">
-            <div
-              class="h-full bg-teal rounded-l-full"
-              style={`width: ${Math.round((gamesWon / (gamesWon + gamesLost)) * 100)}%`}
-            />
-            <div class="h-full bg-red-400 rounded-r-full flex-1" />
-          </div>
-        </div>
-      )
-    }
 
     <!-- Logros / Badges -->
     {
