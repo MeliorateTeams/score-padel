@@ -30,7 +30,7 @@ const canonicalURL = new URL(Astro.url.pathname, 'https://scorepadel.padelzone.w
     <link rel="apple-touch-icon" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="mobile-web-app-capable" content="yes" />
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
@@ -47,10 +47,6 @@ const canonicalURL = new URL(Astro.url.pathname, 'https://scorepadel.padelzone.w
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={`https://scorepadel.padelzone.workers.dev${ogImage}`} />
     <title>{title}</title>
-    <script is:inline>
-      document.documentElement.classList.add('dark')
-    </script>
-
     <!-- Security headers via meta -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />

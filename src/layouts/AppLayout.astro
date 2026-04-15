@@ -32,11 +32,8 @@ if (user) {
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#FF6A00" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>{title} — Score Padel</title>
-    <script is:inline>
-      document.documentElement.classList.add('dark')
-    </script>
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
   </head>
@@ -165,40 +162,6 @@ if (user) {
                   Salir
                 </button>
               </form>
-              <button
-                id="dark-toggle"
-                class="ml-1 p-2 text-muted hover:text-coral rounded-full hover:bg-coral/5 transition-all"
-                title="Modo oscuro"
-              >
-                <svg
-                  id="icon-sun"
-                  class="w-4 h-4 hidden"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"
-                  />
-                </svg>
-                <svg
-                  id="icon-moon"
-                  class="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"
-                  />
-                </svg>
-              </button>
             </div>
             {/* Mobile hamburger */}
             <button
@@ -333,25 +296,6 @@ if (user) {
       })()
     </script>
     <script>
-      // Dark mode
-      const html = document.documentElement
-      const darkToggle = document.getElementById('dark-toggle')
-      const iconSun = document.getElementById('icon-sun')
-      const iconMoon = document.getElementById('icon-moon')
-      function applyDark(dark: boolean) {
-        html.classList.toggle('dark', dark)
-        if (iconSun && iconMoon) {
-          iconSun.classList.toggle('hidden', !dark)
-          iconMoon.classList.toggle('hidden', dark)
-        }
-      }
-      applyDark(localStorage.getItem('theme') === 'dark')
-      darkToggle?.addEventListener('click', () => {
-        const isDark = !html.classList.contains('dark')
-        localStorage.setItem('theme', isDark ? 'dark' : 'light')
-        applyDark(isDark)
-      })
-
       // Mobile menu
       const menuBtn = document.getElementById('mobile-menu-btn')
       const mobileMenu = document.getElementById('mobile-menu')

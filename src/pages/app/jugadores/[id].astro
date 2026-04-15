@@ -956,7 +956,7 @@ const badges = [
       const ctx = c.getContext('2d')
       if (!ctx) return
       // Background
-      ctx.fillStyle = '#0A0A0A'
+      ctx.fillStyle = '#FFFFFF'
       ctx.fillRect(0, 0, 600, 340)
       // Header bar
       const grad = ctx.createLinearGradient(0, 0, 600, 0)
@@ -981,11 +981,11 @@ const badges = [
       ctx.fillText(cardName.charAt(0).toUpperCase(), 70, 142)
       ctx.textAlign = 'left'
       // Name
-      ctx.fillStyle = '#F0F0F0'
+      ctx.fillStyle = '#1A1A2E'
       ctx.font = 'bold 22px sans-serif'
       ctx.fillText(cardName, 130, 125)
       // Level
-      ctx.fillStyle = '#8A8A8A'
+      ctx.fillStyle = '#6B7280'
       ctx.font = '13px sans-serif'
       ctx.fillText(cardLevel + '  ·  División ' + cardDiv, 130, 148)
       // Big rating
@@ -1005,11 +1005,11 @@ const badges = [
       const sy = 200
       stats.forEach((s, i) => {
         const sx = 40 + i * sw + i * 12
-        ctx.fillStyle = '#1C1C1C'
+        ctx.fillStyle = '#F1F3F5'
         ctx.beginPath()
         ctx.roundRect(sx, sy, sw, 70, 10)
         ctx.fill()
-        ctx.fillStyle = '#F0F0F0'
+        ctx.fillStyle = '#1A1A2E'
         ctx.font = 'bold 26px sans-serif'
         ctx.textAlign = 'center'
         ctx.fillText(s.value, sx + sw / 2, sy + 35)
@@ -1019,7 +1019,7 @@ const badges = [
         ctx.textAlign = 'left'
       })
       // Footer
-      ctx.fillStyle = '#D1D5DB'
+      ctx.fillStyle = '#6B7280'
       ctx.font = '10px sans-serif'
       ctx.textAlign = 'center'
       ctx.fillText('Generado con Score Padel · ' + new Date().toLocaleDateString('es'), 300, 326)
