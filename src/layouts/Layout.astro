@@ -23,7 +23,7 @@ const canonicalURL = new URL(Astro.url.pathname, 'https://scorepadel.padelzone.w
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
     <meta name="robots" content="index, follow" />
-    <meta name="theme-color" content="#E5553B" />
+    <meta name="theme-color" content="#FF6A00" />
     <link rel="canonical" href={canonicalURL.toString()} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
@@ -48,28 +48,32 @@ const canonicalURL = new URL(Astro.url.pathname, 'https://scorepadel.padelzone.w
     <meta name="twitter:image" content={`https://scorepadel.padelzone.workers.dev${ogImage}`} />
     <title>{title}</title>
     <script is:inline>
-      if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark')
+      document.documentElement.classList.add('dark')
     </script>
 
     <!-- Security headers via meta -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <!-- JSON-LD Structured Data -->
-    <script type="application/ld+json" is:inline set:html={JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "SportsOrganization",
-      "name": "Score Padel",
-      "url": "https://scorepadel.padelzone.workers.dev",
-      "logo": "https://scorepadel.padelzone.workers.dev/favicon.svg",
-      "description": description,
-      "sport": "Padel",
-      "email": "info@scorepadel.com",
-      "sameAs": [],
-      "potentialAction": {
-        "@type": "RegisterAction",
-        "target": "https://scorepadel.padelzone.workers.dev/registro"
-      }
-    })} />
+    <script
+      type="application/ld+json"
+      is:inline
+      set:html={JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'SportsOrganization',
+        name: 'Score Padel',
+        url: 'https://scorepadel.padelzone.workers.dev',
+        logo: 'https://scorepadel.padelzone.workers.dev/favicon.svg',
+        description: description,
+        sport: 'Padel',
+        email: 'info@scorepadel.com',
+        sameAs: [],
+        potentialAction: {
+          '@type': 'RegisterAction',
+          target: 'https://scorepadel.padelzone.workers.dev/registro',
+        },
+      })}
+    />
   </head>
   <body>
     <a

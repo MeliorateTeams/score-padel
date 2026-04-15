@@ -956,12 +956,12 @@ const badges = [
       const ctx = c.getContext('2d')
       if (!ctx) return
       // Background
-      ctx.fillStyle = '#F8F7F4'
+      ctx.fillStyle = '#0A0A0A'
       ctx.fillRect(0, 0, 600, 340)
       // Header bar
       const grad = ctx.createLinearGradient(0, 0, 600, 0)
-      grad.addColorStop(0, '#E5553B')
-      grad.addColorStop(1, '#F97316')
+      grad.addColorStop(0, '#FF6A00')
+      grad.addColorStop(1, '#FFB347')
       ctx.fillStyle = grad
       ctx.fillRect(0, 0, 600, 80)
       // Brand
@@ -975,21 +975,21 @@ const badges = [
       ctx.beginPath()
       ctx.arc(70, 130, 40, 0, Math.PI * 2)
       ctx.fill()
-      ctx.fillStyle = '#E5553B'
+      ctx.fillStyle = '#FF6A00'
       ctx.font = 'bold 32px sans-serif'
       ctx.textAlign = 'center'
       ctx.fillText(cardName.charAt(0).toUpperCase(), 70, 142)
       ctx.textAlign = 'left'
       // Name
-      ctx.fillStyle = '#1A1F36'
+      ctx.fillStyle = '#F0F0F0'
       ctx.font = 'bold 22px sans-serif'
       ctx.fillText(cardName, 130, 125)
       // Level
-      ctx.fillStyle = '#6B7280'
+      ctx.fillStyle = '#8A8A8A'
       ctx.font = '13px sans-serif'
       ctx.fillText(cardLevel + '  ·  División ' + cardDiv, 130, 148)
       // Big rating
-      ctx.fillStyle = '#E5553B'
+      ctx.fillStyle = '#FF6A00'
       ctx.font = 'bold 44px sans-serif'
       ctx.textAlign = 'right'
       ctx.fillText(cardRating, 576, 140)
@@ -1005,11 +1005,11 @@ const badges = [
       const sy = 200
       stats.forEach((s, i) => {
         const sx = 40 + i * sw + i * 12
-        ctx.fillStyle = '#fff'
+        ctx.fillStyle = '#1C1C1C'
         ctx.beginPath()
         ctx.roundRect(sx, sy, sw, 70, 10)
         ctx.fill()
-        ctx.fillStyle = '#1A1F36'
+        ctx.fillStyle = '#F0F0F0'
         ctx.font = 'bold 26px sans-serif'
         ctx.textAlign = 'center'
         ctx.fillText(s.value, sx + sw / 2, sy + 35)

@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wrangler workers:*)",
+      "Bash(wrangler pages:*)",
+      "Bash(cat .github/workflows/*.yml)",
+      "Bash(cat .github/workflows/*.yaml)",
+      "Bash(openssl rand:*)",
+      "Bash(python3 -c \"import secrets; print\\(secrets.token_hex\\(32\\)\\)\")",
+      "Bash(node -e \"const crypto=require\\('crypto'\\); console.log\\(crypto.randomBytes\\(32\\).toString\\('hex'\\)\\)\")",
+      "Bash(npm run:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)"
+    ]
+  }
+}
