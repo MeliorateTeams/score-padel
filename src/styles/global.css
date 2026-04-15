@@ -35,7 +35,7 @@
   body {
     @apply text-text antialiased;
     font-family: var(--font-sans);
-    background: #FAFAFA;
+    background: #FFF8F2;
     min-height: 100vh;
   }
   :focus-visible {
@@ -75,6 +75,12 @@
 /* ─── Hero pattern ─── */
 .hero-pattern {
   position: relative;
+  background: linear-gradient(180deg, #FFF8F2 0%, #FFECD2 100%);
+}
+
+/* ─── Light sections (warm gradient) ─── */
+.section-light {
+  background: linear-gradient(180deg, #FFF5EB 0%, #FFE8D0 100%);
 }
 
 /* ─── Cards ─── */
