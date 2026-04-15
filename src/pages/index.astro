@@ -268,26 +268,36 @@ const porQueUnirse = [
   </div>
 
   <!-- LIVE STATS BAR -->
-  <section data-scroll-reveal class="py-12 bg-[#2D2A26] text-white">
-    <div class="max-w-7xl mx-auto px-6 lg:px-8">
-      <div class="grid grid-cols-3 gap-8 text-center">
-        <div>
-          <div class="font-display text-3xl sm:text-4xl font-extrabold text-coral">
+  <section data-scroll-reveal class="relative z-20 -mt-8 px-6 pb-10 lg:px-8">
+    <div
+      class="mx-auto max-w-7xl rounded-[2rem] border border-white/40 px-4 py-4 text-white shadow-[0_28px_70px_-30px_rgba(208,79,0,0.55)] sm:px-6 sm:py-6"
+      style="background: linear-gradient(135deg, #f97316 0%, #fb923c 45%, #fdba74 100%);"
+    >
+      <div class="mb-4 flex justify-center sm:mb-5">
+        <span
+          class="inline-flex items-center gap-2 rounded-full bg-white/14 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/80"
+        >
+          Estado en directo
+        </span>
+      </div>
+      <div class="grid grid-cols-1 gap-3 text-center sm:grid-cols-3 sm:gap-4">
+        <div class="rounded-[1.4rem] border border-white/15 bg-black/10 px-4 py-5 backdrop-blur-sm">
+          <div class="font-display text-3xl font-extrabold text-white sm:text-4xl">
             {totalPlayers}
           </div>
-          <div class="text-xs sm:text-sm text-white/60 font-medium mt-1">Jugadores registrados</div>
+          <div class="mt-1 text-xs font-medium text-white/72 sm:text-sm">Jugadores registrados</div>
         </div>
-        <div>
-          <div class="font-display text-3xl sm:text-4xl font-extrabold text-amber">
+        <div class="rounded-[1.4rem] border border-white/15 bg-black/10 px-4 py-5 backdrop-blur-sm">
+          <div class="font-display text-3xl font-extrabold text-white sm:text-4xl">
             {totalMatches}
           </div>
-          <div class="text-xs sm:text-sm text-white/60 font-medium mt-1">Partidos jugados</div>
+          <div class="mt-1 text-xs font-medium text-white/72 sm:text-sm">Partidos jugados</div>
         </div>
-        <div>
-          <div class="font-display text-3xl sm:text-4xl font-extrabold text-teal">
+        <div class="rounded-[1.4rem] border border-white/15 bg-black/10 px-4 py-5 backdrop-blur-sm">
+          <div class="font-display text-3xl font-extrabold text-white sm:text-4xl">
             {totalTournaments}
           </div>
-          <div class="text-xs sm:text-sm text-white/60 font-medium mt-1">Torneos creados</div>
+          <div class="mt-1 text-xs font-medium text-white/72 sm:text-sm">Torneos creados</div>
         </div>
       </div>
     </div>
