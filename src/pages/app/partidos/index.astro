@@ -215,18 +215,18 @@ for (let i = 0; i < allMatchPages.length; i++) {
         </div>
         <div>
           <h1 class="font-display text-xl font-bold text-navy">Mis partidos</h1>
-          <p class="text-xs text-muted">Historial de resultados registrados.</p>
+          <p class="text-xs text-muted">Partidos creados e historial de resultados.</p>
         </div>
       </div>
       <a
-        href="/app/partidos/registrar"
+        href="/app/partidos/crear"
         class="px-5 py-2.5 bg-coral text-white text-sm font-semibold rounded-full hover:bg-coral-dark transition-colors shadow-sm flex items-center gap-2"
       >
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
           ><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"
           ></path></svg
         >
-        Nuevo partido
+        Crear partido
       </a>
     </div>
 
@@ -352,7 +352,7 @@ for (let i = 0; i < allMatchPages.length; i++) {
                     <div
                       class:list={[
                         'w-2.5 h-2.5 rounded-full shrink-0',
-                        won ? 'bg-teal' : draw ? 'bg-amber-400' : 'bg-red-400',
+                        m.status === 'pending' ? 'bg-amber-400' : won ? 'bg-teal' : draw ? 'bg-amber-400' : 'bg-red-400',
                       ]}
                     />
                     <div>
@@ -391,37 +391,36 @@ for (let i = 0; i < allMatchPages.length; i++) {
                     </div>
                   </div>
                   <div class="flex items-center gap-3">
-                    <div class="text-right">
-                      <div class="text-base font-display font-bold tracking-tight">
-                        <span
-                          class:list={[
-                            m.team1_games > m.team2_games ? 'text-coral' : 'text-navy/60',
-                          ]}
-                        >
-                          {m.team1_games}
-                        </span>
-                        <span class="text-muted/40 mx-1.5">–</span>
-                        <span
-                          class:list={[
-                            m.team2_games > m.team1_games ? 'text-coral' : 'text-navy/60',
-                          ]}
-                        >
-                          {m.team2_games}
-                        </span>
+                    {m.status === 'pending' ? (
+                      <a
+                        href={`/app/partidos/resultado/${m.id}`}
+                        class="px-3 py-1.5 bg-amber-400 text-white text-xs font-semibold rounded-full hover:bg-amber-500 transition-colors"
+                      >
+                        Registrar resultado
+                      </a>
+                    ) : (
+                      <div class="text-right">
+                        <div class="text-base font-display font-bold tracking-tight">
+                          <span class:list={[m.team1_games > m.team2_games ? 'text-coral' : 'text-navy/60']}>
+                            {m.team1_games}
+                          </span>
+                          <span class="text-muted/40 mx-1.5">–</span>
+                          <span class:list={[m.team2_games > m.team1_games ? 'text-coral' : 'text-navy/60']}>
+                            {m.team2_games}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <span
-                      class:list={[
-                        'text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full',
-                        won
-                          ? 'bg-teal/10 text-teal'
-                          : draw
-                            ? 'bg-amber-400/10 text-amber-600'
-                            : 'bg-red-400/10 text-red-500',
-                      ]}
-                    >
-                      {won ? 'Victoria' : draw ? 'Empate' : 'Derrota'}
-                    </span>
+                    )}
+                    {m.status !== 'pending' && (
+                      <span
+                        class:list={[
+                          'text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full',
+                          won ? 'bg-teal/10 text-teal' : draw ? 'bg-amber-400/10 text-amber-600' : 'bg-red-400/10 text-red-500',
+                        ]}
+                      >
+                        {won ? 'Victoria' : draw ? 'Empate' : 'Derrota'}
+                      </span>
+                    )}
                     <form
                       method="POST"
                       class="inline"
