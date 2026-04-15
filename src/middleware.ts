@@ -102,7 +102,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
       "base-uri 'self'",
       "form-action 'self'",
       "object-src 'none'",
-      "upgrade-insecure-requests",
+      'upgrade-insecure-requests',
     ].join('; '),
   )
   response.headers.set('X-Permitted-Cross-Domain-Policies', 'none')

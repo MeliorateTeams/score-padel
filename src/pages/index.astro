@@ -205,8 +205,8 @@ const porQueUnirse = [
   <div class="hero-pattern">
     <!-- HERO -->
     <section class="relative min-h-screen flex items-center pt-20 pb-16 overflow-hidden">
-      <div class="absolute top-20 right-0 w-125 h-125 bg-coral/8 rounded-full blur-[120px]"></div>
-      <div class="absolute bottom-0 left-0 w-100 h-100 bg-teal/6 rounded-full blur-[100px]"></div>
+      <div class="absolute top-20 right-0 w-125 h-125 bg-coral/5 rounded-full blur-[120px]"></div>
+      <div class="absolute bottom-0 left-0 w-100 h-100 bg-amber/5 rounded-full blur-[100px]"></div>
       <div class="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 w-full">
         <div class="grid lg:grid-cols-2 gap-10 items-center">
           <!-- Left: Text -->
@@ -248,11 +248,14 @@ const porQueUnirse = [
 
           <!-- Right: Hero Image -->
           <div class="relative">
-            <div class="rounded-3xl overflow-hidden shadow-2xl border border-white/20">
+            <div class="rounded-3xl overflow-hidden shadow-2xl border border-black/5">
               <img
                 src="/images/hero-padel.png"
-                alt="Jugadora de pádel en pista"
+                alt=""
+                role="presentation"
                 class="w-full h-[28rem] lg:h-[32rem] object-cover"
+                loading="eager"
+                decoding="async"
               />
             </div>
             <div
@@ -262,10 +265,10 @@ const porQueUnirse = [
               <div class="text-xs font-medium opacity-90">Jugadores activos</div>
             </div>
             <div
-              class="absolute -top-3 -right-3 bg-navy text-coral px-4 py-2.5 rounded-xl shadow-lg"
+              class="absolute -top-3 -right-3 bg-navy text-white px-4 py-2.5 rounded-xl shadow-lg"
             >
-              <div class="font-display text-lg font-extrabold">{totalMatches}</div>
-              <div class="text-[10px] font-medium text-sky">Partidos jugados</div>
+              <div class="font-display text-lg font-extrabold text-coral">{totalMatches}</div>
+              <div class="text-[10px] font-medium text-white/70">Partidos jugados</div>
             </div>
           </div>
         </div>

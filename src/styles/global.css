@@ -3,28 +3,28 @@
 @import "@fontsource-variable/dm-sans";
 
 @theme {
-  /* ─── Sky-Blue Gradient ScorePadel ─── */
-  --color-bg:          #E0F0FF;        /* celeste base */
-  --color-surface:     #D0E8FA;
-  --color-surface-2:   #C2DFFA;
+  /* ─── Clean Warm ScorePadel ─── */
+  --color-bg:          #FAFAFA;
+  --color-surface:     #F5F5F5;
+  --color-surface-2:   #EFEFEF;
 
-  --color-coral:       #FF6A00;        /* naranja vibrante principal */
-  --color-coral-dark:  #E55C00;
-  --color-navy:        #0F2240;        /* azul profundo para texto/headings */
-  --color-teal:        #FF8C33;        /* naranja cálido secundario */
-  --color-amber:       #FFB347;        /* ámbar dorado */
-  --color-violet:      #CC4400;        /* naranja profundo */
-  --color-sky:         #7BB8E8;        /* celeste medio */
-  --color-sky-dark:    #1B4B7A;        /* azul oscuro del degradado */
-  --color-text:        #1A3350;
-  --color-muted:       #4A6A8A;
+  --color-coral:       #E85D04;        /* naranja cálido principal */
+  --color-coral-dark:  #D04F00;
+  --color-navy:        #1B1B1B;        /* negro suave para texto */
+  --color-teal:        #F48C06;        /* naranja dorado secundario */
+  --color-amber:       #FFBA08;        /* amarillo dorado */
+  --color-violet:      #DC2F02;        /* rojo-naranja acento */
+  --color-sky:         #E5E5E5;        /* gris claro */
+  --color-sky-dark:    #2D2D2D;        /* gris oscuro */
+  --color-text:        #2D2D2D;
+  --color-muted:       #6B6B6B;
 
   /* Compat legacy */
-  --color-primary:     #FF6A00;
-  --color-secondary:   #CC4400;
-  --color-accent:      #FF8C33;
-  --color-dark:        #0A1929;
-  --color-light:       #E0F0FF;
+  --color-primary:     #E85D04;
+  --color-secondary:   #DC2F02;
+  --color-accent:      #F48C06;
+  --color-dark:        #1B1B1B;
+  --color-light:       #FAFAFA;
 
   --font-sans:         'DM Sans',  system-ui, -apple-system, sans-serif;
   --font-display:      'Outfit',   'DM Sans', system-ui, sans-serif;
@@ -35,8 +35,7 @@
   body {
     @apply text-text antialiased;
     font-family: var(--font-sans);
-    background: linear-gradient(180deg, #E8F4FD 0%, #C9E2F5 20%, #A8D0F0 40%, #7BB8E8 60%, #4A95D6 75%, #2B6CB0 85%, #1B4B7A 93%, #0F2240 100%);
-    background-attachment: fixed;
+    background: #FAFAFA;
     min-height: 100vh;
   }
   :focus-visible {
@@ -78,43 +77,40 @@
   position: relative;
 }
 
-/* ─── Cards (frosted glass on blue) ─── */
+/* ─── Cards ─── */
 .card {
   @apply rounded-2xl shadow-sm;
-  background: rgba(255,255,255,0.20);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid rgba(255,255,255,0.30);
+  background: #FFFFFF;
+  border: 1px solid rgba(0,0,0,0.06);
 }
 .card-hover {
   @apply rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200;
-  background: rgba(255,255,255,0.20);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid rgba(255,255,255,0.30);
+  background: #FFFFFF;
+  border: 1px solid rgba(0,0,0,0.06);
 }
 .card-hover:hover {
-  background: rgba(255,255,255,0.30);
-  border-color: rgba(255,106,0,0.35);
+  background: #FFFFFF;
+  border-color: rgba(232,93,4,0.35);
+  box-shadow: 0 10px 40px -10px rgba(232,93,4,0.15);
 }
 
 /* Glow cards */
 .card-glow-coral {
-  box-shadow: 0 0 0 1px rgba(255,106,0,0.20), 0 4px 24px rgba(255,106,0,0.12);
+  box-shadow: 0 0 0 1px rgba(232,93,4,0.20), 0 4px 24px rgba(232,93,4,0.12);
 }
 .card-glow-violet {
-  box-shadow: 0 0 0 1px rgba(204,68,0,0.20), 0 4px 24px rgba(204,68,0,0.12);
+  box-shadow: 0 0 0 1px rgba(220,47,2,0.20), 0 4px 24px rgba(220,47,2,0.12);
 }
 .card-glow-teal {
-  box-shadow: 0 0 0 1px rgba(255,140,51,0.20), 0 4px 24px rgba(255,140,51,0.12);
+  box-shadow: 0 0 0 1px rgba(244,140,6,0.20), 0 4px 24px rgba(244,140,6,0.12);
 }
 
 /* Glass effect */
 .glass {
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
-  background: rgba(255,255,255,0.15);
-  border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.80);
+  border: 1px solid rgba(0,0,0,0.06);
 }
 
 /* ─── Stat pill ─── */
@@ -130,47 +126,48 @@
 
 /* ─── Nav styling ─── */
 .dark-nav {
-  background-color: rgba(200,225,250,0.80) !important;
-  border-color: rgba(255,255,255,0.25);
+  background-color: rgba(255,255,255,0.90) !important;
+  border-color: rgba(0,0,0,0.06);
   backdrop-filter: blur(16px);
 }
 .nav-scrolled {
-  background-color: rgba(15,34,64,0.92) !important;
+  background-color: rgba(27,27,27,0.95) !important;
   border-color: rgba(255,255,255,0.08) !important;
   backdrop-filter: blur(16px);
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
-.divide-gray-100 > :not(:last-child) { border-color: rgba(255,255,255,0.15); }
+.divide-gray-100 > :not(:last-child) { border-color: rgba(0,0,0,0.08); }
 
 .bg-navy { background-color: var(--color-navy) !important; }
 
-/* ─── Deep zone (bottom sections on dark blue gradient) ─── */
-.deep-zone .text-navy { color: #E8F4FD !important; }
-.deep-zone .text-muted { color: #99C7E5 !important; }
-.deep-zone .text-text { color: #BDD9EE !important; }
+/* ─── Deep zone (dark section) ─── */
+.deep-zone { background: #1B1B1B; }
+.deep-zone .text-navy { color: #F5F5F5 !important; }
+.deep-zone .text-muted { color: #A3A3A3 !important; }
+.deep-zone .text-text { color: #D4D4D4 !important; }
 .deep-zone .card,
 .deep-zone .card-hover {
-  background: rgba(15,34,64,0.55) !important;
-  border-color: rgba(120,180,230,0.20) !important;
+  background: rgba(255,255,255,0.06) !important;
+  border-color: rgba(255,255,255,0.10) !important;
 }
 .deep-zone .card-hover:hover {
-  background: rgba(15,34,64,0.70) !important;
-  border-color: rgba(255,106,0,0.50) !important;
+  background: rgba(255,255,255,0.10) !important;
+  border-color: rgba(232,93,4,0.50) !important;
 }
-.deep-zone .border-gray-100 { border-color: rgba(120,180,230,0.15) !important; }
-.deep-zone .bg-gray-50 { background-color: rgba(15,34,64,0.30) !important; }
-.deep-zone .bg-white { background-color: rgba(15,34,64,0.35) !important; }
-.deep-zone .text-navy\/10 { color: rgba(120,180,230,0.20) !important; }
-.deep-zone details summary { color: #E8F4FD !important; }
-.deep-zone details div { color: #99C7E5 !important; }
+.deep-zone .border-gray-100 { border-color: rgba(255,255,255,0.10) !important; }
+.deep-zone .bg-gray-50 { background-color: rgba(255,255,255,0.05) !important; }
+.deep-zone .bg-white { background-color: rgba(255,255,255,0.08) !important; }
+.deep-zone .text-navy\/10 { color: rgba(255,255,255,0.15) !important; }
+.deep-zone details summary { color: #F5F5F5 !important; }
+.deep-zone details div { color: #A3A3A3 !important; }
 .deep-zone .bg-coral\/5,
 .deep-zone .bg-teal\/5,
-.deep-zone [class*="bg-amber/5"] { background-color: rgba(15,34,64,0.35) !important; }
+.deep-zone [class*="bg-amber/5"] { background-color: rgba(255,255,255,0.05) !important; }
 .deep-zone .border-coral\/10,
 .deep-zone .border-teal\/10,
-.deep-zone [class*="border-amber/10"] { border-color: rgba(120,180,230,0.15) !important; }
-.deep-zone .text-white\/60 { color: #99C7E5 !important; }
-.deep-zone .border-white\/20 { border-color: rgba(120,180,230,0.25) !important; }
+.deep-zone [class*="border-amber/10"] { border-color: rgba(255,255,255,0.10) !important; }
+.deep-zone .text-white\/60 { color: #A3A3A3 !important; }
+.deep-zone .border-white\/20 { border-color: rgba(255,255,255,0.15) !important; }
 
 /* ─── Animations ─── */
 @keyframes slide-up {
@@ -245,9 +242,9 @@
 .hover-lift:hover { transform: translateY(-2px); box-shadow: 0 8px 25px -5px rgb(0 0 0 / 0.12); }
 
 /* Rating badge colours */
-.div-c { background: rgba(255,140,51,0.12); color: var(--color-teal); }
-.div-b { background: rgba(255,179,71,0.12); color: var(--color-amber); }
-.div-a { background: rgba(255,106,0,0.15);  color: var(--color-coral); }
+.div-c { background: rgba(244,140,6,0.10); color: #B45309; }
+.div-b { background: rgba(255,186,8,0.12); color: #92400E; }
+.div-a { background: rgba(232,93,4,0.12);  color: var(--color-coral); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

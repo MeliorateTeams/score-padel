@@ -87,8 +87,15 @@ export async function getProfile(db: D1Database, userId: string): Promise<Profil
 
 // Whitelist of allowed profile columns to prevent SQL injection via dynamic field names
 const ALLOWED_PROFILE_FIELDS = new Set<string>([
-  'bio', 'location', 'experience_years', 'racquet_sports',
-  'rating', 'matches_played', 'matches_won', 'birth_date', 'gender',
+  'bio',
+  'location',
+  'experience_years',
+  'racquet_sports',
+  'rating',
+  'matches_played',
+  'matches_won',
+  'birth_date',
+  'gender',
 ])
 
 export async function updateProfile(db: D1Database, userId: string, data: Partial<Profile>) {
