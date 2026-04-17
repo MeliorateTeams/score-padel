@@ -218,17 +218,24 @@ const tournaments = await db
           >
         </div>
         <div>
-          <label for="partner_email" class="text-xs font-medium text-muted block mb-1.5"
-            >Email de tu compañero/a</label
+          <label for="partner_search" class="text-xs font-medium text-muted block mb-1.5"
+            >Buscar compañero/a</label
           >
-          <input
-            type="email"
-            id="partner_email"
-            name="partner_email"
-            required
-            placeholder="companero@email.com"
-            class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
-          />
+          <div class="relative player-search-wrap">
+            <input
+              type="text"
+              id="partner_search"
+              autocomplete="off"
+              placeholder="Escribe un nombre..."
+              data-target="partner_email"
+              class="player-search w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
+            />
+            <input type="hidden" id="partner_email" name="partner_email" required />
+            <div
+              class="player-results hidden absolute left-0 right-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto"
+            >
+            </div>
+          </div>
         </div>
       </div>
 
@@ -253,30 +260,44 @@ const tournaments = await db
         </h2>
         <div class="grid sm:grid-cols-2 gap-4">
           <div>
-            <label for="opponent_email" class="text-xs font-medium text-muted block mb-1.5"
+            <label for="opponent_search" class="text-xs font-medium text-muted block mb-1.5"
               >Rival 1</label
             >
-            <input
-              type="email"
-              id="opponent_email"
-              name="opponent_email"
-              required
-              placeholder="rival1@email.com"
-              class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
-            />
+            <div class="relative player-search-wrap">
+              <input
+                type="text"
+                id="opponent_search"
+                autocomplete="off"
+                placeholder="Escribe un nombre..."
+                data-target="opponent_email"
+                class="player-search w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
+              />
+              <input type="hidden" id="opponent_email" name="opponent_email" required />
+              <div
+                class="player-results hidden absolute left-0 right-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto"
+              >
+              </div>
+            </div>
           </div>
           <div>
-            <label for="opponent2_email" class="text-xs font-medium text-muted block mb-1.5"
+            <label for="opponent2_search" class="text-xs font-medium text-muted block mb-1.5"
               >Rival 2</label
             >
-            <input
-              type="email"
-              id="opponent2_email"
-              name="opponent2_email"
-              required
-              placeholder="rival2@email.com"
-              class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
-            />
+            <div class="relative player-search-wrap">
+              <input
+                type="text"
+                id="opponent2_search"
+                autocomplete="off"
+                placeholder="Escribe un nombre..."
+                data-target="opponent2_email"
+                class="player-search w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
+              />
+              <input type="hidden" id="opponent2_email" name="opponent2_email" required />
+              <div
+                class="player-results hidden absolute left-0 right-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto"
+              >
+              </div>
+            </div>
           </div>
         </div>
         <p class="text-[11px] text-muted/60">
@@ -653,5 +674,68 @@ const tournaments = await db
         }
       })
     })()
+  </script>
+
+  <script>
+    document.querySelectorAll<HTMLInputElement>('.player-search').forEach((input) => {
+      const wrap = input.closest('.player-search-wrap')!
+      const results = wrap.querySelector('.player-results') as HTMLElement
+      const targetId = input.dataset.target!
+      const hidden = document.getElementById(targetId) as HTMLInputElement
+      let timer: ReturnType<typeof setTimeout>
+
+      input.addEventListener('input', () => {
+        clearTimeout(timer)
+        hidden.value = ''
+        const q = input.value.trim()
+        if (q.length < 2) {
+          results.classList.add('hidden')
+          return
+        }
+
+        timer = setTimeout(async () => {
+          const res = await fetch(`/api/players/search?q=${encodeURIComponent(q)}`)
+          const players = (await res.json()) as {
+            id: string
+            name: string
+            email: string
+            rating: string
+            location: string
+          }[]
+
+          if (players.length === 0) {
+            results.innerHTML = '<div class="px-3 py-2 text-xs text-muted">Sin resultados</div>'
+          } else {
+            results.innerHTML = players
+              .map(
+                (p) => `
+              <button type="button" class="w-full text-left px-3 py-2 hover:bg-coral/5 flex items-center gap-2 transition-colors" data-email="${p.email}" data-name="${p.name}">
+                <span class="w-6 h-6 rounded-lg bg-coral/10 flex items-center justify-center text-[10px] font-bold text-coral shrink-0">${p.name.charAt(0).toUpperCase()}</span>
+                <span class="flex-1 min-w-0">
+                  <span class="text-xs font-medium text-navy block truncate">${p.name}</span>
+                  <span class="text-[10px] text-muted block truncate">${p.location || p.email}</span>
+                </span>
+                <span class="text-[10px] font-bold text-coral shrink-0">${p.rating}</span>
+              </button>
+            `,
+              )
+              .join('')
+          }
+
+          results.classList.remove('hidden')
+          results.querySelectorAll('button').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              hidden.value = btn.dataset.email!
+              input.value = btn.dataset.name!
+              results.classList.add('hidden')
+            })
+          })
+        }, 250)
+      })
+
+      document.addEventListener('click', (e) => {
+        if (!wrap.contains(e.target as Node)) results.classList.add('hidden')
+      })
+    })
   </script>
 </AppLayout>
