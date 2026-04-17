@@ -20,7 +20,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
        WHERE u.role != 'guest' AND u.role != 'suspended'
          AND (u.name LIKE ? OR u.email LIKE ?)
        ORDER BY u.name ASC
-       LIMIT 10`
+       LIMIT 10`,
     )
     .bind(`%${q}%`, `%${q}%`)
     .all()

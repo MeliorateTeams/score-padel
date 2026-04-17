@@ -25,7 +25,10 @@ if (Astro.request.method === 'POST') {
     const s1 = form.get(`set${i}_team1`)?.toString()
     const s2 = form.get(`set${i}_team2`)?.toString()
     if (s1 !== undefined && s2 !== undefined && s1 !== '' && s2 !== '') {
-      sets.push({ team1: Math.min(7, Math.max(0, parseInt(s1) || 0)), team2: Math.min(7, Math.max(0, parseInt(s2) || 0)) })
+      sets.push({
+        team1: Math.min(7, Math.max(0, parseInt(s1) || 0)),
+        team2: Math.min(7, Math.max(0, parseInt(s2) || 0)),
+      })
     }
   }
 
@@ -277,7 +280,10 @@ const tournaments = await db
               class="player-search w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
             />
             <input type="hidden" id="partner_email" name="partner_email" required />
-            <div class="player-results hidden absolute left-0 right-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto"></div>
+            <div
+              class="player-results hidden absolute left-0 right-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto"
+            >
+            </div>
           </div>
         </div>
       </div>
@@ -316,7 +322,10 @@ const tournaments = await db
                 class="player-search w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
               />
               <input type="hidden" id="opponent_email" name="opponent_email" required />
-              <div class="player-results hidden absolute left-0 right-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto"></div>
+              <div
+                class="player-results hidden absolute left-0 right-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto"
+              >
+              </div>
             </div>
           </div>
           <div>
@@ -333,7 +342,10 @@ const tournaments = await db
                 class="player-search w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
               />
               <input type="hidden" id="opponent2_email" name="opponent2_email" required />
-              <div class="player-results hidden absolute left-0 right-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto"></div>
+              <div
+                class="player-results hidden absolute left-0 right-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto"
+              >
+              </div>
             </div>
           </div>
         </div>
@@ -605,14 +617,25 @@ const tournaments = await db
       clearTimeout(timer)
       hidden.value = ''
       const q = input.value.trim()
-      if (q.length < 2) { results.classList.add('hidden'); return }
+      if (q.length < 2) {
+        results.classList.add('hidden')
+        return
+      }
       timer = setTimeout(async () => {
         const res = await fetch(`/api/players/search?q=${encodeURIComponent(q)}`)
-        const players = await res.json() as { id: string; name: string; email: string; rating: string; location: string }[]
+        const players = (await res.json()) as {
+          id: string
+          name: string
+          email: string
+          rating: string
+          location: string
+        }[]
         if (players.length === 0) {
           results.innerHTML = '<div class="px-3 py-2 text-xs text-muted">Sin resultados</div>'
         } else {
-          results.innerHTML = players.map(p => `
+          results.innerHTML = players
+            .map(
+              (p) => `
             <button type="button" class="w-full text-left px-3 py-2 hover:bg-coral/5 flex items-center gap-2 transition-colors" data-email="${p.email}" data-name="${p.name}">
               <span class="w-6 h-6 rounded-lg bg-coral/10 flex items-center justify-center text-[10px] font-bold text-coral shrink-0">${p.name.charAt(0).toUpperCase()}</span>
               <span class="flex-1 min-w-0">
@@ -621,10 +644,12 @@ const tournaments = await db
               </span>
               <span class="text-[10px] font-bold text-coral shrink-0">${p.rating}</span>
             </button>
-          `).join('')
+          `,
+            )
+            .join('')
         }
         results.classList.remove('hidden')
-        results.querySelectorAll('button').forEach(btn => {
+        results.querySelectorAll('button').forEach((btn) => {
           btn.addEventListener('click', () => {
             hidden.value = btn.dataset.email!
             input.value = btn.dataset.name!

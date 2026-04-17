@@ -179,12 +179,20 @@
   }
 
   // Scroll-spy: track which section is in the top third of viewport
+  const seen = new Set<string>()
   const sectionEls: { id: string; el: Element }[] = []
   sectionLinks.forEach((link) => {
     const hash = link.getAttribute('href')
-    if (!hash?.startsWith('#')) return
+    if (!hash?.startsWith('#') || seen.has(hash)) return
+    seen.add(hash)
     const section = document.querySelector(hash)
     if (section) sectionEls.push({ id: hash.slice(1), el: section })
+  })
+  // Sort by DOM position so the loop finds the correct active section
+  sectionEls.sort((a, b) => {
+    const aTop = a.el.getBoundingClientRect().top
+    const bTop = b.el.getBoundingClientRect().top
+    return aTop - bTop
   })
 
   function updateActiveSection() {
