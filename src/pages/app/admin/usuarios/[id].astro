@@ -10,6 +10,7 @@ if (user.role !== 'admin') return Astro.redirect('/app')
 
 const db = (Astro.locals as any).db
 const targetId = Astro.params.id
+if (!targetId) return Astro.redirect('/app/admin/usuarios')
 
 // Verify target user exists
 const targetUser = await db

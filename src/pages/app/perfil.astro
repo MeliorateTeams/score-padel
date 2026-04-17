@@ -116,7 +116,10 @@ if (Astro.request.method === 'POST') {
         // Invalidar todas las sesiones excepto la actual
         const currentSession = Astro.cookies.get('session')?.value
         if (currentSession) {
-          await db.prepare('DELETE FROM sessions WHERE user_id = ? AND id != ?').bind(user.id, currentSession).run()
+          await db
+            .prepare('DELETE FROM sessions WHERE user_id = ? AND id != ?')
+            .bind(user.id, currentSession)
+            .run()
         }
         message = 'Contraseña cambiada correctamente. Todas las demás sesiones han sido cerradas.'
       }
@@ -252,7 +255,7 @@ const ratingLevel = (r: number) => {
 
     <!-- Hero card: identity + rating -->
     <div class="card p-0 overflow-hidden">
-      <div class="bg-gradient-to-r from-coral to-coral-dark h-24 relative">
+      <div class="bg-linear-to-r from-coral to-coral-dark h-24 relative">
         <div class="absolute -bottom-10 left-8">
           <div
             class="w-20 h-20 rounded-2xl bg-white shadow-lg flex items-center justify-center border-4 border-white"

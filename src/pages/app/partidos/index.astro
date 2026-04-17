@@ -18,11 +18,9 @@ if (Astro.request.method === 'POST') {
     // Only admin or original recorder (within 24h) can delete
     const match = await db.prepare('SELECT * FROM matches WHERE id = ?').bind(matchId).first()
     const isRecorder = match?.recorded_by === user.id
-    const isRecent = match?.created_at && (Date.now() - new Date(match.created_at as string).getTime()) < 86400000
-    if (
-      match &&
-      (isAdmin || (isRecorder && isRecent))
-    ) {
+    const isRecent =
+      match?.created_at && Date.now() - new Date(match.created_at as string).getTime() < 86400000
+    if (match && (isAdmin || (isRecorder && isRecent))) {
       const players = [
         match.team1_player1,
         match.team1_player2,
@@ -230,7 +228,7 @@ for (let i = 0; i < allMatchPages.length; i++) {
 
     <!-- Filtros -->
     <form method="GET" class="card p-4 flex flex-wrap items-end gap-3">
-      <div class="flex-1 min-w-[120px]">
+      <div class="flex-1 min-w-30">
         <label
           for="from"
           class="text-[10px] font-semibold text-muted uppercase tracking-wider block mb-1"
@@ -244,7 +242,7 @@ for (let i = 0; i < allMatchPages.length; i++) {
           class="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-navy focus:outline-none focus:border-coral/50 transition-colors"
         />
       </div>
-      <div class="flex-1 min-w-[120px]">
+      <div class="flex-1 min-w-30">
         <label
           for="to"
           class="text-[10px] font-semibold text-muted uppercase tracking-wider block mb-1"
@@ -258,7 +256,7 @@ for (let i = 0; i < allMatchPages.length; i++) {
           class="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs text-navy focus:outline-none focus:border-coral/50 transition-colors"
         />
       </div>
-      <div class="flex-1 min-w-[120px]">
+      <div class="flex-1 min-w-30">
         <label
           for="result"
           class="text-[10px] font-semibold text-muted uppercase tracking-wider block mb-1"
@@ -387,7 +385,7 @@ for (let i = 0; i < allMatchPages.length; i++) {
                           <span class="text-[11px] font-mono text-muted/70">{m.set_scores}</span>
                         )}
                         {m.notes && (
-                          <span class="text-[11px] text-muted/60 italic truncate max-w-[180px]">
+                          <span class="text-[11px] text-muted/60 italic truncate max-w-45">
                             💬 {m.notes}
                           </span>
                         )}
