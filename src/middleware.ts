@@ -80,6 +80,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   const response = await next()
 
+  // Prevent browsers from caching SSR pages (dynamic HTML must always be fresh)
+  const ct = response.headers.get('Content-Type') || ''
+  if (ct.includes('text/html')) {
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+  }
+
   // Cabeceras de seguridad profesionales
   response.headers.set('X-Frame-Options', 'DENY')
   response.headers.set('X-Content-Type-Options', 'nosniff')
