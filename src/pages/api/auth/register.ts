@@ -112,7 +112,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
     })
     return new Response(null, {
       status: 303,
-      headers: { Location: new URL('/app', request.url).toString() },
+      headers: { Location: new URL('/app/cuestionario', request.url).toString() },
     })
   } catch (e: any) {
     if (e.message?.includes('UNIQUE')) {

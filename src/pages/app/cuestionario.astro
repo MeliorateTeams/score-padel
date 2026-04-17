@@ -1,0 +1,232 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro'
+import { getProfile, updateProfile } from '../../lib/db'
+
+const user = (Astro.locals as any).user
+if (!user) return Astro.redirect('/login')
+
+const db = (Astro.locals as any).db
+const profile = await getProfile(db, user.id)
+
+// Si ya tiene partidos o ya rellenó el cuestionario (rating > 1.0 con 0 partidos y ya tiene experiencia), ir al app
+if (profile && profile.matches_played > 0) return Astro.redirect('/app')
+
+let completed = false
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData()
+
+  const q1 = parseInt(form.get('q_experience')?.toString() ?? '0')
+  const q2 = parseInt(form.get('q_frequency')?.toString() ?? '0')
+  const q3 = parseInt(form.get('q_technical')?.toString() ?? '0')
+  const q4 = parseInt(form.get('q_competitive')?.toString() ?? '0')
+  const q5 = parseInt(form.get('q_tactical')?.toString() ?? '0')
+  const q6 = parseInt(form.get('q_racquet')?.toString() ?? '0')
+  const q7 = parseInt(form.get('q_selfeval')?.toString() ?? '10')
+
+  // Experience years mapping for profile
+  const expMap: Record<number, number> = { 0: 0, 3: 1, 7: 2, 10: 4, 13: 7, 15: 12 }
+  const experienceYears = expMap[q1] ?? 0
+
+  // Racquet sports mapping
+  const racquetMap: Record<number, string> = { 0: '', 2: '1 deporte', 4: '2+ deportes' }
+  const racquetSports = racquetMap[q6] ?? ''
+
+  // Score Q1-Q6 (raw sum, scaled to 0.1)
+  const rawSum = (q1 + q2 + q3 + q4 + q5 + q6) / 10
+  const rawScore = 1.0 + rawSum * 5.0 / 5.1 // normalize to ~1.0-6.0
+
+  // Anchor Q7 (direct level)
+  const anchorScore = q7 / 10
+
+  // Blend: 40% raw + 60% anchor
+  let initialRating = 0.4 * rawScore + 0.6 * anchorScore
+
+  // Consistency check: if raw and anchor diverge > 1.5, use lower
+  if (Math.abs(rawScore - anchorScore) > 1.5) {
+    initialRating = Math.min(rawScore, anchorScore)
+  }
+
+  // Cap at 5.0 (self-assessment can't reach A division)
+  initialRating = Math.max(1.0, Math.min(5.0, initialRating))
+  initialRating = Math.round(initialRating * 10) / 10
+
+  await updateProfile(db, user.id, {
+    experience_years: experienceYears,
+    racquet_sports: racquetSports,
+  })
+
+  await db.prepare("UPDATE profiles SET rating = ?, updated_at = datetime('now') WHERE user_id = ?")
+    .bind(initialRating, user.id).run()
+
+  completed = true
+}
+---
+
+<AppLayout title="Tu nivel de pádel" user={user}>
+  {completed ? (
+    <div class="max-w-lg mx-auto text-center space-y-6 py-12">
+      <div class="w-20 h-20 mx-auto rounded-2xl bg-coral/10 flex items-center justify-center">
+        <svg class="w-10 h-10 text-coral" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <h1 class="font-display text-2xl font-bold text-navy">¡Perfil completado!</h1>
+      <p class="text-sm text-muted">Tu valoración inicial se ha calculado en base a tus respuestas. Se ajustará automáticamente con cada partido que registres.</p>
+      <a href="/app" class="inline-flex px-8 py-3 bg-coral text-white text-sm font-semibold rounded-full hover:bg-coral-dark transition-colors">
+        Ir al dashboard
+      </a>
+    </div>
+  ) : (
+    <div class="max-w-2xl mx-auto space-y-6">
+      <div class="text-center space-y-2">
+        <span class="inline-block text-xs font-bold text-coral uppercase tracking-[0.2em] bg-coral/10 px-3 py-1 rounded-full">Cuestionario inicial</span>
+        <h1 class="font-display text-2xl font-bold text-navy">¿Cuál es tu nivel de pádel?</h1>
+        <p class="text-sm text-muted max-w-md mx-auto">Responde estas preguntas para calcular tu valoración inicial. Se ajustará automáticamente con cada partido.</p>
+      </div>
+
+      <form method="POST" class="space-y-5">
+        <!-- Q1: Experiencia -->
+        <div class="card p-6 space-y-3">
+          <h2 class="font-display text-sm font-bold text-navy flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-coral/10 flex items-center justify-center text-xs font-bold text-coral">1</span>
+            ¿Cuánto tiempo llevas jugando al pádel?
+          </h2>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <label class="quiz-option"><input type="radio" name="q_experience" value="0" required class="sr-only peer" /><span class="quiz-label">Acabo de empezar</span></label>
+            <label class="quiz-option"><input type="radio" name="q_experience" value="3" class="sr-only peer" /><span class="quiz-label">Menos de 1 año</span></label>
+            <label class="quiz-option"><input type="radio" name="q_experience" value="7" class="sr-only peer" /><span class="quiz-label">1–3 años</span></label>
+            <label class="quiz-option"><input type="radio" name="q_experience" value="10" class="sr-only peer" /><span class="quiz-label">3–5 años</span></label>
+            <label class="quiz-option"><input type="radio" name="q_experience" value="13" class="sr-only peer" /><span class="quiz-label">5–10 años</span></label>
+            <label class="quiz-option"><input type="radio" name="q_experience" value="15" class="sr-only peer" /><span class="quiz-label">Más de 10 años</span></label>
+          </div>
+        </div>
+
+        <!-- Q2: Frecuencia -->
+        <div class="card p-6 space-y-3">
+          <h2 class="font-display text-sm font-bold text-navy flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-coral/10 flex items-center justify-center text-xs font-bold text-coral">2</span>
+            ¿Con qué frecuencia juegas?
+          </h2>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <label class="quiz-option"><input type="radio" name="q_frequency" value="0" required class="sr-only peer" /><span class="quiz-label">Rara vez</span></label>
+            <label class="quiz-option"><input type="radio" name="q_frequency" value="1" class="sr-only peer" /><span class="quiz-label">1–2 veces/mes</span></label>
+            <label class="quiz-option"><input type="radio" name="q_frequency" value="3" class="sr-only peer" /><span class="quiz-label">1–2 veces/semana</span></label>
+            <label class="quiz-option"><input type="radio" name="q_frequency" value="5" class="sr-only peer" /><span class="quiz-label">3–4 veces/semana</span></label>
+            <label class="quiz-option"><input type="radio" name="q_frequency" value="6" class="sr-only peer" /><span class="quiz-label">5+ veces/semana</span></label>
+          </div>
+        </div>
+
+        <!-- Q3: Nivel técnico -->
+        <div class="card p-6 space-y-3">
+          <h2 class="font-display text-sm font-bold text-navy flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-coral/10 flex items-center justify-center text-xs font-bold text-coral">3</span>
+            ¿Cómo describirías tu nivel técnico?
+          </h2>
+          <div class="space-y-2">
+            <label class="quiz-option"><input type="radio" name="q_technical" value="0" required class="sr-only peer" /><span class="quiz-label">Estoy aprendiendo los golpes básicos (derecha, revés)</span></label>
+            <label class="quiz-option"><input type="radio" name="q_technical" value="2" class="sr-only peer" /><span class="quiz-label">Puedo pelotear de forma consistente desde el fondo</span></label>
+            <label class="quiz-option"><input type="radio" name="q_technical" value="5" class="sr-only peer" /><span class="quiz-label">Me siento cómodo/a en la red (voleas, bandeja básica)</span></label>
+            <label class="quiz-option"><input type="radio" name="q_technical" value="8" class="sr-only peer" /><span class="quiz-label">Domino bandeja, víbora y chiquita con control</span></label>
+            <label class="quiz-option"><input type="radio" name="q_technical" value="10" class="sr-only peer" /><span class="quiz-label">Golpes avanzados (x3/x4, bajada, gancho) con efecto y colocación</span></label>
+          </div>
+        </div>
+
+        <!-- Q4: Nivel competitivo -->
+        <div class="card p-6 space-y-3">
+          <h2 class="font-display text-sm font-bold text-navy flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-coral/10 flex items-center justify-center text-xs font-bold text-coral">4</span>
+            ¿Cuál es tu experiencia competitiva?
+          </h2>
+          <div class="space-y-2">
+            <label class="quiz-option"><input type="radio" name="q_competitive" value="0" required class="sr-only peer" /><span class="quiz-label">Solo juego con amigos (social)</span></label>
+            <label class="quiz-option"><input type="radio" name="q_competitive" value="2" class="sr-only peer" /><span class="quiz-label">Participo en americanas o ligas locales amateur</span></label>
+            <label class="quiz-option"><input type="radio" name="q_competitive" value="5" class="sr-only peer" /><span class="quiz-label">Compito en torneos de club amateur</span></label>
+            <label class="quiz-option"><input type="radio" name="q_competitive" value="8" class="sr-only peer" /><span class="quiz-label">Compito en torneos federados o regionales</span></label>
+            <label class="quiz-option"><input type="radio" name="q_competitive" value="10" class="sr-only peer" /><span class="quiz-label">Competidor/a nacional o internacional</span></label>
+          </div>
+        </div>
+
+        <!-- Q5: Táctica -->
+        <div class="card p-6 space-y-3">
+          <h2 class="font-display text-sm font-bold text-navy flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-coral/10 flex items-center justify-center text-xs font-bold text-coral">5</span>
+            ¿Cómo describirías tu juego táctico?
+          </h2>
+          <div class="space-y-2">
+            <label class="quiz-option"><input type="radio" name="q_tactical" value="0" required class="sr-only peer" /><span class="quiz-label">No pienso mucho en la estrategia, simplemente golpeo</span></label>
+            <label class="quiz-option"><input type="radio" name="q_tactical" value="1" class="sr-only peer" /><span class="quiz-label">Entiendo la posición básica (red vs fondo)</span></label>
+            <label class="quiz-option"><input type="radio" name="q_tactical" value="3" class="sr-only peer" /><span class="quiz-label">Puedo construir puntos y mover a los rivales</span></label>
+            <label class="quiz-option"><input type="radio" name="q_tactical" value="5" class="sr-only peer" /><span class="quiz-label">Adapto la estrategia a las debilidades del rival</span></label>
+            <label class="quiz-option"><input type="radio" name="q_tactical" value="6" class="sr-only peer" /><span class="quiz-label">Leo el juego y anticipo a los rivales consistentemente</span></label>
+          </div>
+        </div>
+
+        <!-- Q6: Otros deportes de raqueta -->
+        <div class="card p-6 space-y-3">
+          <h2 class="font-display text-sm font-bold text-navy flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-coral/10 flex items-center justify-center text-xs font-bold text-coral">6</span>
+            ¿Has practicado otros deportes de raqueta?
+          </h2>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="quiz-option"><input type="radio" name="q_racquet" value="0" required class="sr-only peer" /><span class="quiz-label">Ninguno</span></label>
+            <label class="quiz-option"><input type="radio" name="q_racquet" value="2" class="sr-only peer" /><span class="quiz-label">1 deporte</span></label>
+            <label class="quiz-option"><input type="radio" name="q_racquet" value="4" class="sr-only peer" /><span class="quiz-label">2 o más</span></label>
+          </div>
+        </div>
+
+        <!-- Q7: Autoevaluación -->
+        <div class="card p-6 space-y-3">
+          <h2 class="font-display text-sm font-bold text-navy flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-coral/10 flex items-center justify-center text-xs font-bold text-coral">7</span>
+            ¿Con cuál descripción te identificas más?
+          </h2>
+          <div class="space-y-2">
+            <label class="quiz-option"><input type="radio" name="q_selfeval" value="10" required class="sr-only peer" /><span class="quiz-label"><strong>Iniciación</strong> — Estoy aprendiendo, aún no mantengo peloteos</span></label>
+            <label class="quiz-option"><input type="radio" name="q_selfeval" value="15" class="sr-only peer" /><span class="quiz-label"><strong>Principiante</strong> — Mantengo peloteos desde el fondo, saque básico</span></label>
+            <label class="quiz-option"><input type="radio" name="q_selfeval" value="25" class="sr-only peer" /><span class="quiz-label"><strong>Intermedio bajo</strong> — Peloteos consistentes, juego de red básico</span></label>
+            <label class="quiz-option"><input type="radio" name="q_selfeval" value="35" class="sr-only peer" /><span class="quiz-label"><strong>Intermedio</strong> — Buena técnica, conciencia táctica, cómodo en la red</span></label>
+            <label class="quiz-option"><input type="radio" name="q_selfeval" value="45" class="sr-only peer" /><span class="quiz-label"><strong>Intermedio alto</strong> — Golpes avanzados, competitivo en torneos</span></label>
+            <label class="quiz-option"><input type="radio" name="q_selfeval" value="55" class="sr-only peer" /><span class="quiz-label"><strong>Avanzado</strong> — Nivel semiprofesional, gano torneos amateur</span></label>
+            <label class="quiz-option"><input type="radio" name="q_selfeval" value="65" class="sr-only peer" /><span class="quiz-label"><strong>Profesional</strong> — Jugador/a federado o profesional</span></label>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <a href="/app" class="text-sm text-muted hover:text-coral transition-colors">Omitir →</a>
+          <button type="submit" class="px-8 py-3 bg-coral text-white text-sm font-semibold rounded-full hover:bg-coral-dark transition-colors shadow-lg shadow-coral/30">
+            Calcular mi nivel
+          </button>
+        </div>
+      </form>
+    </div>
+  )}
+</AppLayout>
+
+<style>
+  .quiz-option {
+    display: block;
+    cursor: pointer;
+  }
+  .quiz-label {
+    display: block;
+    padding: 0.625rem 1rem;
+    border: 1.5px solid rgba(0,0,0,0.08);
+    border-radius: 0.75rem;
+    font-size: 0.8125rem;
+    color: #1B1B1B;
+    background: #fff;
+    transition: all 0.15s ease;
+  }
+  .quiz-option:hover .quiz-label {
+    border-color: rgba(232,93,4,0.3);
+    background: rgba(232,93,4,0.03);
+  }
+  .peer:checked ~ .quiz-label {
+    border-color: #E85D04;
+    background: rgba(232,93,4,0.08);
+    color: #E85D04;
+    font-weight: 600;
+    box-shadow: 0 0 0 1px rgba(232,93,4,0.15);
+  }
+</style>

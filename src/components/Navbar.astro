@@ -178,32 +178,29 @@
     })
   }
 
+  // Scroll-spy: track which section is in the top third of viewport
+  const sectionEls: { id: string; el: Element }[] = []
+  sectionLinks.forEach((link) => {
+    const hash = link.getAttribute('href')
+    if (!hash?.startsWith('#')) return
+    const section = document.querySelector(hash)
+    if (section) sectionEls.push({ id: hash.slice(1), el: section })
+  })
+
+  function updateActiveSection() {
+    const scrollY = window.scrollY + window.innerHeight * 0.33
+    let activeId = ''
+    for (const { id, el } of sectionEls) {
+      const rect = el.getBoundingClientRect()
+      const top = rect.top + window.scrollY
+      if (scrollY >= top) activeId = id
+    }
+    setActiveLink(activeId)
+  }
+
+  // Scroll-reveal setup
   if ('IntersectionObserver' in window) {
-    const sectionObserver = new IntersectionObserver(
-      (entries) => {
-        const activeEntry = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0]
-
-        if (activeEntry?.target?.id) {
-          setActiveLink(activeEntry.target.id)
-        }
-      },
-      {
-        rootMargin: '-28% 0px -55% 0px',
-        threshold: [0.15, 0.35, 0.55],
-      },
-    )
-
-    sectionLinks.forEach((link) => {
-      const hash = link.getAttribute('href')
-      if (!hash?.startsWith('#')) return
-      const section = document.querySelector(hash)
-      if (section) sectionObserver.observe(section)
-    })
-
     revealNodes.forEach((node, index) => {
-      node.classList.add('scroll-reveal')
       if (node instanceof HTMLElement) {
         node.style.setProperty('--reveal-delay', `${Math.min(index * 45, 180)}ms`)
       }
@@ -215,7 +212,6 @@
           if (!entry.isIntersecting) return
           entry.target.classList.add('is-visible')
           observer.unobserve(entry.target)
-          // Remove will-change after animation to free GPU memory
           setTimeout(() => {
             if (entry.target instanceof HTMLElement) {
               entry.target.style.willChange = 'auto'
@@ -242,6 +238,7 @@
         ticking = true
         requestAnimationFrame(() => {
           updateNav()
+          updateActiveSection()
           ticking = false
         })
       }
@@ -249,4 +246,5 @@
     { passive: true },
   )
   updateNav()
+  updateActiveSection()
 </script>
