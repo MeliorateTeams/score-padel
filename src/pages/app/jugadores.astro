@@ -44,26 +44,28 @@ const page = Math.max(1, parseInt(Astro.url.searchParams.get('page') ?? '1'))
 const perPage = 18
 
 let query = `
-  SELECT u.id, u.name, p.rating, p.location, p.matches_played, p.experience_years
+  SELECT u.id, u.name, u.email, p.rating, p.location, p.matches_played, p.experience_years
   FROM users u
   LEFT JOIN profiles p ON u.id = p.user_id
   WHERE u.id != ?
+    AND u.role != 'guest' AND u.role != 'suspended'
 `
 let countQuery = `
   SELECT COUNT(*) as total
   FROM users u
   LEFT JOIN profiles p ON u.id = p.user_id
   WHERE u.id != ?
+    AND u.role != 'guest' AND u.role != 'suspended'
 `
 const params: any[] = [user.id]
 const countParams: any[] = [user.id]
 
 if (search && search.length <= 50) {
   const safeSearch = search.replace(/%/g, '\\%').replace(/_/g, '\\_')
-  query += " AND u.name LIKE ? ESCAPE '\\'"
-  countQuery += " AND u.name LIKE ? ESCAPE '\\'"
-  params.push(`%${safeSearch}%`)
-  countParams.push(`%${safeSearch}%`)
+  query += " AND (u.name LIKE ? ESCAPE '\\' OR u.email LIKE ? ESCAPE '\\')"
+  countQuery += " AND (u.name LIKE ? ESCAPE '\\' OR u.email LIKE ? ESCAPE '\\')"
+  params.push(`%${safeSearch}%`, `%${safeSearch}%`)
+  countParams.push(`%${safeSearch}%`, `%${safeSearch}%`)
 }
 if (locationFilter && locationFilter.length <= 50) {
   const safeLoc = locationFilter.replace(/%/g, '\\%').replace(/_/g, '\\_')
@@ -222,14 +224,23 @@ for (let i = 0; i < allPages.length; i++) {
       )
     }
 
-    <form method="GET" class="flex flex-wrap gap-3 mb-8">
-      <input
-        type="text"
-        name="q"
-        value={search}
-        placeholder="Nombre del jugador..."
-        class="flex-1 min-w-50 px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
-      />
+    <form method="GET" class="flex flex-wrap gap-3 mb-8" id="players-filter-form">
+      <div class="relative flex-1 min-w-50">
+        <input
+          type="text"
+          id="players-filter-search"
+          name="q"
+          value={search}
+          autocomplete="off"
+          placeholder="Nombre o email del jugador..."
+          class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
+        />
+        <div
+          id="players-filter-results"
+          class="hidden absolute left-0 right-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-xl shadow-lg max-h-56 overflow-y-auto"
+        >
+        </div>
+      </div>
       <input
         type="text"
         name="location"
@@ -323,4 +334,59 @@ for (let i = 0; i < allPages.length; i++) {
 
     <p class="text-center text-xs text-muted mt-4">{total} jugadores encontrados</p>
   </div>
+
+  <script>
+    const searchInput = document.getElementById('players-filter-search') as HTMLInputElement | null
+    const resultsBox = document.getElementById('players-filter-results') as HTMLElement | null
+    if (searchInput && resultsBox) {
+      let timer: ReturnType<typeof setTimeout>
+
+      searchInput.addEventListener('input', () => {
+        clearTimeout(timer)
+        const q = searchInput.value.trim()
+        if (q.length < 2) {
+          resultsBox.classList.add('hidden')
+          return
+        }
+
+        timer = setTimeout(async () => {
+          const res = await fetch(`/api/players/search?q=${encodeURIComponent(q)}`)
+          const players = (await res.json()) as {
+            id: string
+            name: string
+            email: string
+            rating: string
+            location: string
+          }[]
+
+          if (players.length === 0) {
+            resultsBox.innerHTML = '<div class="px-3 py-2 text-xs text-muted">Sin resultados</div>'
+          } else {
+            resultsBox.innerHTML = players
+              .map(
+                (p) => `
+              <a href="/app/jugadores/${p.id}" class="w-full text-left px-3 py-2 hover:bg-coral/5 flex items-center gap-2 transition-colors block">
+                <span class="w-6 h-6 rounded-lg bg-coral/10 flex items-center justify-center text-[10px] font-bold text-coral shrink-0">${p.name.charAt(0).toUpperCase()}</span>
+                <span class="flex-1 min-w-0">
+                  <span class="text-xs font-medium text-navy block truncate">${p.name}</span>
+                  <span class="text-[10px] text-muted block truncate">${p.location || p.email}</span>
+                </span>
+                <span class="text-[10px] font-bold text-coral shrink-0">${p.rating}</span>
+              </a>
+            `,
+              )
+              .join('')
+          }
+
+          resultsBox.classList.remove('hidden')
+        }, 250)
+      })
+
+      document.addEventListener('click', (e) => {
+        if (!searchInput.closest('form')?.contains(e.target as Node)) {
+          resultsBox.classList.add('hidden')
+        }
+      })
+    }
+  </script>
 </AppLayout>

@@ -66,7 +66,7 @@ if (user) {
             </a>
             {/* Quick search */}
             <form action="/app/jugadores" method="GET" class="hidden lg:flex items-center ml-4">
-              <div class="relative">
+              <div class="relative" id="quick-player-search-wrap">
                 <svg
                   class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted/50"
                   fill="none"
@@ -82,10 +82,17 @@ if (user) {
                 </svg>
                 <input
                   type="text"
+                  id="quick-player-search"
                   name="q"
+                  autocomplete="off"
                   placeholder="Buscar jugador..."
                   class="w-44 pl-8 pr-3 py-1.5 text-xs bg-[#fff5eb] border border-[#efd2ba] rounded-full text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 focus:w-56 transition-all"
                 />
+                <div
+                  id="quick-player-results"
+                  class="hidden absolute left-0 right-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-xl shadow-lg max-h-56 overflow-y-auto"
+                >
+                </div>
               </div>
             </form>
             {/* Desktop nav */}
@@ -304,6 +311,63 @@ if (user) {
       menuBtn?.addEventListener('click', () => {
         mobileMenu?.classList.toggle('hidden')
       })
+    </script>
+    <script>
+      // Navbar quick player autocomplete
+      const quickInput = document.getElementById('quick-player-search') as HTMLInputElement | null
+      const quickResults = document.getElementById('quick-player-results') as HTMLElement | null
+      const quickWrap = document.getElementById('quick-player-search-wrap')
+
+      if (quickInput && quickResults && quickWrap) {
+        let timer: ReturnType<typeof setTimeout>
+
+        quickInput.addEventListener('input', () => {
+          clearTimeout(timer)
+          const q = quickInput.value.trim()
+          if (q.length < 2) {
+            quickResults.classList.add('hidden')
+            return
+          }
+
+          timer = setTimeout(async () => {
+            const res = await fetch(`/api/players/search?q=${encodeURIComponent(q)}`)
+            const players = (await res.json()) as {
+              id: string
+              name: string
+              email: string
+              rating: string
+              location: string
+            }[]
+
+            if (players.length === 0) {
+              quickResults.innerHTML = '<div class="px-3 py-2 text-xs text-muted">Sin resultados</div>'
+            } else {
+              quickResults.innerHTML = players
+                .map(
+                  (p) => `
+                <a href="/app/jugadores/${p.id}" class="w-full text-left px-3 py-2 hover:bg-coral/5 flex items-center gap-2 transition-colors block">
+                  <span class="w-6 h-6 rounded-lg bg-coral/10 flex items-center justify-center text-[10px] font-bold text-coral shrink-0">${p.name.charAt(0).toUpperCase()}</span>
+                  <span class="flex-1 min-w-0">
+                    <span class="text-xs font-medium text-navy block truncate">${p.name}</span>
+                    <span class="text-[10px] text-muted block truncate">${p.location || p.email}</span>
+                  </span>
+                  <span class="text-[10px] font-bold text-coral shrink-0">${p.rating}</span>
+                </a>
+              `,
+                )
+                .join('')
+            }
+
+            quickResults.classList.remove('hidden')
+          }, 250)
+        })
+
+        document.addEventListener('click', (e) => {
+          if (!quickWrap.contains(e.target as Node)) {
+            quickResults.classList.add('hidden')
+          }
+        })
+      }
     </script>
     <script define:vars={{ unreadCount }}>
       // Browser notifications for unread items
