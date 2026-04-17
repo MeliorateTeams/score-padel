@@ -1,0 +1,469 @@
+---
+import AppLayout from '../../../../layouts/AppLayout.astro'
+import { getProfile, updateProfile } from '../../../../lib/db'
+import { calculateInitialRating } from '../../../../lib/rating'
+import { hashPassword } from '../../../../lib/auth'
+
+const user = (Astro.locals as any).user
+if (!user) return Astro.redirect('/login')
+if (user.role !== 'admin') return Astro.redirect('/app')
+
+const db = (Astro.locals as any).db
+const targetId = Astro.params.id
+
+// Verify target user exists
+const targetUser = await db
+  .prepare('SELECT id, name, email, role, created_at FROM users WHERE id = ?')
+  .bind(targetId)
+  .first()
+if (!targetUser) return Astro.redirect('/app/admin/usuarios')
+
+let message = ''
+let messageType = 'success'
+
+function sanitize(input: string, maxLen = 200): string {
+  return input
+    .replace(/<[^>]*>/g, '')
+    .trim()
+    .slice(0, maxLen)
+}
+
+if (Astro.request.method === 'POST') {
+  const form = await Astro.request.formData()
+  const action = form.get('action')?.toString()
+
+  if (action === 'update-user') {
+    const name = sanitize(form.get('name')?.toString() ?? '', 100)
+    const email = sanitize(form.get('email')?.toString() ?? '', 200).toLowerCase()
+
+    if (!name || name.length < 2) {
+      message = 'El nombre debe tener al menos 2 caracteres.'
+      messageType = 'error'
+    } else if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      message = 'Email no válido.'
+      messageType = 'error'
+    } else {
+      // Check email uniqueness (exclude current user)
+      const existing = await db
+        .prepare('SELECT id FROM users WHERE email = ? AND id != ?')
+        .bind(email, targetId)
+        .first()
+      if (existing) {
+        message = 'Ese email ya está registrado por otro usuario.'
+        messageType = 'error'
+      } else {
+        await db
+          .prepare('UPDATE users SET name = ?, email = ? WHERE id = ?')
+          .bind(name, email, targetId)
+          .run()
+        message = 'Datos de usuario actualizados.'
+      }
+    }
+  }
+
+  if (action === 'update-profile') {
+    const experienceYears = Math.max(
+      0,
+      Math.min(50, parseInt(form.get('experience_years')?.toString() ?? '0') || 0),
+    )
+    const racquetSports = sanitize(form.get('racquet_sports')?.toString() ?? '', 100)
+    const birthDate = form.get('birth_date')?.toString() ?? ''
+    const gender = form.get('gender')?.toString() ?? ''
+    const validGenders = ['', 'masculino', 'femenino', 'otro']
+    const safeGender = validGenders.includes(gender) ? gender : ''
+    const safeBirthDate = /^\d{4}-\d{2}-\d{2}$/.test(birthDate) ? birthDate : ''
+
+    await updateProfile(db, targetId, {
+      bio: sanitize(form.get('bio')?.toString() ?? '', 500),
+      location: sanitize(form.get('location')?.toString() ?? '', 100),
+      experience_years: experienceYears,
+      racquet_sports: racquetSports,
+      birth_date: safeBirthDate,
+      gender: safeGender,
+    })
+
+    // Recalculate initial rating if no matches
+    const currentProfile = await getProfile(db, targetId)
+    if (currentProfile && currentProfile.matches_played === 0) {
+      const initialRating = calculateInitialRating(experienceYears, racquetSports)
+      await db
+        .prepare("UPDATE profiles SET rating = ?, updated_at = datetime('now') WHERE user_id = ?")
+        .bind(initialRating, targetId)
+        .run()
+    }
+
+    message = 'Perfil actualizado correctamente.'
+  }
+
+  if (action === 'update-rating') {
+    const newRating = parseFloat(form.get('rating')?.toString() ?? '0')
+    if (newRating >= 1.0 && newRating <= 7.0) {
+      await db
+        .prepare("UPDATE profiles SET rating = ?, updated_at = datetime('now') WHERE user_id = ?")
+        .bind(Math.round(newRating * 10) / 10, targetId)
+        .run()
+      message = `Rating actualizado a ${newRating.toFixed(1)}.`
+    } else {
+      message = 'El rating debe estar entre 1.0 y 7.0.'
+      messageType = 'error'
+    }
+  }
+
+  if (action === 'reset-password') {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%'
+    const bytes = crypto.getRandomValues(new Uint8Array(12))
+    const tempPass = Array.from(bytes, (b) => chars[b % chars.length]).join('')
+    const hash = await hashPassword(tempPass)
+    await db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').bind(hash, targetId).run()
+    await db.prepare('DELETE FROM sessions WHERE user_id = ?').bind(targetId).run()
+    message = `Contraseña temporal: ${tempPass}`
+  }
+}
+
+// Reload data after possible changes
+const tu = (await db
+  .prepare('SELECT id, name, email, role, created_at FROM users WHERE id = ?')
+  .bind(targetId)
+  .first()) as any
+const profile = await getProfile(db, targetId)
+---
+
+<AppLayout title={`Editar: ${tu.name}`} user={user}>
+  <div class="max-w-2xl mx-auto space-y-6">
+    <div class="flex items-center gap-3">
+      <a href="/app/admin/usuarios" class="text-xs text-muted hover:text-coral transition-colors"
+        >← Usuarios</a
+      >
+    </div>
+
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-coral/10 flex items-center justify-center">
+        <span class="font-display text-lg font-bold text-coral"
+          >{tu.name?.charAt(0)?.toUpperCase()}</span
+        >
+      </div>
+      <div>
+        <h1 class="font-display text-xl font-bold text-navy">Editar jugador</h1>
+        <p class="text-xs text-muted">{tu.name} · {tu.email}</p>
+      </div>
+      <span
+        class:list={[
+          'ml-auto text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full',
+          tu.role === 'admin'
+            ? 'bg-coral/10 text-coral'
+            : tu.role === 'suspended'
+              ? 'bg-red-500/10 text-red-500'
+              : 'bg-teal/10 text-teal',
+        ]}
+      >
+        {tu.role}
+      </span>
+    </div>
+
+    {
+      message && (
+        <div
+          class:list={[
+            'p-4 rounded-xl text-sm font-medium',
+            messageType === 'error'
+              ? 'bg-red-50 border border-red-200 text-red-600'
+              : 'bg-teal/10 border border-teal/20 text-teal',
+          ]}
+        >
+          {message}
+        </div>
+      )
+    }
+
+    <!-- Datos de cuenta -->
+    <form method="POST" class="card p-6 space-y-4">
+      <input type="hidden" name="action" value="update-user" />
+      <h2
+        class="font-display text-sm font-bold text-navy uppercase tracking-wider flex items-center gap-2"
+      >
+        <svg
+          class="w-4 h-4 text-coral"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+          ></path>
+        </svg>
+        Datos de cuenta
+      </h2>
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label for="name" class="text-xs font-medium text-muted block mb-1.5">Nombre</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            required
+            minlength="2"
+            maxlength="100"
+            value={tu.name}
+            class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy focus:outline-none focus:border-coral/50 transition-colors"
+          />
+        </div>
+        <div>
+          <label for="email" class="text-xs font-medium text-muted block mb-1.5">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            maxlength="200"
+            value={tu.email}
+            class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy focus:outline-none focus:border-coral/50 transition-colors"
+          />
+        </div>
+      </div>
+      <div class="flex justify-end">
+        <button
+          type="submit"
+          class="px-6 py-2 bg-coral text-white text-xs font-semibold rounded-full hover:bg-coral-dark transition-colors"
+        >
+          Guardar cuenta
+        </button>
+      </div>
+    </form>
+
+    <!-- Perfil -->
+    <form method="POST" class="card p-6 space-y-4">
+      <input type="hidden" name="action" value="update-profile" />
+      <h2
+        class="font-display text-sm font-bold text-navy uppercase tracking-wider flex items-center gap-2"
+      >
+        <svg
+          class="w-4 h-4 text-coral"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
+          ></path>
+        </svg>
+        Perfil e información
+      </h2>
+
+      <div>
+        <label for="location" class="text-xs font-medium text-muted block mb-1.5">Ubicación</label>
+        <input
+          type="text"
+          id="location"
+          name="location"
+          value={profile?.location ?? ''}
+          placeholder="Madrid, España"
+          class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
+        />
+      </div>
+
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label for="birth_date" class="text-xs font-medium text-muted block mb-1.5"
+            >Fecha de nacimiento</label
+          >
+          <input
+            type="date"
+            id="birth_date"
+            name="birth_date"
+            value={profile?.birth_date ?? ''}
+            class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy focus:outline-none focus:border-coral/50 transition-colors"
+          />
+        </div>
+        <div>
+          <label for="gender" class="text-xs font-medium text-muted block mb-1.5">Género</label>
+          <select
+            id="gender"
+            name="gender"
+            class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy focus:outline-none focus:border-coral/50 transition-colors"
+          >
+            <option value="" selected={!profile?.gender}>Seleccionar</option>
+            <option value="masculino" selected={profile?.gender === 'masculino'}>Masculino</option>
+            <option value="femenino" selected={profile?.gender === 'femenino'}>Femenino</option>
+            <option value="otro" selected={profile?.gender === 'otro'}>Otro</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label for="experience_years" class="text-xs font-medium text-muted block mb-1.5"
+            >Años jugando pádel</label
+          >
+          <input
+            type="number"
+            id="experience_years"
+            name="experience_years"
+            min="0"
+            max="50"
+            value={profile?.experience_years ?? 0}
+            class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy focus:outline-none focus:border-coral/50 transition-colors"
+          />
+        </div>
+        <div>
+          <label for="racquet_sports" class="text-xs font-medium text-muted block mb-1.5"
+            >Otros deportes de raqueta</label
+          >
+          <input
+            type="text"
+            id="racquet_sports"
+            name="racquet_sports"
+            value={profile?.racquet_sports ?? ''}
+            placeholder="Tenis, Squash..."
+            class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label for="bio" class="text-xs font-medium text-muted block mb-1.5">Sobre el jugador</label
+        >
+        <textarea
+          id="bio"
+          name="bio"
+          rows="3"
+          placeholder="Bio del jugador..."
+          class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy placeholder:text-muted/50 focus:outline-none focus:border-coral/50 transition-colors resize-none"
+          >{profile?.bio ?? ''}</textarea
+        >
+      </div>
+
+      <div class="flex justify-end">
+        <button
+          type="submit"
+          class="px-6 py-2 bg-coral text-white text-xs font-semibold rounded-full hover:bg-coral-dark transition-colors"
+        >
+          Guardar perfil
+        </button>
+      </div>
+    </form>
+
+    <!-- Rating manual -->
+    <form method="POST" class="card p-6 space-y-4">
+      <input type="hidden" name="action" value="update-rating" />
+      <h2
+        class="font-display text-sm font-bold text-navy uppercase tracking-wider flex items-center gap-2"
+      >
+        <svg
+          class="w-4 h-4 text-coral"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"
+          ></path>
+        </svg>
+        Rating
+      </h2>
+      <div class="flex items-center gap-4">
+        <div class="text-center">
+          <div class="font-display text-3xl font-bold text-coral">
+            {profile?.rating?.toFixed(1) ?? '1.0'}
+          </div>
+          <div class="text-[10px] text-muted">Actual</div>
+        </div>
+        <div class="flex-1">
+          <label for="rating" class="text-xs font-medium text-muted block mb-1.5"
+            >Nuevo rating (1.0 – 7.0)</label
+          >
+          <input
+            type="number"
+            id="rating"
+            name="rating"
+            min="1.0"
+            max="7.0"
+            step="0.1"
+            value={profile?.rating?.toFixed(1) ?? '1.0'}
+            class="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm text-navy focus:outline-none focus:border-coral/50 transition-colors"
+          />
+        </div>
+        <button
+          type="submit"
+          class="mt-5 px-6 py-2.5 bg-amber-500 text-white text-xs font-semibold rounded-full hover:bg-amber-600 transition-colors"
+        >
+          Actualizar
+        </button>
+      </div>
+      <p class="text-[10px] text-muted">
+        ⚠️ Cambiar el rating manualmente sobreescribe el cálculo automático.
+      </p>
+    </form>
+
+    <!-- Reset contraseña -->
+    <form
+      method="POST"
+      class="card p-6 space-y-4"
+      onsubmit="return confirm('¿Restablecer la contraseña de este usuario?')"
+    >
+      <input type="hidden" name="action" value="reset-password" />
+      <h2
+        class="font-display text-sm font-bold text-navy uppercase tracking-wider flex items-center gap-2"
+      >
+        <svg
+          class="w-4 h-4 text-coral"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z"
+          ></path>
+        </svg>
+        Contraseña
+      </h2>
+      <div class="flex items-center justify-between">
+        <p class="text-xs text-muted">
+          Genera una contraseña temporal aleatoria y cierra todas las sesiones del usuario.
+        </p>
+        <button
+          type="submit"
+          class="px-6 py-2 bg-navy text-white text-xs font-semibold rounded-full hover:bg-navy/90 transition-colors whitespace-nowrap"
+        >
+          Reset contraseña
+        </button>
+      </div>
+    </form>
+
+    <!-- Info extra -->
+    <div class="card p-6 space-y-3">
+      <h2 class="font-display text-sm font-bold text-navy uppercase tracking-wider">Info</h2>
+      <div class="grid grid-cols-2 gap-y-2 text-xs">
+        <span class="text-muted">ID</span><span class="text-navy font-mono text-[11px]"
+          >{tu.id}</span
+        >
+        <span class="text-muted">Registrado</span><span class="text-navy"
+          >{
+            new Date(tu.created_at).toLocaleDateString('es-ES', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            })
+          }</span
+        >
+        <span class="text-muted">Partidos</span><span class="text-navy font-bold"
+          >{profile?.matches_played ?? 0}</span
+        >
+        <span class="text-muted">Victorias</span><span class="text-navy font-bold"
+          >{profile?.matches_won ?? 0}</span
+        >
+      </div>
+    </div>
+  </div>
+</AppLayout>
