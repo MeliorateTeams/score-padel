@@ -37,8 +37,25 @@ const playerIds = [
 ]
 if (!playerIds.includes(user.id) && user.role !== 'admin') return Astro.redirect('/app/partidos')
 
-// Already completed
-if (match.status === 'completed') return Astro.redirect('/app/partidos')
+// Determine if user can edit an already-completed match (admin or recorder within 24h)
+const isRecorder = match.recorded_by === user.id
+const isRecent =
+  match.created_at && Date.now() - new Date(match.created_at as string).getTime() < 86400000
+const canEdit = user.role === 'admin' || (isRecorder && isRecent)
+
+// Already completed - only redirect if user has no edit permission
+if (match.status === 'completed' && !canEdit) return Astro.redirect('/app/partidos')
+
+// Parse existing set scores for pre-filling the edit form
+let existingSetScores: { team1: number; team2: number }[] = []
+if (match.status === 'completed' && match.set_scores) {
+  try {
+    const parsed = JSON.parse(match.set_scores as string)
+    if (Array.isArray(parsed)) existingSetScores = parsed
+  } catch {
+    /* ignore */
+  }
+}
 
 let message = ''
 let error = ''
@@ -50,7 +67,10 @@ if (Astro.request.method === 'POST') {
     const s1 = form.get(`set${i}_team1`)?.toString()
     const s2 = form.get(`set${i}_team2`)?.toString()
     if (s1 !== undefined && s2 !== undefined && s1 !== '' && s2 !== '') {
-      sets.push({ team1: Math.min(7, Math.max(0, parseInt(s1) || 0)), team2: Math.min(7, Math.max(0, parseInt(s2) || 0)) })
+      sets.push({
+        team1: Math.min(7, Math.max(0, parseInt(s1) || 0)),
+        team2: Math.min(7, Math.max(0, parseInt(s2) || 0)),
+      })
     }
   }
 
@@ -62,6 +82,34 @@ if (Astro.request.method === 'POST') {
   } else if (team1_games === 0 && team2_games === 0) {
     error = 'Registra al menos un juego.'
   } else {
+    const isEditing = match.status === 'completed'
+
+    // If re-editing a completed match: reverse old stats and rating history
+    if (isEditing) {
+      const allMatchPlayers = [
+        match.team1_player1,
+        match.team1_player2,
+        match.team2_player1,
+        match.team2_player2,
+      ].filter(Boolean) as string[]
+      const oldWasTeam1Win = (match.team1_games as number) > (match.team2_games as number)
+      const oldWinners = (
+        oldWasTeam1Win
+          ? [match.team1_player1, match.team1_player2]
+          : [match.team2_player1, match.team2_player2]
+      ).filter(Boolean) as string[]
+      for (const pid of allMatchPlayers) {
+        const wasWinner = oldWinners.includes(pid)
+        await db
+          .prepare(
+            `UPDATE profiles SET matches_played = MAX(0, matches_played - 1), matches_won = MAX(0, matches_won - ?) WHERE user_id = ?`,
+          )
+          .bind(wasWinner ? 1 : 0, pid)
+          .run()
+      }
+      await db.prepare('DELETE FROM rating_history WHERE match_id = ?').bind(matchId).run()
+    }
+
     await db
       .prepare(
         'UPDATE matches SET status=?, team1_games=?, team2_games=?, set_scores=?, recorded_by=? WHERE id=?',
@@ -69,19 +117,21 @@ if (Astro.request.method === 'POST') {
       .bind('completed', team1_games, team2_games, JSON.stringify(sets), user.id, matchId)
       .run()
 
-    // Create match confirmations
-    for (const pid of playerIds.filter(Boolean)) {
-      const existing = await db
-        .prepare('SELECT 1 FROM match_confirmations WHERE match_id=? AND user_id=?')
-        .bind(matchId, pid)
-        .first()
-      if (!existing) {
-        await db
-          .prepare(
-            'INSERT INTO match_confirmations (match_id, user_id, confirmed) VALUES (?, ?, ?)',
-          )
-          .bind(matchId, pid, pid === user.id ? 1 : 0)
-          .run()
+    // Create match confirmations (only on first registration)
+    if (!isEditing) {
+      for (const pid of playerIds.filter(Boolean)) {
+        const existing = await db
+          .prepare('SELECT 1 FROM match_confirmations WHERE match_id=? AND user_id=?')
+          .bind(matchId, pid)
+          .first()
+        if (!existing) {
+          await db
+            .prepare(
+              'INSERT INTO match_confirmations (match_id, user_id, confirmed) VALUES (?, ?, ?)',
+            )
+            .bind(matchId, pid, pid === user.id ? 1 : 0)
+            .run()
+        }
       }
     }
 
@@ -101,18 +151,25 @@ if (Astro.request.method === 'POST') {
           crypto.randomUUID(),
           pid,
           'match',
-          `${user.name} registró el resultado: ${setsStr}`,
+          isEditing
+            ? `${user.name} corrigió el resultado: ${setsStr}`
+            : `${user.name} registró el resultado: ${setsStr}`,
           '/app/partidos',
         )
         .run()
     }
 
-    message = '¡Resultado registrado! Las valoraciones se han actualizado.'
+    message = isEditing
+      ? '¡Resultado actualizado! Las valoraciones se han recalculado.'
+      : '¡Resultado registrado! Las valoraciones se han actualizado.'
   }
 }
 ---
 
-<AppLayout title="Registrar resultado" user={user}>
+<AppLayout
+  title={match.status === 'completed' ? 'Editar resultado' : 'Registrar resultado'}
+  user={user}
+>
   <div class="max-w-xl mx-auto space-y-6">
     <div class="flex items-center gap-3">
       <a
@@ -146,9 +203,15 @@ if (Astro.request.method === 'POST') {
         >
       </div>
       <div>
-        <h1 class="font-display text-xl font-bold text-navy">Registrar resultado</h1>
+        <h1 class="font-display text-xl font-bold text-navy">
+          {match.status === 'completed' ? 'Editar resultado' : 'Registrar resultado'}
+        </h1>
         <p class="text-xs text-muted">
-          Introduce los sets del partido para actualizar valoraciones.
+          {
+            match.status === 'completed'
+              ? 'Corrige los sets — las valoraciones se recalcularán automáticamente.'
+              : 'Introduce los sets del partido para actualizar valoraciones.'
+          }
         </p>
       </div>
     </div>
@@ -252,6 +315,7 @@ if (Astro.request.method === 'POST') {
                   name={`set${n}_team1`}
                   min="0"
                   max="7"
+                  value={existingSetScores[n - 1]?.team1 ?? undefined}
                   required={n === 1}
                   class="text-center px-2 py-2 bg-white border border-gray-200 rounded-xl text-sm font-display font-bold text-navy focus:outline-none focus:border-coral/50 transition-colors"
                 />
@@ -261,6 +325,7 @@ if (Astro.request.method === 'POST') {
                   name={`set${n}_team2`}
                   min="0"
                   max="7"
+                  value={existingSetScores[n - 1]?.team2 ?? undefined}
                   required={n === 1}
                   class="text-center px-2 py-2 bg-white border border-gray-200 rounded-xl text-sm font-display font-bold text-navy focus:outline-none focus:border-coral/50 transition-colors"
                 />
@@ -286,7 +351,7 @@ if (Astro.request.method === 'POST') {
                   d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              Guardar resultado
+              Guardar {match.status === 'completed' ? 'cambios' : 'resultado'}
             </button>
           </div>
         </form>
