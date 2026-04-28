@@ -1,37 +1,65 @@
-﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#FF7A1A"/>
-      <stop offset="100%" stop-color="#D94400"/>
-    </linearGradient>
-    <linearGradient id="ball" x1="0.3" y1="0" x2="0.8" y2="1">
-      <stop offset="0%" stop-color="#FFED4A"/>
-      <stop offset="100%" stop-color="#F5A623"/>
-    </linearGradient>
-  </defs>
-  <rect x="16" y="16" width="480" height="480" rx="110" fill="url(#bg)"/>
-  <g transform="translate(280,240) rotate(20)">
-    <rect x="-14" y="78" width="28" height="72" rx="7" fill="white" opacity="0.88"/>
-    <rect x="-26" y="68" width="52" height="16" rx="6" fill="white" opacity="0.82"/>
-    <rect x="-58" y="-78" width="116" height="150" rx="40" fill="white" opacity="0.93"/>
-    <circle cx="-28" cy="-52" r="8" fill="#E06018" opacity="0.5"/>
-    <circle cx="0" cy="-52" r="8" fill="#E06018" opacity="0.5"/>
-    <circle cx="28" cy="-52" r="8" fill="#E06018" opacity="0.5"/>
-    <circle cx="-28" cy="-26" r="8" fill="#E06018" opacity="0.5"/>
-    <circle cx="0" cy="-26" r="8" fill="#E06018" opacity="0.5"/>
-    <circle cx="28" cy="-26" r="8" fill="#E06018" opacity="0.5"/>
-    <circle cx="-28" cy="0" r="8" fill="#E06018" opacity="0.5"/>
-    <circle cx="0" cy="0" r="8" fill="#E06018" opacity="0.5"/>
-    <circle cx="28" cy="0" r="8" fill="#E06018" opacity="0.5"/>
-    <circle cx="-28" cy="26" r="8" fill="#E06018" opacity="0.5"/>
-    <circle cx="0" cy="26" r="8" fill="#E06018" opacity="0.5"/>
-    <circle cx="28" cy="26" r="8" fill="#E06018" opacity="0.5"/>
-    <circle cx="-28" cy="52" r="8" fill="#E06018" opacity="0.5"/>
-    <circle cx="0" cy="52" r="8" fill="#E06018" opacity="0.5"/>
-    <circle cx="28" cy="52" r="8" fill="#E06018" opacity="0.5"/>
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="-15 5 370 235">
+  <!--
+    ScorePadel animated logo
+    Trazo: trayectoria real del logo (coordenadas calculadas desde los SVG originales)
+    Animación: el trazo se dibuja solo, al llegar al final aparece la pelota y todo se resetea
+  -->
+  <style>
+    /* Estado estático (fallback si no hay animación: favicon pequeño, prefers-reduced-motion) */
+    .sp-line {
+      stroke-dasharray: 800;
+      stroke-dashoffset: 0;
+      animation: sp-draw 3.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+    .sp-ball {
+      opacity: 1;
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: sp-ball 3.4s ease-in-out infinite;
+    }
+
+    /* Animación principal */
+    @keyframes sp-draw {
+      0%   { stroke-dashoffset: 800; }   /* oculto al inicio */
+      58%  { stroke-dashoffset: 0; }     /* trazo completo */
+      79%  { stroke-dashoffset: 0; }     /* pausa con trazo visible */
+      80%  { stroke-dashoffset: 800; }   /* reset instantáneo */
+      100% { stroke-dashoffset: 800; }   /* espera antes del siguiente ciclo */
+    }
+
+    @keyframes sp-ball {
+      0%, 52%    { opacity: 0; transform: scale(0); }
+      62%        { opacity: 1; transform: scale(1.25); } /* aparece con rebote */
+      70%, 78%   { opacity: 1; transform: scale(1); }
+      87%        { opacity: 0; transform: scale(0.3); } /* se va */
+      100%       { opacity: 0; transform: scale(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .sp-line, .sp-ball { animation: none; }
+    }
+  </style>
+
+  <!-- Trazo del logo: M inicio → arco grande → bucle → cola horizontal -->
+  <path
+    class="sp-line"
+    d="M 20 105
+       C 20 105  105 34  163 63
+       C 212 87  205 196  161 193
+       C 144 192  130 143  222 143
+       C 242 143  269 141  303 143"
+    fill="none"
+    stroke="#033E8C"
+    stroke-width="13"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- Pelota de pádel en el punto final del trazo (303, 143) -->
+  <g class="sp-ball" transform="translate(303, 143)">
+    <circle r="17" fill="#EEF046" stroke="#C3C700" stroke-width="1.5"/>
+    <!-- Líneas características de la pelota de pádel (S-curves en blanco) -->
+    <path d="M -8 -8 Q -3.5 0 -8 8"  fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" opacity="0.88"/>
+    <path d="M  8 -8 Q  3.5 0  8 8"  fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" opacity="0.88"/>
   </g>
-  <circle cx="180" cy="185" r="76" fill="url(#ball)"/>
-  <path d="M122,148 Q155,190 122,232" fill="none" stroke="white" stroke-width="4" opacity="0.55" stroke-linecap="round"/>
-  <path d="M238,148 Q205,190 238,232" fill="none" stroke="white" stroke-width="4" opacity="0.55" stroke-linecap="round"/>
-  <circle cx="158" cy="164" r="16" fill="white" opacity="0.25"/>
 </svg>
