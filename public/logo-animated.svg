@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="7 20 322 188">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="7 20 360 188">
   <style>
     .sp-line {
       stroke-dasharray: 800;
@@ -40,7 +40,7 @@
        C 20 105 105 34 163 63
        C 212 87 205 196 161 193
        C 144 192 130 143 222 143
-       C 242 143 269 141 303 143"
+      C 242 143 252 143 266 143"
     fill="none"
     stroke="#033E8C"
     stroke-width="13"
@@ -48,9 +48,9 @@
     stroke-linejoin="round"
   />
 
-  <g transform="translate(305,143)">
+  <g transform="translate(320,143)">
     <g class="sp-ball">
-      <circle r="26" fill="#EEF046" stroke="#C3C700" stroke-width="2.4"/>
+      <circle r="23" fill="#EEF046" stroke="#C3C700" stroke-width="2.4"/>
       <path d="M -11 -11 Q -4.6 0 -11 11" fill="none" stroke="white" stroke-width="5" stroke-linecap="round" opacity="0.92"/>
       <path d="M 11 -11 Q 4.6 0 11 11" fill="none" stroke="white" stroke-width="5" stroke-linecap="round" opacity="0.92"/>
     </g>
