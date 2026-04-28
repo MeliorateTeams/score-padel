@@ -18,7 +18,7 @@ let weeklyMatches = 0
 if (db) {
   const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
   const [p, m, t, matches, tournaments, ranking, locations, newP, weekM] = await Promise.all([
-    db.prepare('SELECT COUNT(*) as c FROM users WHERE role != ?').bind('guest').first(),
+    db.prepare('SELECT COUNT(*) as c FROM users').first(),
     db.prepare('SELECT COUNT(*) as c FROM matches').first(),
     db.prepare('SELECT COUNT(*) as c FROM tournaments').first(),
     db
@@ -54,7 +54,7 @@ if (db) {
       SELECT u.name, p.rating, p.matches_played, p.location
       FROM profiles p
       JOIN users u ON p.user_id = u.id
-      WHERE u.role != 'guest' AND p.matches_played > 0
+      WHERE u.role != 'suspended' AND p.matches_played > 0
       ORDER BY p.rating DESC LIMIT 10
     `,
       )
@@ -65,7 +65,7 @@ if (db) {
       SELECT p.location, COUNT(*) as count
       FROM profiles p
       JOIN users u ON p.user_id = u.id
-      WHERE u.role != 'guest' AND p.location IS NOT NULL AND p.location != ''
+      WHERE u.role != 'suspended' AND p.location IS NOT NULL AND p.location != ''
       GROUP BY p.location
       ORDER BY count DESC LIMIT 12
     `,

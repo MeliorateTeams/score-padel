@@ -17,7 +17,7 @@ if (Astro.request.method === 'POST') {
   if (targetId && targetId !== user.id) {
     if (action === 'change-role') {
       const newRole = form.get('new_role')?.toString()
-      if (newRole && ['admin', 'player', 'guest'].includes(newRole)) {
+      if (newRole && ['admin', 'player'].includes(newRole)) {
         await db.prepare('UPDATE users SET role = ? WHERE id = ?').bind(newRole, targetId).run()
         message = 'Rol actualizado.'
       }
@@ -133,9 +133,7 @@ const users = await db
                             ? 'bg-coral/10 text-coral'
                             : u.role === 'suspended'
                               ? 'bg-red-500/10 text-red-500'
-                              : u.role === 'guest'
-                                ? 'bg-gray-100 text-muted'
-                                : 'bg-teal/10 text-teal',
+                              : 'bg-teal/10 text-teal',
                         ]}
                       >
                         {u.role}
@@ -180,7 +178,6 @@ const users = await db
                                   <option value="">Cambiar rol...</option>
                                   <option value="admin">Admin</option>
                                   <option value="player">Player</option>
-                                  <option value="guest">Guest</option>
                                 </select>
                               </form>
                               <form

@@ -48,14 +48,14 @@ let query = `
   FROM users u
   LEFT JOIN profiles p ON u.id = p.user_id
   WHERE u.id != ?
-    AND u.role != 'guest' AND u.role != 'suspended'
+    AND u.role != 'suspended'
 `
 let countQuery = `
   SELECT COUNT(*) as total
   FROM users u
   LEFT JOIN profiles p ON u.id = p.user_id
   WHERE u.id != ?
-    AND u.role != 'guest' AND u.role != 'suspended'
+    AND u.role != 'suspended'
 `
 const params: any[] = [user.id]
 const countParams: any[] = [user.id]

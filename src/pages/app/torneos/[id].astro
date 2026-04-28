@@ -3,7 +3,6 @@ import AppLayout from '../../../layouts/AppLayout.astro'
 
 const user = (Astro.locals as any).user
 if (!user) return Astro.redirect('/login')
-if (user.role === 'guest') return Astro.redirect('/app')
 
 const db = (Astro.locals as any).db
 const { id } = Astro.params
@@ -21,64 +20,60 @@ const tournament = await db
 if (!tournament) return Astro.redirect('/app/torneos')
 
 // Handle POST actions
-if (Astro.request.method === 'POST' && user.role !== 'guest') {
+if (Astro.request.method === 'POST') {
   const form = await Astro.request.formData()
   const action = form.get('action')?.toString()
   if (action === 'join') {
-    if (user.role === 'guest') {
-      // guests cannot join
-    } else {
-      const partner_email = form.get('partner_email')?.toString().trim().toLowerCase()
-      if (partner_email) {
-        const partner = (await db
-          .prepare('SELECT id FROM users WHERE email = ?')
-          .bind(partner_email)
-          .first()) as { id: string } | null
-        const alreadyInCheck = await db
-          .prepare('SELECT 1 FROM tournament_players WHERE tournament_id = ? AND user_id = ?')
-          .bind(id, user.id)
-          .first()
-        if (partner && partner.id !== user.id && !alreadyInCheck) {
-          try {
-            await db
-              .prepare('INSERT INTO tournament_players (tournament_id, user_id) VALUES (?, ?)')
-              .bind(id, user.id)
-              .run()
-          } catch {}
-          try {
-            await db
-              .prepare('INSERT INTO tournament_players (tournament_id, user_id) VALUES (?, ?)')
-              .bind(id, partner.id)
-              .run()
-          } catch {}
-          // Notify creator and partner
-          const nId1 = crypto.randomUUID()
+    const partner_email = form.get('partner_email')?.toString().trim().toLowerCase()
+    if (partner_email) {
+      const partner = (await db
+        .prepare('SELECT id FROM users WHERE email = ?')
+        .bind(partner_email)
+        .first()) as { id: string } | null
+      const alreadyInCheck = await db
+        .prepare('SELECT 1 FROM tournament_players WHERE tournament_id = ? AND user_id = ?')
+        .bind(id, user.id)
+        .first()
+      if (partner && partner.id !== user.id && !alreadyInCheck) {
+        try {
           await db
-            .prepare(
-              'INSERT INTO notifications (id, user_id, type, message, link) VALUES (?, ?, ?, ?, ?)',
-            )
-            .bind(
-              nId1,
-              (tournament as any).creator_id,
-              'tournament',
-              `${user.name} y ${partner_email} se han inscrito en ${(tournament as any).name}`,
-              `/app/torneos/${id}`,
-            )
+            .prepare('INSERT INTO tournament_players (tournament_id, user_id) VALUES (?, ?)')
+            .bind(id, user.id)
             .run()
-          const nId2 = crypto.randomUUID()
+        } catch {}
+        try {
           await db
-            .prepare(
-              'INSERT INTO notifications (id, user_id, type, message, link) VALUES (?, ?, ?, ?, ?)',
-            )
-            .bind(
-              nId2,
-              partner.id,
-              'tournament',
-              `${user.name} te ha inscrito como pareja en el torneo ${(tournament as any).name}`,
-              `/app/torneos/${id}`,
-            )
+            .prepare('INSERT INTO tournament_players (tournament_id, user_id) VALUES (?, ?)')
+            .bind(id, partner.id)
             .run()
-        }
+        } catch {}
+        // Notify creator and partner
+        const nId1 = crypto.randomUUID()
+        await db
+          .prepare(
+            'INSERT INTO notifications (id, user_id, type, message, link) VALUES (?, ?, ?, ?, ?)',
+          )
+          .bind(
+            nId1,
+            (tournament as any).creator_id,
+            'tournament',
+            `${user.name} y ${partner_email} se han inscrito en ${(tournament as any).name}`,
+            `/app/torneos/${id}`,
+          )
+          .run()
+        const nId2 = crypto.randomUUID()
+        await db
+          .prepare(
+            'INSERT INTO notifications (id, user_id, type, message, link) VALUES (?, ?, ?, ?, ?)',
+          )
+          .bind(
+            nId2,
+            partner.id,
+            'tournament',
+            `${user.name} te ha inscrito como pareja en el torneo ${(tournament as any).name}`,
+            `/app/torneos/${id}`,
+          )
+          .run()
       }
     }
   } else if (action === 'leave') {
@@ -308,15 +303,13 @@ const tournamentMatches = await db
               </form>
             ) : isFull ? (
               <p class="text-sm text-muted">El torneo está completo.</p>
-            ) : user.role === 'guest' ? (
-              <p class="text-sm text-muted">
-                <a href="/registro" class="text-coral hover:underline">Regístrate</a> para inscribirte.
-              </p>
             ) : (
               <form method="POST" class="space-y-3">
                 <input type="hidden" name="action" value="join" />
                 <div>
-                  <label for="partner_email" class="block text-xs text-muted mb-1">Email de tu pareja <span class="text-coral">*</span></label>
+                  <label for="partner_email" class="block text-xs text-muted mb-1">
+                    Email de tu pareja <span class="text-coral">*</span>
+                  </label>
                   <input
                     id="partner_email"
                     type="email"
@@ -325,7 +318,9 @@ const tournamentMatches = await db
                     placeholder="pareja@email.com"
                     class="w-full max-w-xs px-3 py-2 text-sm bg-card border border-border rounded-xl focus:outline-none focus:border-coral"
                   />
-                  <p class="text-xs text-muted mt-1">El pádel es 2v2 — debes inscribirte con una pareja.</p>
+                  <p class="text-xs text-muted mt-1">
+                    El pádel es 2v2 — debes inscribirte con una pareja.
+                  </p>
                 </div>
                 <button
                   type="submit"

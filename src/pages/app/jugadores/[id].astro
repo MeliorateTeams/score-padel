@@ -24,7 +24,7 @@ const player = await db
 if (!player) return Astro.redirect('/app/jugadores')
 
 // Handle delete (admin only, can't delete yourself)
-if (Astro.request.method === 'POST' && user.role !== 'guest') {
+if (Astro.request.method === 'POST') {
   const form = await Astro.request.formData()
   const action = form.get('action')?.toString()
   if (action === 'delete' && id !== user.id && user.role === 'admin') {
@@ -48,9 +48,13 @@ if (Astro.request.method === 'POST' && user.role !== 'guest') {
     return Astro.redirect('/app/jugadores')
   }
   if (action === 'challenge' && id !== user.id) {
-    const msg = (form.get('challenge_msg')?.toString()?.trim() || '').replace(/<[^>]*>/g, '').slice(0, 500)
+    const msg = (form.get('challenge_msg')?.toString()?.trim() || '')
+      .replace(/<[^>]*>/g, '')
+      .slice(0, 500)
     const date = form.get('challenge_date')?.toString() || ''
-    const loc = (form.get('challenge_location')?.toString()?.trim() || '').replace(/<[^>]*>/g, '').slice(0, 200)
+    const loc = (form.get('challenge_location')?.toString()?.trim() || '')
+      .replace(/<[^>]*>/g, '')
+      .slice(0, 200)
     const cId = crypto.randomUUID()
     await db
       .prepare(
@@ -813,7 +817,7 @@ const badges = [
 
     <!-- Challenge / CTA -->
     {
-      !isOwnProfile && user.role !== 'guest' && (
+      !isOwnProfile && (
         <div class="card p-5">
           {pendingChallenge ? (
             <div class="text-center">

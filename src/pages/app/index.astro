@@ -139,7 +139,6 @@ const badges = [
 ]
 const earnedBadges = badges.filter((b) => b.earned)
 
-const isGuest = user.role === 'guest'
 const isAdmin = user.role === 'admin'
 const errorParam = Astro.url.searchParams.get('error')
 ---
@@ -157,122 +156,65 @@ const errorParam = Astro.url.searchParams.get('error')
     }
   </div>
 
-  {
-    errorParam === 'guest' && (
-      <div class="mb-6 p-4 rounded-xl bg-amber/10 border border-amber/20 text-sm text-amber-700">
-        Tu cuenta de invitado no tiene acceso a esta función.{' '}
-        <a href="/registro" class="underline font-semibold">
-          Crea una cuenta completa
-        </a>{' '}
-        para desbloquear todas las funciones.
-      </div>
-    )
-  }
-
-  {
-    isGuest && (
-      <div class="mb-6 p-4 rounded-xl bg-teal/10 border border-teal/20 text-sm text-teal">
-        Estás usando una <strong>cuenta de invitado</strong>. Puedes explorar la plataforma, ver
-        clasificaciones y jugadores, pero no podrás registrar partidos, crear torneos ni editar tu
-        perfil.{' '}
-        <a href="/registro" class="underline font-semibold">
-          Regístrate
-        </a>{' '}
-        para acceder a todo.
-      </div>
-    )
-  }
-
   <!-- Hero actions: Registrar partido & Buscar jugadores -->
-  {
-    !isGuest && (
-      <div class="grid sm:grid-cols-2 gap-4 mb-8">
-        <a
-          href="/app/partidos/crear"
-          class="relative overflow-hidden rounded-2xl p-6 bg-linear-to-br from-coral to-coral-dark text-white shadow-lg shadow-coral/20 hover:shadow-xl hover:shadow-coral/30 hover:-translate-y-0.5 transition-all group block"
-        >
-          <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-8 translate-x-8" />
-          <div class="relative">
-            <div class="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center mb-4">
-              <svg
-                class="w-6 h-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-            </div>
-            <h2 class="font-display text-lg font-extrabold mb-1">Crear partido</h2>
-            <p class="text-sm text-white/70">
-              Organiza un partido 2 vs 2 y registra el resultado al terminar.
-            </p>
-          </div>
-        </a>
-        <a
-          href="/app/jugadores"
-          class="relative overflow-hidden rounded-2xl p-6 border-2 border-coral/30 bg-coral/5 text-navy hover:border-coral hover:bg-coral/10 hover:-translate-y-0.5 transition-all group block"
-        >
-          <div class="absolute top-0 right-0 w-32 h-32 bg-coral/5 rounded-full -translate-y-8 translate-x-8" />
-          <div class="relative">
-            <div class="w-12 h-12 rounded-xl bg-coral/10 flex items-center justify-center mb-4">
-              <svg
-                class="w-6 h-6 text-coral"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-                />
-              </svg>
-            </div>
-            <h2 class="font-display text-lg font-extrabold mb-1">Buscar jugadores</h2>
-            <p class="text-sm text-muted">
-              Encuentra rivales de tu nivel cerca de ti en cualquier lugar.
-            </p>
-          </div>
-        </a>
+  <div class="grid sm:grid-cols-2 gap-4 mb-8">
+    <a
+      href="/app/partidos/crear"
+      class="relative overflow-hidden rounded-2xl p-6 bg-linear-to-br from-coral to-coral-dark text-white shadow-lg shadow-coral/20 hover:shadow-xl hover:shadow-coral/30 hover:-translate-y-0.5 transition-all group block"
+    >
+      <div
+        class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-8 translate-x-8"
+      >
       </div>
-    )
-  }
-  {
-    isGuest && (
-      <div class="mb-8">
-        <a
-          href="/app/jugadores"
-          class="relative overflow-hidden rounded-2xl p-6 border-2 border-coral/30 bg-coral/5 text-navy hover:border-coral hover:bg-coral/10 hover:-translate-y-0.5 transition-all group block"
-        >
-          <div class="absolute top-0 right-0 w-32 h-32 bg-coral/5 rounded-full -translate-y-8 translate-x-8" />
-          <div class="relative">
-            <div class="w-12 h-12 rounded-xl bg-coral/10 flex items-center justify-center mb-4">
-              <svg
-                class="w-6 h-6 text-coral"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-                />
-              </svg>
-            </div>
-            <h2 class="font-display text-lg font-extrabold mb-1">Buscar jugadores</h2>
-            <p class="text-sm text-muted">
-              Encuentra rivales de tu nivel cerca de ti en cualquier lugar.
-            </p>
-          </div>
-        </a>
+      <div class="relative">
+        <div class="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center mb-4">
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
+          </svg>
+        </div>
+        <h2 class="font-display text-lg font-extrabold mb-1">Crear partido</h2>
+        <p class="text-sm text-white/70">
+          Organiza un partido 2 vs 2 y registra el resultado al terminar.
+        </p>
       </div>
-    )
-  }
+    </a>
+    <a
+      href="/app/jugadores"
+      class="relative overflow-hidden rounded-2xl p-6 border-2 border-coral/30 bg-coral/5 text-navy hover:border-coral hover:bg-coral/10 hover:-translate-y-0.5 transition-all group block"
+    >
+      <div
+        class="absolute top-0 right-0 w-32 h-32 bg-coral/5 rounded-full -translate-y-8 translate-x-8"
+      >
+      </div>
+      <div class="relative">
+        <div class="w-12 h-12 rounded-xl bg-coral/10 flex items-center justify-center mb-4">
+          <svg
+            class="w-6 h-6 text-coral"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+            ></path>
+          </svg>
+        </div>
+        <h2 class="font-display text-lg font-extrabold mb-1">Buscar jugadores</h2>
+        <p class="text-sm text-muted">
+          Encuentra rivales de tu nivel cerca de ti en cualquier lugar.
+        </p>
+      </div>
+    </a>
+  </div>
 
   <!-- Stats grid -->
   <div class="grid sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8 stagger">
@@ -679,19 +621,15 @@ const errorParam = Astro.url.searchParams.get('error')
         <div class="text-[10px] text-muted">Compara dos jugadores</div>
       </div>
     </a>
-    {
-      !isGuest && (
-        <a
-          href="/api/export?type=partidos"
-          class="card p-4 hover:border-coral/30 transition-colors flex items-center gap-3"
-        >
-          <span class="text-lg">📥</span>
-          <div>
-            <div class="text-sm font-semibold text-navy">Exportar datos</div>
-            <div class="text-[10px] text-muted">Descargar partidos CSV</div>
-          </div>
-        </a>
-      )
-    }
+    <a
+      href="/api/export?type=partidos"
+      class="card p-4 hover:border-coral/30 transition-colors flex items-center gap-3"
+    >
+      <span class="text-lg">📥</span>
+      <div>
+        <div class="text-sm font-semibold text-navy">Exportar datos</div>
+        <div class="text-[10px] text-muted">Descargar partidos CSV</div>
+      </div>
+    </a>
   </div>
 </AppLayout>

@@ -8,7 +8,7 @@ if (user.role !== 'admin') return Astro.redirect('/app')
 const db = (Astro.locals as any).db
 
 const totalUsers = await db
-  .prepare("SELECT COUNT(*) as cnt FROM users WHERE role != 'guest'")
+  .prepare("SELECT COUNT(*) as cnt FROM users WHERE role != 'suspended'")
   .first()
 const totalMatches = await db.prepare('SELECT COUNT(*) as cnt FROM matches').first()
 const totalTournaments = await db.prepare('SELECT COUNT(*) as cnt FROM tournaments').first()
@@ -19,7 +19,7 @@ const matchesThisWeek = await db
   .bind(weekAgo)
   .first()
 const newUsersThisWeek = await db
-  .prepare("SELECT COUNT(*) as cnt FROM users WHERE created_at >= ? AND role != 'guest'")
+  .prepare("SELECT COUNT(*) as cnt FROM users WHERE created_at >= ? AND role != 'suspended'")
   .bind(weekAgo)
   .first()
 

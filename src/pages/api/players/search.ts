@@ -17,7 +17,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
       `SELECT u.id, u.name, u.email, p.rating, p.location
        FROM users u
        LEFT JOIN profiles p ON u.id = p.user_id
-       WHERE u.role != 'guest' AND u.role != 'suspended'
+       WHERE u.role != 'suspended'
          AND (u.name LIKE ? OR u.email LIKE ?)
        ORDER BY u.name ASC
        LIMIT 10`,

@@ -5,7 +5,6 @@ import { calculateAndUpdateRatings } from '../../../lib/rating'
 
 const user = (Astro.locals as any).user
 if (!user) return Astro.redirect('/login')
-if (user.role === 'guest') return Astro.redirect('/app?error=guest')
 
 const db = (Astro.locals as any).db
 let message = ''

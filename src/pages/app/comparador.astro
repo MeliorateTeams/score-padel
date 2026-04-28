@@ -13,7 +13,7 @@ let player2: any = null
 let h2hData: any[] = []
 
 const allPlayers = await db.prepare(`
-  SELECT u.id, u.name FROM users u WHERE u.role != 'guest' ORDER BY u.name
+  SELECT u.id, u.name FROM users u WHERE u.role != 'suspended' ORDER BY u.name
 `).all()
 
 if (p1Id && p2Id && p1Id !== p2Id) {
