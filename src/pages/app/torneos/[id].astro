@@ -386,11 +386,7 @@ const tournamentMatches = await db
               </form>
             )}
             {(tournament as any).status !== 'finished' && (players.results?.length ?? 0) > 0 && (
-              <form
-                method="POST"
-                class="inline-flex items-center gap-1.5"
-                onsubmit="return confirm('¿Declarar ganador y finalizar torneo?')"
-              >
+              <form method="POST" class="inline-flex items-center gap-1.5" id="form-declare-winner">
                 <input type="hidden" name="action" value="declare-winner" />
                 <select
                   name="winner_id"
@@ -403,21 +399,19 @@ const tournamentMatches = await db
                   ))}
                 </select>
                 <button
-                  type="submit"
+                  type="button"
+                  onclick="spConfirm('Finalizar torneo','¿Declarar ganador y cerrar el torneo? Esta acción no se puede deshacer.',()=>document.getElementById('form-declare-winner').submit(),'warning')"
                   class="inline-flex items-center gap-1 px-3 py-2 text-xs text-amber-700 border border-amber/20 rounded-xl hover:bg-amber/10 transition-colors font-semibold"
                 >
                   🏆 Finalizar
                 </button>
               </form>
             )}
-            <form
-              method="POST"
-              onsubmit="return confirm('¿Eliminar este torneo? Esta acción no se puede deshacer.')"
-              class="inline"
-            >
+            <form method="POST" class="inline" id="form-delete-torneo">
               <input type="hidden" name="action" value="delete" />
               <button
-                type="submit"
+                type="button"
+                onclick="spConfirm('Eliminar torneo','¿Eliminar este torneo y todos sus datos? Esta acción no se puede deshacer.',()=>document.getElementById('form-delete-torneo').submit(),'danger')"
                 class="inline-flex items-center gap-1.5 px-4 py-2 text-xs text-red-500 border border-red-500/20 rounded-xl hover:bg-red-500/10 transition-colors"
               >
                 <svg

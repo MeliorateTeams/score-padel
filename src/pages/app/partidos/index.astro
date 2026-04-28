@@ -526,15 +526,12 @@ for (let i = 0; i < allMatchPages.length; i++) {
                         </svg>
                       </a>
                     )}
-                    <form
-                      method="POST"
-                      class="inline"
-                      onsubmit="return confirm('¿Eliminar este partido? Se revertirán las valoraciones.')"
-                    >
+                    <form method="POST" class="inline" id={`del-match-${m.id}`}>
                       <input type="hidden" name="action" value="delete" />
                       <input type="hidden" name="match_id" value={m.id} />
                       <button
-                        type="submit"
+                        type="button"
+                        onclick={`spConfirm('Eliminar partido','¿Eliminar este partido? Se revertirán las valoraciones de los 4 jugadores.',()=>document.getElementById('del-match-${m.id}').submit(),'danger')`}
                         class="p-1.5 text-muted/50 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
                         title="Eliminar partido"
                       >

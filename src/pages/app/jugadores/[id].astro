@@ -932,14 +932,11 @@ const badges = [
 
     {
       user.role === 'admin' && !isOwnProfile && (
-        <form
-          method="POST"
-          onsubmit="return confirm('¿Eliminar a este jugador? Se borrarán todos sus datos, partidos e historial. Esta acción no se puede deshacer.')"
-          class="text-center"
-        >
+        <form method="POST" class="text-center" id="form-delete-player">
           <input type="hidden" name="action" value="delete" />
           <button
-            type="submit"
+            type="button"
+            onclick="spConfirm('Eliminar jugador','¿Eliminar a este jugador? Se borrarán todos sus datos, partidos e historial. Esta acción no se puede deshacer.',()=>document.getElementById('form-delete-player').submit(),'danger')"
             class="inline-flex items-center gap-1.5 px-4 py-2 text-xs text-red-500 border border-red-500/20 rounded-xl hover:bg-red-500/10 transition-colors"
           >
             <svg

@@ -44,12 +44,27 @@ if (Astro.request.method === 'POST') {
       await db.prepare('DELETE FROM notifications WHERE user_id = ?').bind(targetId).run()
       await db.prepare('DELETE FROM rating_history WHERE user_id = ?').bind(targetId).run()
       await db.prepare('DELETE FROM match_confirmations WHERE user_id = ?').bind(targetId).run()
-      await db.prepare('DELETE FROM challenges WHERE challenger_id = ? OR challenged_id = ?').bind(targetId, targetId).run()
+      await db
+        .prepare('DELETE FROM challenges WHERE challenger_id = ? OR challenged_id = ?')
+        .bind(targetId, targetId)
+        .run()
       await db.prepare('DELETE FROM tournament_players WHERE user_id = ?').bind(targetId).run()
-      await db.prepare('UPDATE matches SET team1_player1 = NULL WHERE team1_player1 = ?').bind(targetId).run()
-      await db.prepare('UPDATE matches SET team1_player2 = NULL WHERE team1_player2 = ?').bind(targetId).run()
-      await db.prepare('UPDATE matches SET team2_player1 = NULL WHERE team2_player1 = ?').bind(targetId).run()
-      await db.prepare('UPDATE matches SET team2_player2 = NULL WHERE team2_player2 = ?').bind(targetId).run()
+      await db
+        .prepare('UPDATE matches SET team1_player1 = NULL WHERE team1_player1 = ?')
+        .bind(targetId)
+        .run()
+      await db
+        .prepare('UPDATE matches SET team1_player2 = NULL WHERE team1_player2 = ?')
+        .bind(targetId)
+        .run()
+      await db
+        .prepare('UPDATE matches SET team2_player1 = NULL WHERE team2_player1 = ?')
+        .bind(targetId)
+        .run()
+      await db
+        .prepare('UPDATE matches SET team2_player2 = NULL WHERE team2_player2 = ?')
+        .bind(targetId)
+        .run()
       await db.prepare('DELETE FROM profiles WHERE user_id = ?').bind(targetId).run()
       await db.prepare('DELETE FROM users WHERE id = ?').bind(targetId).run()
       message = 'Usuario eliminado permanentemente.'
@@ -197,12 +212,13 @@ const users = await db
                               <form
                                 method="POST"
                                 class="inline"
-                                onsubmit="return confirm('¿Suspender a este usuario?')"
+                                id={`form-suspend-${u.id}`}
                               >
                                 <input type="hidden" name="action" value="suspend" />
                                 <input type="hidden" name="user_id" value={u.id} />
                                 <button
-                                  type="submit"
+                                  type="button"
+                                  onclick={`spConfirm('Suspender usuario','¿Suspender a ${u.name}? Se cerrará su sesión y no podrá acceder.',()=>document.getElementById('form-suspend-${u.id}').submit(),'warning')`}
                                   class="p-1 text-muted/50 hover:text-red-500 transition-colors"
                                   title="Suspender"
                                 >
@@ -224,12 +240,13 @@ const users = await db
                               <form
                                 method="POST"
                                 class="inline"
-                                onsubmit="return confirm('¿Restablecer contraseña a Padel2026!?')"
+                                id={`form-reset-${u.id}`}
                               >
                                 <input type="hidden" name="action" value="reset-password" />
                                 <input type="hidden" name="user_id" value={u.id} />
                                 <button
-                                  type="submit"
+                                  type="button"
+                                  onclick={`spConfirm('Restablecer contraseña','¿Generar contraseña temporal para ${u.name} y cerrar su sesión?',()=>document.getElementById('form-reset-${u.id}').submit(),'warning')`}
                                   class="p-1 text-muted/50 hover:text-amber-500 transition-colors"
                                   title="Reset contraseña"
                                 >
@@ -248,15 +265,16 @@ const users = await db
                                   </svg>
                                 </button>
                               </form>
-                            <form
+                              <form
                                 method="POST"
                                 class="inline"
-                                onsubmit={`return confirm('¿Eliminar a ${u.name} permanentemente? Esta acción no se puede deshacer.')`}
+                                id={`form-delete-${u.id}`}
                               >
                                 <input type="hidden" name="action" value="delete-user" />
                                 <input type="hidden" name="user_id" value={u.id} />
                                 <button
-                                  type="submit"
+                                  type="button"
+                                  onclick={`spConfirm('Eliminar usuario permanentemente','¿Eliminar a ${u.name}? Se borrarán todos sus datos, partidos e historial. Esta acción no se puede deshacer.',()=>document.getElementById('form-delete-${u.id}').submit(),'danger')`}
                                   class="p-1 text-muted/50 hover:text-red-600 transition-colors"
                                   title="Eliminar usuario"
                                 >

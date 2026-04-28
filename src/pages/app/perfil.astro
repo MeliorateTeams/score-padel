@@ -773,13 +773,11 @@ const ratingLevel = (r: number) => {
             Descargar mis datos (JSON)
           </button>
         </form>
-        <form
-          method="POST"
-          onsubmit="return confirm('⚠️ ¿Estás seguro? Se eliminarán TODOS tus datos permanentemente. Esta acción no se puede deshacer.')"
-        >
+        <form method="POST" id="form-delete-account">
           <input type="hidden" name="action" value="delete-account" />
           <button
-            type="submit"
+            type="button"
+            onclick="spConfirm('Eliminar cuenta','¿Eliminar tu cuenta permanentemente? Se borrarán TODOS tus datos. Esta acción no se puede deshacer.',()=>document.getElementById('form-delete-account').submit(),'danger')"
             class="px-5 py-2 bg-red-50 text-red-600 text-xs font-semibold rounded-full hover:bg-red-100 transition-colors border border-red-200 flex items-center gap-2"
           >
             <svg

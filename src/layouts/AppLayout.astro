@@ -90,7 +90,7 @@ if (user) {
                 <div
                   id="quick-player-results"
                   class="hidden absolute left-0 right-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-xl shadow-lg max-h-56 overflow-y-auto"
-                ></div>
+                />
               </div>
             </form>
             {/* Desktop nav */}
@@ -375,6 +375,127 @@ if (user) {
           })
         }
       }
+    </script>
+
+    <!-- Global confirm modal -->
+    <div
+      id="sp-confirm-modal"
+      class="fixed inset-0 z-[200] flex items-center justify-center p-4 hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="sp-modal-title"
+    >
+      <div id="sp-modal-backdrop" class="absolute inset-0 bg-navy/40 backdrop-blur-sm"></div>
+      <div
+        class="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 animate-[fadeInUp_0.18s_ease-out]"
+      >
+        <div class="flex items-start gap-3">
+          <div
+            id="sp-modal-icon"
+            class="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
+          >
+          </div>
+          <div class="flex-1 min-w-0">
+            <h3 id="sp-modal-title" class="font-display font-bold text-navy text-base leading-snug">
+            </h3>
+            <p id="sp-modal-message" class="text-sm text-muted mt-1 leading-relaxed"></p>
+          </div>
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-1">
+          <button
+            id="sp-modal-cancel"
+            type="button"
+            class="px-4 py-2 text-sm font-medium text-muted hover:text-navy border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            id="sp-modal-confirm"
+            type="button"
+            class="px-4 py-2 text-sm font-semibold text-white rounded-xl transition-colors"
+          >
+            Confirmar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      ;(function () {
+        const modal = document.getElementById('sp-confirm-modal')!
+        const backdrop = document.getElementById('sp-modal-backdrop')!
+        const iconEl = document.getElementById('sp-modal-icon')!
+        const titleEl = document.getElementById('sp-modal-title')!
+        const msgEl = document.getElementById('sp-modal-message')!
+        const cancelBtn = document.getElementById('sp-modal-cancel')!
+        const confirmBtn = document.getElementById('sp-modal-confirm')!
+
+        let _resolve: ((v: boolean) => void) | null = null
+
+        function close(result: boolean) {
+          modal.classList.add('hidden')
+          document.body.style.overflow = ''
+          if (_resolve) {
+            _resolve(result)
+            _resolve = null
+          }
+        }
+
+        backdrop.addEventListener('click', () => close(false))
+        cancelBtn.addEventListener('click', () => close(false))
+        confirmBtn.addEventListener('click', () => close(true))
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && !modal.classList.contains('hidden')) close(false)
+        })
+
+        type ModalVariant = 'danger' | 'warning' | 'info'
+
+        const variants: Record<
+          ModalVariant,
+          { icon: string; iconBg: string; iconColor: string; btnClass: string }
+        > = {
+          danger: {
+            icon: '<path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/>',
+            iconBg: 'bg-red-50',
+            iconColor: 'text-red-500',
+            btnClass: 'bg-red-500 hover:bg-red-600',
+          },
+          warning: {
+            icon: '<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>',
+            iconBg: 'bg-amber-50',
+            iconColor: 'text-amber-500',
+            btnClass: 'bg-amber-500 hover:bg-amber-600',
+          },
+          info: {
+            icon: '<path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"/>',
+            iconBg: 'bg-teal/10',
+            iconColor: 'text-teal',
+            btnClass: 'bg-teal hover:bg-teal/90',
+          },
+        }
+
+        ;(window as any).spConfirm = function (
+          title: string,
+          message: string,
+          onConfirm: () => void,
+          variant: ModalVariant = 'danger',
+        ) {
+          const v = variants[variant] ?? variants.danger
+          iconEl.className = `flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${v.iconBg}`
+          iconEl.innerHTML = `<svg class="w-5 h-5 ${v.iconColor}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">${v.icon}</svg>`
+          titleEl.textContent = title
+          msgEl.textContent = message
+          confirmBtn.className = `px-4 py-2 text-sm font-semibold text-white rounded-xl transition-colors ${v.btnClass}`
+
+          modal.classList.remove('hidden')
+          document.body.style.overflow = 'hidden'
+          cancelBtn.focus()
+
+          _resolve = (confirmed) => {
+            if (confirmed) onConfirm()
+          }
+        }
+      })()
     </script>
   </body>
 </html>
