@@ -380,7 +380,8 @@ if (user) {
     <!-- Global confirm modal -->
     <div
       id="sp-confirm-modal"
-      class="fixed inset-0 z-[200] flex items-center justify-center p-4 hidden"
+      class="fixed inset-0 z-200 items-center justify-center p-4 hidden"
+      style="display:none"
       role="dialog"
       aria-modal="true"
       aria-labelledby="sp-modal-title"
@@ -392,7 +393,7 @@ if (user) {
         <div class="flex items-start gap-3">
           <div
             id="sp-modal-icon"
-            class="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
+            class="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center"
           >
           </div>
           <div class="flex-1 min-w-0">
@@ -433,7 +434,7 @@ if (user) {
         let _resolve: ((v: boolean) => void) | null = null
 
         function close(result: boolean) {
-          modal.classList.add('hidden')
+          modal.style.display = 'none'
           document.body.style.overflow = ''
           if (_resolve) {
             _resolve(result)
@@ -487,7 +488,7 @@ if (user) {
           msgEl.textContent = message
           confirmBtn.className = `px-4 py-2 text-sm font-semibold text-white rounded-xl transition-colors ${v.btnClass}`
 
-          modal.classList.remove('hidden')
+        modal.style.display = 'flex'
           document.body.style.overflow = 'hidden'
           cancelBtn.focus()
 
