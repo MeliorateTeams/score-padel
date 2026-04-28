@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro'
 import { env } from 'cloudflare:workers'
 import { createUser, createSession } from '../../../lib/db'
+import { isAllowedEmailDomain } from '../../../lib/auth'
 
 async function verifyTurnstile(token: string, ip: string): Promise<boolean> {
   const secret = (env as any).TURNSTILE_SECRET
@@ -53,19 +54,7 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
     })
   }
 
-  const allowedDomains = [
-    'gmail.com',
-    'outlook.com',
-    'outlook.es',
-    'hotmail.com',
-    'hotmail.es',
-    'yahoo.com',
-    'yahoo.es',
-    'icloud.com',
-    'live.com',
-  ]
-  const emailDomain = email.split('@')[1]
-  if (!emailDomain || !allowedDomains.includes(emailDomain)) {
+  if (!isAllowedEmailDomain(email)) {
     return new Response(null, {
       status: 303,
       headers: { Location: new URL('/registro?error=email', request.url).toString() },

@@ -2,7 +2,7 @@
 import AppLayout from '../../../../layouts/AppLayout.astro'
 import { getProfile, updateProfile } from '../../../../lib/db'
 import { calculateInitialRating } from '../../../../lib/rating'
-import { hashPassword } from '../../../../lib/auth'
+import { hashPassword, isAllowedEmailDomain } from '../../../../lib/auth'
 
 const user = (Astro.locals as any).user
 if (!user) return Astro.redirect('/login')
@@ -42,6 +42,9 @@ if (Astro.request.method === 'POST') {
       messageType = 'error'
     } else if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       message = 'Email no válido.'
+      messageType = 'error'
+    } else if (!isAllowedEmailDomain(email)) {
+      message = 'Solo se permiten correos de Gmail, Outlook, Hotmail, Yahoo o iCloud.'
       messageType = 'error'
     } else {
       // Check email uniqueness (exclude current user)

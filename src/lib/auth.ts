@@ -1,3 +1,21 @@
+// Allowed email domains for registration and admin user management
+export const ALLOWED_EMAIL_DOMAINS = [
+  'gmail.com',
+  'outlook.com',
+  'outlook.es',
+  'hotmail.com',
+  'hotmail.es',
+  'yahoo.com',
+  'yahoo.es',
+  'icloud.com',
+  'live.com',
+]
+
+export function isAllowedEmailDomain(email: string): boolean {
+  const domain = email.split('@')[1]?.toLowerCase()
+  return !!domain && ALLOWED_EMAIL_DOMAINS.includes(domain)
+}
+
 // Password hashing using Web Crypto API (PBKDF2) - works in Cloudflare Workers
 const ITERATIONS = 100000
 const SALT_LENGTH = 16
