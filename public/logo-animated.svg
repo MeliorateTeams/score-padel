@@ -1,47 +1,44 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="7 20 322 188">
-  <!--
-    ScorePadel – logo animado para navbar
-    Trazo: trayectoria real del logo (calculada desde los SVG originales)
-    Animación: trazo se dibuja, al final aparece la pelota, bucle infinito
-  -->
   <style>
     .sp-line {
       stroke-dasharray: 800;
       stroke-dashoffset: 0;
-      animation: sp-draw 3.4s cubic-bezier(0.4,0,0.2,1) infinite;
+      animation: sp-draw 3.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
     }
+
     .sp-ball {
       opacity: 1;
       transform-box: fill-box;
       transform-origin: center;
-      animation: sp-ball 3.4s ease-in-out infinite;
+      animation: sp-ball 3.8s ease-in-out infinite;
     }
+
     @keyframes sp-draw {
-      0%   { stroke-dashoffset: 800; }
-      58%  { stroke-dashoffset: 0; }
-      79%  { stroke-dashoffset: 0; }
-      80%  { stroke-dashoffset: 800; }
+      0% { stroke-dashoffset: 800; }
+      58% { stroke-dashoffset: 0; }
+      79% { stroke-dashoffset: 0; }
+      80% { stroke-dashoffset: 800; }
       100% { stroke-dashoffset: 800; }
     }
+
     @keyframes sp-ball {
-      0%, 52%    { opacity: 0; transform: scale(0); }
-      62%        { opacity: 1; transform: scale(1.3); }
-      70%, 78%   { opacity: 1; transform: scale(1); }
-      87%        { opacity: 0; transform: scale(0.2); }
-      100%       { opacity: 0; transform: scale(0); }
+      0%, 44% { opacity: 0; transform: scale(0); }
+      56% { opacity: 1; transform: scale(1.42); }
+      64%, 90% { opacity: 1; transform: scale(1.08); }
+      100% { opacity: 0; transform: scale(0.25); }
     }
+
     @media (prefers-reduced-motion: reduce) {
       .sp-line { animation: none; stroke-dashoffset: 0; }
       .sp-ball { animation: none; opacity: 1; transform: scale(1); }
     }
   </style>
 
-  <!-- Trazo del logo: arco superior → curva hacia el bucle → cola horizontal -->
   <path
     class="sp-line"
     d="M 20 105
-       C 20 105  105 34  163 63
-       C 212 87  205 196 161 193
+       C 20 105 105 34 163 63
+       C 212 87 205 196 161 193
        C 144 192 130 143 222 143
        C 242 143 269 141 303 143"
     fill="none"
@@ -51,10 +48,11 @@
     stroke-linejoin="round"
   />
 
-  <!-- Pelota de pádel al final del trazo -->
-  <g class="sp-ball" transform="translate(303,143)">
-    <circle r="17" fill="#EEF046" stroke="#C3C700" stroke-width="1.5"/>
-    <path d="M -8 -8 Q -3.5 0 -8 8"  fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" opacity="0.85"/>
-    <path d="M  8 -8 Q  3.5 0  8 8"  fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" opacity="0.85"/>
+  <g transform="translate(305,143)">
+    <g class="sp-ball">
+      <circle r="26" fill="#EEF046" stroke="#C3C700" stroke-width="2.4"/>
+      <path d="M -11 -11 Q -4.6 0 -11 11" fill="none" stroke="white" stroke-width="5" stroke-linecap="round" opacity="0.92"/>
+      <path d="M 11 -11 Q 4.6 0 11 11" fill="none" stroke="white" stroke-width="5" stroke-linecap="round" opacity="0.92"/>
+    </g>
   </g>
 </svg>

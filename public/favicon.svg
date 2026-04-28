@@ -1,47 +1,13 @@
-﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-  <style>
-    .sp-line {
-      stroke-dasharray: 520;
-      stroke-dashoffset: 0;
-      animation: sp-draw 3.4s cubic-bezier(0.4,0,0.2,1) infinite;
-    }
-    .sp-ball {
-      opacity: 1;
-      transform-box: fill-box;
-      transform-origin: center;
-      animation: sp-ball 3.4s ease-in-out infinite;
-    }
-    @keyframes sp-draw {
-      0%   { stroke-dashoffset: 520; }
-      58%  { stroke-dashoffset: 0; }
-      79%  { stroke-dashoffset: 0; }
-      80%  { stroke-dashoffset: 520; }
-      100% { stroke-dashoffset: 520; }
-    }
-    @keyframes sp-ball {
-      0%, 52%    { opacity: 0; transform: scale(0); }
-      62%        { opacity: 1; transform: scale(1.3); }
-      70%, 78%   { opacity: 1; transform: scale(1); }
-      87%        { opacity: 0; transform: scale(0.2); }
-      100%       { opacity: 0; transform: scale(0); }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .sp-line { animation: none; stroke-dashoffset: 0; }
-      .sp-ball { animation: none; opacity: 1; transform: scale(1); }
-    }
-  </style>
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
   <path
-    class="sp-line"
     d="M 19 94 C 19 94 66 55 98 71 C 125 84 122 145 97 143 C 88 142 80 115 131 115 C 142 115 157 114 176 115"
     fill="none"
     stroke="#033E8C"
-    stroke-width="22"
+    stroke-width="24"
     stroke-linecap="round"
     stroke-linejoin="round"
   />
-  <g class="sp-ball" transform="translate(176,115)">
-    <circle r="15" fill="#EEF046" stroke="#C3C700" stroke-width="2"/>
-    <path d="M -6 -6 Q -3 0 -6 6"  fill="none" stroke="white" stroke-width="3" stroke-linecap="round" opacity="0.88"/>
-    <path d="M  6 -6 Q  3 0  6 6"  fill="none" stroke="white" stroke-width="3" stroke-linecap="round" opacity="0.88"/>
-  </g>
+  <circle cx="176" cy="115" r="18" fill="#EEF046" stroke="#C3C700" stroke-width="2.5"/>
+  <path d="M 169 108 Q 173 115 169 122" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" opacity="0.92"/>
+  <path d="M 183 108 Q 179 115 183 122" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" opacity="0.92"/>
 </svg>
