@@ -209,11 +209,7 @@ const users = await db
                                   <option value="player">Player</option>
                                 </select>
                               </form>
-                              <form
-                                method="POST"
-                                class="inline"
-                                id={`form-suspend-${u.id}`}
-                              >
+                              <form method="POST" class="inline" id={`form-suspend-${u.id}`}>
                                 <input type="hidden" name="action" value="suspend" />
                                 <input type="hidden" name="user_id" value={u.id} />
                                 <button
@@ -237,11 +233,7 @@ const users = await db
                                   </svg>
                                 </button>
                               </form>
-                              <form
-                                method="POST"
-                                class="inline"
-                                id={`form-reset-${u.id}`}
-                              >
+                              <form method="POST" class="inline" id={`form-reset-${u.id}`}>
                                 <input type="hidden" name="action" value="reset-password" />
                                 <input type="hidden" name="user_id" value={u.id} />
                                 <button
@@ -265,11 +257,7 @@ const users = await db
                                   </svg>
                                 </button>
                               </form>
-                              <form
-                                method="POST"
-                                class="inline"
-                                id={`form-delete-${u.id}`}
-                              >
+                              <form method="POST" class="inline" id={`form-delete-${u.id}`}>
                                 <input type="hidden" name="action" value="delete-user" />
                                 <input type="hidden" name="user_id" value={u.id} />
                                 <button

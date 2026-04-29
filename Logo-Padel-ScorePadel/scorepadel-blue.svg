@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 407 407" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:1.5;">
+    <g transform="matrix(1,0,0,1,-2310.822601,-747.883944)">
+        <g id="Mesa-de-trabajo1" serif:id="Mesa de trabajo1" transform="matrix(1,0,0,0.775361,0,0)">
+            <rect x="0" y="0" width="2752" height="1536" style="fill:none;"/>
+            <g transform="matrix(0.906507,0,0,1.169141,1470.469536,-291.554396)">
+                <rect x="927.024" y="671.558" width="448.976" height="448.976" style="fill:none;"/>
+            </g>
+            <g transform="matrix(0.906507,0,0,1.169141,1470.469536,179.415759)">
+                <rect x="927.024" y="671.558" width="448.976" height="448.976" style="fill:none;"/>
+                <g transform="matrix(2.360146,0,0,2.360146,-2798.787401,-503.497572)">
+                    <path d="M1587.526,587.997C1587.526,587.997 1640.265,543.73 1676.405,561.8C1706.344,576.77 1702.384,645.233 1675.27,643.006C1664.313,642.107 1655.583,612.003 1713.285,612.003C1726.362,612.003 1742.94,610.549 1764.038,611.79" style="fill:none;stroke:rgb(3,62,140);stroke-width:9.35px;"/>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
