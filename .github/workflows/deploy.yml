@@ -49,8 +49,7 @@ jobs:
           command: d1 execute scorepadel-db --remote -y --file migrations/0011_tournament_competition_type.sql
 
       - name: Email verification rollout stays disabled
-        run: echo "Cloudflare Email no activo: no se despliega verificación por correo todavía"
-
+        run: 'echo "Cloudflare Email no activo: no se despliega verificacion por correo todavia"'
 
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3
