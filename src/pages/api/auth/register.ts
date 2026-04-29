@@ -1,7 +1,14 @@
 import type { APIRoute } from 'astro'
 import { env } from 'cloudflare:workers'
-import { createUser, createSession } from '../../../lib/db'
+import {
+  createEmailVerificationChallenge,
+  createSession,
+  createUser,
+  getUserEmailVerificationState,
+} from '../../../lib/db'
 import { isAllowedEmailDomain } from '../../../lib/auth'
+import { sendVerificationCodeEmail } from '../../../lib/email'
+import { isEmailVerificationEnabled } from '../../../lib/features'
 
 async function verifyTurnstile(token: string, ip: string): Promise<boolean> {
   const secret = (env as any).TURNSTILE_SECRET
@@ -15,9 +22,10 @@ async function verifyTurnstile(token: string, ip: string): Promise<boolean> {
   return data.success === true
 }
 
-export const POST: APIRoute = async ({ request, cookies, locals }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
   const db = (locals as any).db
   if (!db) return new Response('Server error', { status: 500 })
+  const emailVerificationEnabled = isEmailVerificationEnabled(env as Record<string, unknown>)
 
   const form = await request.formData()
   const name = form.get('name')?.toString().trim()
@@ -90,26 +98,75 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
   }
 
   try {
-    const userId = await createUser(db, email, password, safeName)
-    const token = await createSession(db, userId)
-    cookies.set('session', token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      path: '/',
-      maxAge: 72 * 3600,
+    if (!emailVerificationEnabled) {
+      const userId = await createUser(db, email, password, safeName)
+      const token = await createSession(db, userId)
+
+      return new Response(null, {
+        status: 303,
+        headers: {
+          'Set-Cookie': `session=${token}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${72 * 3600}`,
+          Location: new URL('/app/cuestionario', request.url).toString(),
+        },
+      })
+    }
+
+    const userId = await createUser(db, email, password, safeName, { emailVerified: false })
+    const verification = await createEmailVerificationChallenge(db, userId)
+
+    await sendVerificationCodeEmail({
+      binding: (env as any).EMAIL,
+      fromAddress: (env as any).EMAIL_FROM,
+      to: email,
+      code: verification.code,
+      verificationUrl: new URL(
+        `/verificar-email?email=${encodeURIComponent(email)}`,
+        request.url,
+      ).toString(),
     })
+
     return new Response(null, {
       status: 303,
-      headers: { Location: new URL('/app/cuestionario', request.url).toString() },
+      headers: {
+        Location: new URL(
+          `/verificar-email?email=${encodeURIComponent(email)}&sent=1`,
+          request.url,
+        ).toString(),
+      },
     })
   } catch (e: any) {
     if (e.message?.includes('UNIQUE')) {
+      const existingUser = await getUserEmailVerificationState(db, email)
+      if (emailVerificationEnabled && existingUser && !existingUser.verifiedAt) {
+        return new Response(null, {
+          status: 303,
+          headers: {
+            Location: new URL(
+              `/verificar-email?email=${encodeURIComponent(email)}&error=unverified`,
+              request.url,
+            ).toString(),
+          },
+        })
+      }
+
       return new Response(null, {
         status: 303,
         headers: { Location: new URL('/registro?error=existe', request.url).toString() },
       })
     }
+
+    if (email && (e.message === 'EMAIL_CONFIG_MISSING' || e.code)) {
+      return new Response(null, {
+        status: 303,
+        headers: {
+          Location: new URL(
+            `/verificar-email?email=${encodeURIComponent(email)}&error=email_send`,
+            request.url,
+          ).toString(),
+        },
+      })
+    }
+
     return new Response(null, {
       status: 303,
       headers: { Location: new URL('/registro?error=server', request.url).toString() },

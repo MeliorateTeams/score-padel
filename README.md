@@ -38,6 +38,18 @@ All commands are run from the root of the project, from a terminal:
 | `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
 | `npm run astro -- --help` | Get help using the Astro CLI                     |
 
+## Email Verification Setup
+
+The email verification flow is prepared in code but intentionally not deployed yet.
+
+Only enable it when all of the following are ready:
+
+1. Onboard your domain in Cloudflare Email Sending.
+2. Restore the `EMAIL` binding in `wrangler.jsonc`.
+3. Configure the Worker secret or variable `EMAIL_FROM` with a verified sender address such as `noreply@tu-dominio.com`.
+4. Apply `migrations/0010_email_verification.sql` to D1.
+5. Set `EMAIL_VERIFICATION_ENABLED=true` in the runtime environment.
+
 ## 👀 Want to learn more?
 
 Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).

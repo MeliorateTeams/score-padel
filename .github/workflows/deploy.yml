@@ -41,6 +41,17 @@ jobs:
             INSERT OR IGNORE INTO d1_migrations (name) VALUES ('0001_init.sql'),('0002_add_roles.sql'),('0003_add_age_gender.sql'),('0004_add_set_scores.sql'),('0005_add_notifications.sql'),('0006_challenges_confirmations.sql'),('0007_match_notes.sql'),('0008_carousel_images.sql'),('0009_match_status.sql');
             UPDATE users SET role = 'player' WHERE role = 'guest';"
 
+      - name: Apply validated league migration
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: d1 execute scorepadel-db --remote -y --file migrations/0011_tournament_competition_type.sql
+
+      - name: Email verification rollout stays disabled
+        run: echo "Cloudflare Email no activo: no se despliega verificación por correo todavía"
+
+
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3
         with:

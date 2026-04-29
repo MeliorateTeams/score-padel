@@ -4,6 +4,7 @@ const user = (Astro.locals as any).user
 if (user) return Astro.redirect('/app')
 
 const error = Astro.url.searchParams.get('error')
+const verified = Astro.url.searchParams.get('verified') === '1'
 const errorMsg: Record<string, string> = {
   campos: 'Email y contraseña son obligatorios.',
   invalid: 'Email o contraseña incorrectos.',
@@ -141,6 +142,13 @@ const accessHighlights = [
                   </div>
                 )
               }
+              {
+                verified && (
+                  <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50/95 px-4 py-3 text-sm text-emerald-700 shadow-sm">
+                    Email verificado correctamente. Ya puedes iniciar sesión.
+                  </div>
+                )
+              }
 
               <form method="POST" action="/api/auth/login" class="space-y-4">
                 <div>
@@ -211,7 +219,8 @@ const accessHighlights = [
                   class="cf-turnstile"
                   data-sitekey="0x4AAAAAAC-Ckm7i94mOfZpc"
                   data-theme="light"
-                ></div>
+                >
+                </div>
                 <button
                   type="submit"
                   class="w-full rounded-full py-3.5 text-sm font-semibold text-white shadow-[0_20px_40px_-20px_rgba(208,79,0,0.9)] transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-[0_24px_50px_-20px_rgba(208,79,0,0.85)]"

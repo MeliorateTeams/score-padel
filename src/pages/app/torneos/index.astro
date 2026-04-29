@@ -10,8 +10,10 @@ const tournaments = await db
   .prepare(
     `
   SELECT t.*, u.name as creator_name,
+    COALESCE(tct.competition_type, 'tournament') as competition_type,
     (SELECT COUNT(*) FROM tournament_players tp WHERE tp.tournament_id = t.id) as player_count
   FROM tournaments t
+  LEFT JOIN tournament_competition_types tct ON tct.tournament_id = t.id
   JOIN users u ON t.creator_id = u.id
   ORDER BY t.event_date DESC
   LIMIT 50
@@ -59,14 +61,26 @@ const tournaments = await db
         {tournaments.results?.map((t: any) => (
           <a href={`/app/torneos/${t.id}`} class="card-hover p-6 block">
             <div class="flex items-center justify-between mb-3">
-              <span
-                class:list={[
-                  'text-xs font-medium px-2 py-0.5 rounded-full',
-                  t.status === 'open' ? 'bg-teal/10 text-teal' : 'bg-muted/10 text-muted',
-                ]}
-              >
-                {t.status === 'open' ? 'Abierto' : 'Cerrado'}
-              </span>
+              <div class="flex items-center gap-2">
+                <span
+                  class:list={[
+                    'text-xs font-medium px-2 py-0.5 rounded-full',
+                    t.status === 'open' ? 'bg-teal/10 text-teal' : 'bg-muted/10 text-muted',
+                  ]}
+                >
+                  {t.status === 'open' ? 'Abierto' : 'Cerrado'}
+                </span>
+                <span
+                  class:list={[
+                    'text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide',
+                    t.competition_type === 'validated_league'
+                      ? 'bg-amber/10 text-amber-700'
+                      : 'bg-coral/10 text-coral',
+                  ]}
+                >
+                  {t.competition_type === 'validated_league' ? 'Liga validada' : 'Torneo oficial'}
+                </span>
+              </div>
               <span class="text-xs text-muted">
                 {t.player_count}/{t.max_players}
               </span>

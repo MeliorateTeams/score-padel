@@ -90,7 +90,7 @@ if (Astro.request.method === 'POST') {
 
 const tournaments = await db
   .prepare(
-    `SELECT t.id, t.name FROM tournament_players tp JOIN tournaments t ON tp.tournament_id = t.id WHERE tp.user_id = ? AND t.status = 'open'`,
+    `SELECT t.id, t.name, COALESCE(tct.competition_type, 'tournament') as competition_type FROM tournament_players tp JOIN tournaments t ON tp.tournament_id = t.id LEFT JOIN tournament_competition_types tct ON tct.tournament_id = t.id WHERE tp.user_id = ? AND t.status = 'open'`,
   )
   .bind(user.id)
   .all()
@@ -439,7 +439,10 @@ const tournaments = await db
             >
               <option value="">Sin torneo</option>
               {tournaments.results?.map((t: any) => (
-                <option value={t.id}>{t.name}</option>
+                <option value={t.id}>
+                  {t.competition_type === 'validated_league' ? 'Liga validada' : 'Torneo oficial'} ·{' '}
+                  {t.name}
+                </option>
               ))}
             </select>
           </div>

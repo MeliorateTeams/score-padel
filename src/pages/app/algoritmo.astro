@@ -31,8 +31,8 @@ if (user.role !== 'admin') return Astro.redirect('/app')
 
     <div class="rounded-2xl border border-coral/20 bg-coral/5 px-5 py-4 text-sm text-navy/80">
       La implementación vigente sigue un modelo SPR: media de rating por equipo, resultado esperado
-      frente a resultado real y un delta ponderado por formato, competitividad, fiabilidad,
-      recencia, validación del partido y factor K 0.60.
+      frente a resultado real, valoración de partido sobre el rating rival y promedio ponderado
+      80/20 con peso por formato, competitividad, fiabilidad, recencia, validación y tipo de evento.
     </div>
 
     <div class="card p-6 space-y-3">
@@ -54,9 +54,10 @@ if (user.role !== 'admin') return Astro.redirect('/app')
       </h2>
       <p class="text-sm text-navy/80 leading-relaxed">
         Todo jugador nuevo debe pasar por una colocación inicial antes de usar la app con
-        normalidad. El registro público y la verificación por email ya redirigen al cuestionario, y
-        los jugadores creados desde administración también quedan forzados a completarlo en su
-        primer acceso si aún no tienen una semilla válida de rating.
+        normalidad. El registro público ya redirige al cuestionario y los jugadores creados desde
+        administración también quedan forzados a completarlo en su primer acceso si aún no tienen
+        una semilla válida de rating. La variante con verificación por email está preparada, pero no
+        está desplegada todavía.
       </p>
       <p class="text-sm text-navy/80 leading-relaxed">
         Ese cuestionario combina autoevaluación y señales objetivas para ubicar al jugador en la
@@ -158,7 +159,7 @@ if (user.role !== 'admin') return Astro.redirect('/app')
               >
               <span
                 >El <strong class="text-navy">peso del partido</strong> según formato, nivel del rival,
-                fiabilidad previa, recencia y validación del resultado.</span
+                fiabilidad previa, recencia, validación del resultado y tipo de evento.</span
               >
             </li>
           </ul>
@@ -199,10 +200,12 @@ if (user.role !== 'admin') return Astro.redirect('/app')
       <p class="text-sm text-navy/80 leading-relaxed">
         Para cada partido, el algoritmo calcula una <strong>valoración de partido</strong> y un <strong
           >peso de partido</strong
-        > para cada jugador. El rating vigente se reconstruye desde el historial válido aplicando un delta
-        sobre cada equipo según la diferencia entre el resultado real y el esperado. Ese delta usa un
-        <strong>factor K de 0.60</strong>. Los partidos de más de <strong>12 meses</strong> dejan de empujar
-        el rating principal.
+        > para cada jugador. La valoración de partido nace del rating medio del equipo rival ajustado
+        por la diferencia entre resultado real y esperado con multiplicador <strong>3.0</strong>. El
+        rating final se calcula con promedio ponderado de hasta <strong>30 partidos</strong> en los últimos
+        <strong>12 meses</strong>, mezclando <strong>80%</strong> del promedio y <strong>20%</strong
+        >
+        del mejor resultado reciente.
       </p>
 
       <div class="space-y-4">
@@ -309,8 +312,9 @@ if (user.role !== 'admin') return Astro.redirect('/app')
                 <span class="w-1.5 h-1.5 rounded-full bg-teal mt-1.5 shrink-0"></span>
                 <span
                   ><strong class="text-navy">Validación y evento:</strong> un torneo oficial tiene peso
-                  máximo; un amistoso confirmado por los 4 jugadores aporta peso medio; un resultado sin
-                  validar todavía no empuja el rating.</span
+                  máximo; una <strong>liga validada</strong> empuja con peso alto intermedio; un amistoso
+                  confirmado por los 4 jugadores aporta peso medio; un resultado sin validar todavía no
+                  empuja el rating.</span
                 >
               </li>
               <li class="flex items-start gap-2">

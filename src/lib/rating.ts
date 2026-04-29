@@ -4,7 +4,17 @@ import { generateId } from './auth'
 const MIN_RATING = 1.0
 const MAX_RATING = 7.0
 const MAX_PROVISIONAL_RATING = 6.5
-const K_FACTOR = 0.6
+const PROFILE_ONLY_INITIAL_RATING_CAP = 2.5
+const EXPECTED_SCORE_SCALE = 1.5
+const PERFORMANCE_DELTA_MULTIPLIER = 3.0
+const FORMAT_CAP_GAMES = 24
+const COMPETITIVENESS_HALF_POINT = 1.5
+const RELIABILITY_FULL_MATCHES = 5
+const RECENCY_HALF_LIFE_DAYS = 180
+const MAX_MATCH_AGE_DAYS = 365
+const RECENT_MATCH_WINDOW = 30
+const PEAK_AVERAGE_WEIGHT = 0.8
+const PEAK_BEST_WEIGHT = 0.2
 
 interface QuestionnaireAnswers {
   experienceScore: number
@@ -19,6 +29,7 @@ interface QuestionnaireAnswers {
 interface MatchForRebuild {
   id: string
   tournament_id: string | null
+  competition_type: string | null
   team1_player1: string
   team1_player2: string | null
   team2_player1: string
@@ -31,14 +42,20 @@ interface MatchForRebuild {
   confirmed_count: number | null
 }
 
+interface PlayerMatchSample {
+  createdAt: string
+  matchRating: number
+  baseWeight: number
+}
+
 function clampRating(value: number): number {
   const bounded = Math.max(MIN_RATING, Math.min(MAX_RATING, value))
-  return Math.round(bounded * 100) / 100
+  return Math.round(bounded * 10) / 10
 }
 
 function clampProvisionalRating(value: number): number {
   const bounded = Math.max(MIN_RATING, Math.min(MAX_PROVISIONAL_RATING, value))
-  return Math.round(bounded * 100) / 100
+  return Math.round(bounded * 10) / 10
 }
 
 function parseSqliteDate(value: string): Date {
@@ -47,7 +64,7 @@ function parseSqliteDate(value: string): Date {
 
 function expectedGamePercentage(ratingA: number, ratingB: number): number {
   const diff = ratingA - ratingB
-  return 1 / (1 + Math.pow(10, -diff / 2))
+  return 1 / (1 + Math.pow(10, -diff / EXPECTED_SCORE_SCALE))
 }
 
 function getSetCount(setScores: string | null): number {
@@ -61,43 +78,55 @@ function getSetCount(setScores: string | null): number {
 }
 
 function getFormatWeight(setCount: number, totalGames: number): number {
-  if (setCount >= 3 || totalGames >= 30) return 1.0
-  if (setCount >= 2 || totalGames >= 18) return 0.85
-  return 0.7
+  void setCount
+  return 0.5 + 0.5 * Math.min(totalGames / FORMAT_CAP_GAMES, 1)
 }
 
 function getCompetitivenessWeight(ratingDiff: number): number {
-  const diff = Math.abs(ratingDiff)
-  if (diff <= 0.5) return 1.0
-  if (diff <= 1.0) return 0.8
-  if (diff <= 1.5) return 0.6
-  return 0.4
+  return 1 / (1 + Math.pow(Math.abs(ratingDiff) / COMPETITIVENESS_HALF_POINT, 2))
 }
 
-function getReliabilityWeight(priorMatches: number): number {
-  if (priorMatches >= 10) return 1.0
-  if (priorMatches >= 5) return 0.85
-  if (priorMatches >= 1) return 0.65
-  return 0.5
+function getReliabilityWeight(opponentMatches: number): number {
+  return 0.3 + 0.7 * Math.min(opponentMatches / RELIABILITY_FULL_MATCHES, 1)
 }
 
 function getRecencyWeight(matchAgeInDays: number): number {
-  if (matchAgeInDays <= 30) return 1.0
-  if (matchAgeInDays <= 90) return 0.85
-  if (matchAgeInDays <= 180) return 0.65
-  if (matchAgeInDays <= 365) return 0.4
-  return 0.0
+  if (matchAgeInDays > MAX_MATCH_AGE_DAYS) return 0.0
+  return Math.pow(0.5, matchAgeInDays / RECENCY_HALF_LIFE_DAYS)
+}
+
+function isValidatedLeague(competitionType: string | null): boolean {
+  return competitionType === 'validated_league'
+}
+
+function isOfficialTournament(competitionType: string | null): boolean {
+  return !competitionType || competitionType === 'tournament'
 }
 
 function getEventWeight(
-  tournamentId: string | null,
+  competitionType: string | null,
   confirmedCount: number,
   totalConfirmations: number,
   playerCount: number,
 ): number {
-  if (tournamentId) return 1.0
+  if (isOfficialTournament(competitionType)) return 1.0
+  if (isValidatedLeague(competitionType)) return 0.75
   if (totalConfirmations >= playerCount && confirmedCount >= playerCount) return 0.5
   return 0.0
+}
+
+function calculateMatchRating(
+  playerTeamRating: number,
+  opponentTeamRating: number,
+  gamesWon: number,
+  totalGames: number,
+): number {
+  if (totalGames <= 0) return clampRating(playerTeamRating)
+
+  const expectedPct = expectedGamePercentage(playerTeamRating, opponentTeamRating)
+  const actualPct = gamesWon / totalGames
+  const performanceDelta = actualPct - expectedPct
+  return clampRating(opponentTeamRating + performanceDelta * PERFORMANCE_DELTA_MULTIPLIER)
 }
 
 function average(values: number[]): number {
@@ -153,18 +182,64 @@ export function calculateQuestionnaireInitialRating(answers: QuestionnaireAnswer
 }
 
 export function calculateInitialRating(experienceYears: number, racquetSports: string): number {
-  let seed = 1.5
+  let seed = 1.0
 
-  if (experienceYears >= 10) seed = 5.5
-  else if (experienceYears >= 5) seed = 4.5
-  else if (experienceYears >= 3) seed = 3.5
-  else if (experienceYears >= 1) seed = 2.5
+  if (experienceYears >= 10) seed += 1.5
+  else if (experienceYears >= 5) seed += 1.0
+  else if (experienceYears >= 3) seed += 0.7
+  else if (experienceYears >= 1) seed += 0.3
 
   const sportsCount = getSportsCount(racquetSports)
-  if (sportsCount >= 2) seed += 0.5
-  else if (sportsCount >= 1) seed += 0.25
+  seed += Math.min(sportsCount * 0.2, 0.5)
 
-  return clampProvisionalRating(seed)
+  return clampRating(Math.min(seed, PROFILE_ONLY_INITIAL_RATING_CAP))
+}
+
+function getSamplesWithinWindow(
+  samples: PlayerMatchSample[],
+  evaluationDate: Date,
+): PlayerMatchSample[] {
+  return samples
+    .filter((sample) => {
+      const ageInDays =
+        (evaluationDate.getTime() - parseSqliteDate(sample.createdAt).getTime()) /
+        (1000 * 60 * 60 * 24)
+      return ageInDays >= 0 && ageInDays <= MAX_MATCH_AGE_DAYS
+    })
+    .slice(-RECENT_MATCH_WINDOW)
+}
+
+function calculateRatingFromSamples(
+  seedRating: number,
+  samples: PlayerMatchSample[],
+  evaluationDate: Date,
+): number {
+  const windowSamples = getSamplesWithinWindow(samples, evaluationDate)
+  if (windowSamples.length === 0) return clampRating(seedRating)
+
+  let weightedSum = 0
+  let totalWeight = 0
+  let bestMatchRating = MIN_RATING
+
+  for (const sample of windowSamples) {
+    const ageInDays = Math.max(
+      0,
+      (evaluationDate.getTime() - parseSqliteDate(sample.createdAt).getTime()) /
+        (1000 * 60 * 60 * 24),
+    )
+    const recencyWeight = getRecencyWeight(ageInDays)
+    const totalSampleWeight = sample.baseWeight * recencyWeight
+    if (totalSampleWeight <= 0) continue
+
+    weightedSum += sample.matchRating * totalSampleWeight
+    totalWeight += totalSampleWeight
+    bestMatchRating = Math.max(bestMatchRating, sample.matchRating)
+  }
+
+  if (totalWeight <= 0) return clampRating(seedRating)
+
+  const weightedAverage = weightedSum / totalWeight
+  return clampRating(weightedAverage * PEAK_AVERAGE_WEIGHT + bestMatchRating * PEAK_BEST_WEIGHT)
 }
 
 async function getSeedRatings(db: D1Database): Promise<Map<string, number>> {
@@ -199,6 +274,7 @@ async function getMatchesForRebuild(db: D1Database): Promise<MatchForRebuild[]> 
       SELECT
         m.id,
         m.tournament_id,
+        COALESCE(tct.competition_type, 'tournament') AS competition_type,
         m.team1_player1,
         m.team1_player2,
         m.team2_player1,
@@ -210,6 +286,7 @@ async function getMatchesForRebuild(db: D1Database): Promise<MatchForRebuild[]> 
         COUNT(mc.user_id) AS confirmation_total,
         SUM(CASE WHEN mc.confirmed = 1 THEN 1 ELSE 0 END) AS confirmed_count
       FROM matches m
+      LEFT JOIN tournament_competition_types tct ON tct.tournament_id = m.tournament_id
       LEFT JOIN match_confirmations mc ON mc.match_id = m.id
       WHERE m.status = 'completed'
       GROUP BY m.id
@@ -228,11 +305,13 @@ export async function rebuildRatingsFromMatches(db: D1Database): Promise<void> {
   const currentRatings = new Map<string, number>()
   const matchesPlayed = new Map<string, number>()
   const matchesWon = new Map<string, number>()
+  const playerSamples = new Map<string, PlayerMatchSample[]>()
 
   for (const [userId, seed] of seedRatings.entries()) {
     currentRatings.set(userId, clampRating(seed))
     matchesPlayed.set(userId, 0)
     matchesWon.set(userId, 0)
+    playerSamples.set(userId, [])
   }
 
   await db.prepare('DELETE FROM rating_history').run()
@@ -250,6 +329,7 @@ export async function rebuildRatingsFromMatches(db: D1Database): Promise<void> {
         currentRatings.set(playerId, MIN_RATING)
         matchesPlayed.set(playerId, 0)
         matchesWon.set(playerId, 0)
+        playerSamples.set(playerId, [])
       }
     }
 
@@ -259,30 +339,13 @@ export async function rebuildRatingsFromMatches(db: D1Database): Promise<void> {
     const confirmedCount = Number(match.confirmed_count ?? 0)
     const confirmationTotal = Number(match.confirmation_total ?? 0)
     const eventWeight = getEventWeight(
-      match.tournament_id,
+      match.competition_type,
       confirmedCount,
       confirmationTotal,
       playerCount,
     )
 
-    if (eventWeight > 0) {
-      const team1Won = Number(match.team1_games ?? 0) > Number(match.team2_games ?? 0)
-      for (const playerId of allPlayers) {
-        matchesPlayed.set(playerId, (matchesPlayed.get(playerId) ?? 0) + 1)
-      }
-      for (const playerId of team1Won ? team1Players : team2Players) {
-        matchesWon.set(playerId, (matchesWon.get(playerId) ?? 0) + 1)
-      }
-    }
-
     if (totalGames <= 0 || eventWeight <= 0) continue
-
-    const ageInDays = Math.max(
-      0,
-      (Date.now() - parseSqliteDate(match.created_at).getTime()) / (1000 * 60 * 60 * 24),
-    )
-    const recencyWeight = getRecencyWeight(ageInDays)
-    if (recencyWeight <= 0) continue
 
     const team1Rating = average(
       team1Players.map((playerId) => currentRatings.get(playerId) ?? MIN_RATING),
@@ -290,30 +353,66 @@ export async function rebuildRatingsFromMatches(db: D1Database): Promise<void> {
     const team2Rating = average(
       team2Players.map((playerId) => currentRatings.get(playerId) ?? MIN_RATING),
     )
-    const expectedTeam1 = expectedGamePercentage(team1Rating, team2Rating)
-    const actualTeam1 = Number(match.team1_games ?? 0) / totalGames
-    const competitivenessWeight = getCompetitivenessWeight(team1Rating - team2Rating)
-    const priorMatchAverage = Math.max(
-      0,
-      Math.round(average(allPlayers.map((playerId) => matchesPlayed.get(playerId) ?? 0)) - 1),
-    )
-    const reliabilityWeight = getReliabilityWeight(priorMatchAverage)
-    const formatWeight = getFormatWeight(setCount, totalGames)
-    const totalWeight =
-      formatWeight * competitivenessWeight * reliabilityWeight * recencyWeight * eventWeight
-    const delta = K_FACTOR * totalWeight * (actualTeam1 - expectedTeam1)
 
-    if (Math.abs(delta) < 0.0001) continue
+    const team1MatchRating = calculateMatchRating(
+      team1Rating,
+      team2Rating,
+      Number(match.team1_games ?? 0),
+      totalGames,
+    )
+    const team2MatchRating = calculateMatchRating(
+      team2Rating,
+      team1Rating,
+      Number(match.team2_games ?? 0),
+      totalGames,
+    )
+
+    const competitivenessWeight = getCompetitivenessWeight(team1Rating - team2Rating)
+    const team1OpponentMatches = Math.round(
+      average(team2Players.map((playerId) => matchesPlayed.get(playerId) ?? 0)),
+    )
+    const team2OpponentMatches = Math.round(
+      average(team1Players.map((playerId) => matchesPlayed.get(playerId) ?? 0)),
+    )
+    const formatWeight = getFormatWeight(setCount, totalGames)
+    const team1BaseWeight =
+      formatWeight *
+      competitivenessWeight *
+      getReliabilityWeight(team1OpponentMatches) *
+      eventWeight
+    const team2BaseWeight =
+      formatWeight *
+      competitivenessWeight *
+      getReliabilityWeight(team2OpponentMatches) *
+      eventWeight
+
+    const evaluationDate = parseSqliteDate(match.created_at)
 
     const team1Changes = team1Players.map((playerId) => {
       const oldRating = currentRatings.get(playerId) ?? MIN_RATING
-      const newRating = clampRating(oldRating + delta)
+      const samples = playerSamples.get(playerId) ?? []
+      samples.push({
+        createdAt: match.created_at,
+        matchRating: team1MatchRating,
+        baseWeight: team1BaseWeight,
+      })
+      playerSamples.set(playerId, samples)
+      const seedRating = seedRatings.get(playerId) ?? MIN_RATING
+      const newRating = calculateRatingFromSamples(seedRating, samples, evaluationDate)
       return { playerId, oldRating, newRating }
     })
 
     const team2Changes = team2Players.map((playerId) => {
       const oldRating = currentRatings.get(playerId) ?? MIN_RATING
-      const newRating = clampRating(oldRating - delta)
+      const samples = playerSamples.get(playerId) ?? []
+      samples.push({
+        createdAt: match.created_at,
+        matchRating: team2MatchRating,
+        baseWeight: team2BaseWeight,
+      })
+      playerSamples.set(playerId, samples)
+      const seedRating = seedRatings.get(playerId) ?? MIN_RATING
+      const newRating = calculateRatingFromSamples(seedRating, samples, evaluationDate)
       return { playerId, oldRating, newRating }
     })
 
@@ -333,15 +432,29 @@ export async function rebuildRatingsFromMatches(db: D1Database): Promise<void> {
         )
         .run()
     }
+
+    const team1Won = Number(match.team1_games ?? 0) > Number(match.team2_games ?? 0)
+    for (const playerId of allPlayers) {
+      matchesPlayed.set(playerId, (matchesPlayed.get(playerId) ?? 0) + 1)
+    }
+    for (const playerId of team1Won ? team1Players : team2Players) {
+      matchesWon.set(playerId, (matchesWon.get(playerId) ?? 0) + 1)
+    }
   }
 
+  const now = new Date()
   for (const [userId, rating] of currentRatings.entries()) {
+    const finalRating = calculateRatingFromSamples(
+      seedRatings.get(userId) ?? MIN_RATING,
+      playerSamples.get(userId) ?? [],
+      now,
+    )
     await db
       .prepare(
         "UPDATE profiles SET rating = ?, matches_played = ?, matches_won = ?, updated_at = datetime('now') WHERE user_id = ?",
       )
       .bind(
-        clampRating(rating),
+        clampRating(finalRating || rating),
         matchesPlayed.get(userId) ?? 0,
         matchesWon.get(userId) ?? 0,
         userId,

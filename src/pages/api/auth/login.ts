@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro'
 import { env } from 'cloudflare:workers'
 import { loginUser, createSession } from '../../../lib/db'
+import { isEmailVerificationEnabled } from '../../../lib/features'
 
 async function verifyTurnstile(token: string, ip: string): Promise<boolean> {
   const secret = (env as any).TURNSTILE_SECRET
@@ -17,6 +18,7 @@ async function verifyTurnstile(token: string, ip: string): Promise<boolean> {
 export const POST: APIRoute = async ({ request, cookies, locals }) => {
   const db = (locals as any).db
   if (!db) return new Response('Server error', { status: 500 })
+  const emailVerificationEnabled = isEmailVerificationEnabled(env as Record<string, unknown>)
 
   const form = await request.formData()
   const email = form.get('email')?.toString().trim().toLowerCase()
@@ -39,15 +41,27 @@ export const POST: APIRoute = async ({ request, cookies, locals }) => {
     })
   }
 
-  const userId = await loginUser(db, email, password)
-  if (!userId) {
+  const login = await loginUser(db, email, password)
+  if (!login) {
     return new Response(null, {
       status: 303,
       headers: { Location: new URL('/login?error=invalid', request.url).toString() },
     })
   }
 
-  const token = await createSession(db, userId)
+  if (emailVerificationEnabled && !login.emailVerifiedAt) {
+    return new Response(null, {
+      status: 303,
+      headers: {
+        Location: new URL(
+          `/verificar-email?email=${encodeURIComponent(email)}&error=unverified`,
+          request.url,
+        ).toString(),
+      },
+    })
+  }
+
+  const token = await createSession(db, login.id)
   cookies.set('session', token, {
     httpOnly: true,
     secure: true,

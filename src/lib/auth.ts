@@ -16,6 +16,8 @@ export function isAllowedEmailDomain(email: string): boolean {
   return !!domain && ALLOWED_EMAIL_DOMAINS.includes(domain)
 }
 
+const VERIFICATION_CODE_DIGITS = 6
+
 // Password hashing using Web Crypto API (PBKDF2) - works in Cloudflare Workers
 const ITERATIONS = 100000
 const SALT_LENGTH = 16
@@ -42,6 +44,30 @@ export async function verifyPassword(password: string, stored: string): Promise<
   let diff = 0
   for (let i = 0; i < a.length; i++) {
     diff |= a[i] ^ b[i]
+  }
+  return diff === 0
+}
+
+export async function hashVerificationCode(code: string, saltHex: string): Promise<string> {
+  const enc = new TextEncoder()
+  const digest = await crypto.subtle.digest('SHA-256', enc.encode(`${saltHex}:${code}`))
+  return toHex(new Uint8Array(digest))
+}
+
+export function generateVerificationCode(): string {
+  const value = crypto.getRandomValues(new Uint32Array(1))[0] % 10 ** VERIFICATION_CODE_DIGITS
+  return value.toString().padStart(VERIFICATION_CODE_DIGITS, '0')
+}
+
+export function generateVerificationSalt(): string {
+  return toHex(crypto.getRandomValues(new Uint8Array(16)))
+}
+
+export function timingSafeEqualText(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  let diff = 0
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
   }
   return diff === 0
 }
