@@ -83,32 +83,6 @@ if (Astro.request.method === 'POST') {
   } else {
     const isEditing = match.status === 'completed'
 
-    // If re-editing a completed match: reverse old stats and rating history
-    if (isEditing) {
-      const allMatchPlayers = [
-        match.team1_player1,
-        match.team1_player2,
-        match.team2_player1,
-        match.team2_player2,
-      ].filter(Boolean) as string[]
-      const oldWasTeam1Win = (match.team1_games as number) > (match.team2_games as number)
-      const oldWinners = (
-        oldWasTeam1Win
-          ? [match.team1_player1, match.team1_player2]
-          : [match.team2_player1, match.team2_player2]
-      ).filter(Boolean) as string[]
-      for (const pid of allMatchPlayers) {
-        const wasWinner = oldWinners.includes(pid)
-        await db
-          .prepare(
-            `UPDATE profiles SET matches_played = MAX(0, matches_played - 1), matches_won = MAX(0, matches_won - ?) WHERE user_id = ?`,
-          )
-          .bind(wasWinner ? 1 : 0, pid)
-          .run()
-      }
-      await db.prepare('DELETE FROM rating_history WHERE match_id = ?').bind(matchId).run()
-    }
-
     await db
       .prepare(
         'UPDATE matches SET status=?, team1_games=?, team2_games=?, set_scores=?, recorded_by=? WHERE id=?',
@@ -159,8 +133,8 @@ if (Astro.request.method === 'POST') {
     }
 
     message = isEditing
-      ? '¡Resultado actualizado! Las valoraciones se han recalculado.'
-      : '¡Resultado registrado! Las valoraciones se han actualizado.'
+      ? '¡Resultado actualizado! El rating se ha recompuesto con las reglas nuevas.'
+      : '¡Resultado registrado! El rating se recalculará cuando el partido ya cuente por validación o torneo.'
   }
 }
 ---

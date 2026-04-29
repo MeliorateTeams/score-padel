@@ -115,8 +115,6 @@ if (Astro.request.method === 'POST') {
         const team1 = [user.id, partnerId!]
         const team2 = [opponent.id, opponent2Id!]
 
-        await calculateAndUpdateRatings(db, matchId, team1, team2, team1_games, team2_games)
-
         // Create match confirmations (recorder auto-confirmed)
         const allPlayerIds = [user.id, partnerId!, opponent.id, opponent2Id!]
         for (const pid of allPlayerIds) {
@@ -127,6 +125,8 @@ if (Astro.request.method === 'POST') {
             .bind(matchId, pid, pid === user.id ? 1 : 0)
             .run()
         }
+
+        await calculateAndUpdateRatings(db, matchId, team1, team2, team1_games, team2_games)
 
         // Create notifications for all players except the recorder
         const setsStr = sets.map((s) => `${s.team1}-${s.team2}`).join(', ')
@@ -149,7 +149,8 @@ if (Astro.request.method === 'POST') {
             .run()
         }
 
-        message = '¡Partido registrado! Las valoraciones se han actualizado.'
+        message =
+          '¡Partido registrado! El rating se recalcula automáticamente cuando el resultado ya cuenta por validación o torneo.'
       }
     }
   }
@@ -186,7 +187,8 @@ const tournaments = await db
       <div>
         <h1 class="font-display text-xl font-bold text-navy">Registrar partido</h1>
         <p class="text-xs text-muted">
-          Introduce los datos del partido para actualizar las valoraciones.
+          Introduce los datos del partido para recalcular el rating según validación, formato y
+          rival.
         </p>
       </div>
     </div>

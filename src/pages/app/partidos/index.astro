@@ -1,5 +1,6 @@
 ---
 import AppLayout from '../../../layouts/AppLayout.astro'
+import { rebuildRatingsFromMatches } from '../../../lib/rating'
 
 const user = (Astro.locals as any).user
 if (!user) return Astro.redirect('/login')
@@ -21,46 +22,8 @@ if (Astro.request.method === 'POST') {
     const isRecent =
       match?.created_at && Date.now() - new Date(match.created_at as string).getTime() < 86400000
     if (match && (isAdmin || (isRecorder && isRecent))) {
-      const players = [
-        match.team1_player1,
-        match.team1_player2,
-        match.team2_player1,
-        match.team2_player2,
-      ].filter(Boolean)
-      const isTeam1Win = match.team1_games > match.team2_games
-      const winners = isTeam1Win
-        ? [match.team1_player1, match.team1_player2]
-        : [match.team2_player1, match.team2_player2]
-
-      // Delete rating history entries for this match (by timestamp match)
-      await db.prepare('DELETE FROM rating_history WHERE match_id = ?').bind(matchId).run()
-
-      // Decrement match counts and recalculate from last rating_history entry
-      for (const pid of players) {
-        if (!pid) continue
-        const won = winners.includes(pid)
-        await db
-          .prepare(
-            `UPDATE profiles SET matches_played = MAX(0, matches_played - 1), matches_won = MAX(0, matches_won - ${won ? 1 : 0}) WHERE user_id = ?`,
-          )
-          .bind(pid)
-          .run()
-        // Restore rating from last history entry or reset to default
-        const lastEntry = await db
-          .prepare(
-            'SELECT new_rating FROM rating_history WHERE user_id = ? ORDER BY created_at DESC LIMIT 1',
-          )
-          .bind(pid)
-          .first()
-        if (lastEntry) {
-          await db
-            .prepare('UPDATE profiles SET rating = ? WHERE user_id = ?')
-            .bind(lastEntry.new_rating, pid)
-            .run()
-        }
-      }
-
       await db.prepare('DELETE FROM matches WHERE id = ?').bind(matchId).run()
+      await rebuildRatingsFromMatches(db)
       deleteMsg = 'Partido eliminado correctamente.'
     }
   }
@@ -70,6 +33,7 @@ if (Astro.request.method === 'POST') {
       .prepare('UPDATE match_confirmations SET confirmed = 1 WHERE match_id = ? AND user_id = ?')
       .bind(matchId, user.id)
       .run()
+    await rebuildRatingsFromMatches(db)
     deleteMsg = 'Partido confirmado.'
   }
   if (action === 'reject' && matchId) {
@@ -77,6 +41,7 @@ if (Astro.request.method === 'POST') {
       .prepare('UPDATE match_confirmations SET confirmed = -1 WHERE match_id = ? AND user_id = ?')
       .bind(matchId, user.id)
       .run()
+    await rebuildRatingsFromMatches(db)
     deleteMsg = 'Has disputado este resultado.'
   }
 }

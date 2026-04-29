@@ -1,5 +1,6 @@
 ---
 import AppLayout from '../../../layouts/AppLayout.astro'
+import { rebuildRatingsFromMatches } from '../../../lib/rating'
 
 const user = (Astro.locals as any).user
 if (!user) return Astro.redirect('/login')
@@ -139,13 +140,6 @@ if (Astro.request.method === 'POST') {
     const isCreator = (tournament as any).creator_id === user.id
     const isAdmin = user.role === 'admin'
     if (isCreator || isAdmin) {
-      // Remove rating_history for matches in this tournament
-      await db
-        .prepare(
-          'DELETE FROM rating_history WHERE match_id IN (SELECT id FROM matches WHERE tournament_id = ?)',
-        )
-        .bind(id)
-        .run()
       // Unlink matches from tournament (keep match records)
       await db
         .prepare('UPDATE matches SET tournament_id = NULL WHERE tournament_id = ?')
@@ -155,6 +149,7 @@ if (Astro.request.method === 'POST') {
       await db.prepare('DELETE FROM tournament_players WHERE tournament_id = ?').bind(id).run()
       // Delete tournament
       await db.prepare('DELETE FROM tournaments WHERE id = ?').bind(id).run()
+      await rebuildRatingsFromMatches(db)
       return Astro.redirect('/app/torneos')
     }
   } else if (action === 'close-registration') {

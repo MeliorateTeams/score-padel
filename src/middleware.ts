@@ -30,12 +30,17 @@ function cleanupRateLimits() {
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const db = (env as any).DB
+  const url = new URL(context.request.url)
 
   // Rate limiting on auth endpoints
-  const url = new URL(context.request.url)
   if (
     context.request.method === 'POST' &&
-    (url.pathname === '/api/auth/login' || url.pathname === '/api/auth/register')
+    [
+      '/api/auth/login',
+      '/api/auth/register',
+      '/api/auth/verify-email',
+      '/api/auth/resend-verification',
+    ].includes(url.pathname)
   ) {
     const ip =
       context.request.headers.get('cf-connecting-ip') ||
@@ -76,6 +81,27 @@ export const onRequest = defineMiddleware(async (context, next) => {
       }
     }
     ;(context.locals as any).db = db
+
+    const currentUser = (context.locals as any).user
+    if (
+      currentUser &&
+      currentUser.role !== 'admin' &&
+      ['GET', 'HEAD'].includes(context.request.method) &&
+      url.pathname.startsWith('/app') &&
+      url.pathname !== '/app/cuestionario'
+    ) {
+      const profile = await db
+        .prepare('SELECT rating, matches_played FROM profiles WHERE user_id = ?')
+        .bind(currentUser.id)
+        .first<{ rating: number; matches_played: number }>()
+
+      const needsInitialPlacement =
+        !profile || ((profile.matches_played ?? 0) === 0 && Number(profile.rating ?? 1) <= 1.0)
+
+      if (needsInitialPlacement) {
+        return Response.redirect(new URL('/app/cuestionario', context.request.url), 302)
+      }
+    }
   }
 
   const response = await next()

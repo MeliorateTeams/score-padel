@@ -1,310 +1,371 @@
 import type { D1Database } from '@cloudflare/workers-types'
 import { generateId } from './auth'
 
-// ═══════════════════════════════════════════════════════════════════════════
-// Configuración Oficial Score Padel v1.0 — Algoritmo de Valoración
-// ═══════════════════════════════════════════════════════════════════════════
-//
-// Escala: 1.0 - 7.0 (valoración continua, no clasificación posicional)
-//
-// Parámetros oficiales:
-//  - Sigmoid scale factor:      1.5   (diff ±3 pts → ~95%/5% expected)
-//  - Performance delta mult:    3.0   (delta 0.5 → ±1.5 pts adjustment)
-//  - Format cap (max games):    24    (partidos 24+ juegos = peso completo)
-//  - Competitiveness halfpoint: 1.5   (diff 1.5 pts → peso 50%)
-//  - Reliability ramp:          5     (oponente con 5+ partidos = fiable)
-//  - Time decay half-life:      180   (días hasta peso 50%)
-//  - Peak blend ratio:          80/20 (promedio 80% + mejor resultado 20%)
-//  - Match window:              30    (últimos partidos considerados)
-//  - Time window:               12    (meses de antigüedad máxima)
-//  - Rating inicial máximo:     2.5   (perfil sin partidos jugados)
-//
-// Flujo por partido:
-//  1. Calcular % juegos esperado (sigmoid sobre diff de ratings)
-//  2. Calcular match rating = rating oponente + ajuste rendimiento
-//  3. Calcular peso (formato × competitividad × fiabilidad × tiempo)
-//  4. Recalcular valoración = promedio ponderado (80%) + peak (20%)
-// ═══════════════════════════════════════════════════════════════════════════
-
 const MIN_RATING = 1.0
 const MAX_RATING = 7.0
-const MAX_MATCHES_FOR_AVERAGE = 30
-const MONTHS_WINDOW = 12
+const MAX_PROVISIONAL_RATING = 6.5
+const K_FACTOR = 0.6
 
-function clampRating(r: number): number {
-  return Math.round(Math.max(MIN_RATING, Math.min(MAX_RATING, r)) * 10) / 10
+interface QuestionnaireAnswers {
+  experienceScore: number
+  frequencyScore: number
+  technicalScore: number
+  competitiveScore: number
+  tacticalScore: number
+  racquetScore: number
+  selfEvaluationScore: number
 }
 
-/**
- * Calcula el % de juegos esperado para el equipo A dada la diferencia de ratings.
- * Escala 1-7 de pádel.
- */
+interface MatchForRebuild {
+  id: string
+  tournament_id: string | null
+  team1_player1: string
+  team1_player2: string | null
+  team2_player1: string
+  team2_player2: string | null
+  team1_games: number
+  team2_games: number
+  set_scores: string | null
+  created_at: string
+  confirmation_total: number | null
+  confirmed_count: number | null
+}
+
+function clampRating(value: number): number {
+  const bounded = Math.max(MIN_RATING, Math.min(MAX_RATING, value))
+  return Math.round(bounded * 100) / 100
+}
+
+function clampProvisionalRating(value: number): number {
+  const bounded = Math.max(MIN_RATING, Math.min(MAX_PROVISIONAL_RATING, value))
+  return Math.round(bounded * 100) / 100
+}
+
+function parseSqliteDate(value: string): Date {
+  return new Date(value.replace(' ', 'T') + 'Z')
+}
+
 function expectedGamePercentage(ratingA: number, ratingB: number): number {
   const diff = ratingA - ratingB
-  // Sigmoid centrado: si diff=0 → 50%, si diff=+3 → ~95%, si diff=-3 → ~5%
-  return 1 / (1 + Math.pow(10, -diff / 1.5))
+  return 1 / (1 + Math.pow(10, -diff / 2))
 }
 
-/**
- * Calcula la valoración de partido para un jugador/equipo.
- * Si rindió mejor de lo esperado, su match rating será más alto que su rating actual.
- */
-function calculateMatchRating(
-  playerRating: number,
-  opponentRating: number,
-  gamesWon: number,
-  totalGames: number,
+function getSetCount(setScores: string | null): number {
+  if (!setScores) return 0
+  try {
+    const parsed = JSON.parse(setScores)
+    return Array.isArray(parsed) ? parsed.length : 0
+  } catch {
+    return 0
+  }
+}
+
+function getFormatWeight(setCount: number, totalGames: number): number {
+  if (setCount >= 3 || totalGames >= 30) return 1.0
+  if (setCount >= 2 || totalGames >= 18) return 0.85
+  return 0.7
+}
+
+function getCompetitivenessWeight(ratingDiff: number): number {
+  const diff = Math.abs(ratingDiff)
+  if (diff <= 0.5) return 1.0
+  if (diff <= 1.0) return 0.8
+  if (diff <= 1.5) return 0.6
+  return 0.4
+}
+
+function getReliabilityWeight(priorMatches: number): number {
+  if (priorMatches >= 10) return 1.0
+  if (priorMatches >= 5) return 0.85
+  if (priorMatches >= 1) return 0.65
+  return 0.5
+}
+
+function getRecencyWeight(matchAgeInDays: number): number {
+  if (matchAgeInDays <= 30) return 1.0
+  if (matchAgeInDays <= 90) return 0.85
+  if (matchAgeInDays <= 180) return 0.65
+  if (matchAgeInDays <= 365) return 0.4
+  return 0.0
+}
+
+function getEventWeight(
+  tournamentId: string | null,
+  confirmedCount: number,
+  totalConfirmations: number,
+  playerCount: number,
 ): number {
-  if (totalGames === 0) return playerRating
-
-  const expectedPct = expectedGamePercentage(playerRating, opponentRating)
-  const actualPct = gamesWon / totalGames
-
-  // Diferencia entre rendimiento real y esperado
-  const performanceDelta = actualPct - expectedPct
-
-  // Convertir la diferencia en ajuste de rating
-  // Factor de escala: rendimiento perfecto (delta ~0.5) → aprox ±1.5 puntos de rating
-  const ratingAdjustment = performanceDelta * 3.0
-
-  // La valoración de partido = rating del oponente ajustado por rendimiento
-  // Si ganas más de lo esperado contra alguien de 4.0, tu match rating > 4.0
-  const matchRating = opponentRating + ratingAdjustment
-
-  return clampRating(matchRating)
+  if (tournamentId) return 1.0
+  if (totalConfirmations >= playerCount && confirmedCount >= playerCount) return 0.5
+  return 0.0
 }
 
-/**
- * Calcula el peso del partido según (punto 8c del documento):
- * - Formato: partidos más largos → más peso (más fiable el resultado)
- * - Competitividad: ratings más cercanos → más peso
- * - Fiabilidad: oponente con más partidos → más peso
- * - Degradación temporal: partidos más recientes → más peso
- */
-function calculateMatchWeight(
-  ratingDiff: number,
-  opponentMatchesPlayed: number,
-  matchAgeInDays: number,
-  totalGames: number,
-): number {
-  // Formato/duración: partidos con más juegos son más representativos
-  // 6 juegos (mínimo) → 0.5, 12 juegos → ~0.8, 24+ juegos → ~1.0
-  const formatWeight = 0.5 + 0.5 * Math.min(totalGames / 24, 1)
-
-  // Competitividad: partidos entre rivales cercanos pesan más
-  // diff=0 → peso 1.0, diff=3 → peso ~0.25
-  const competitiveness = 1 / (1 + Math.pow(Math.abs(ratingDiff) / 1.5, 2))
-
-  // Fiabilidad del rival: más partidos jugados = rating más fiable
-  // 0 partidos → 0.3, 5+ partidos → ~1.0
-  const reliability = 0.3 + 0.7 * Math.min(opponentMatchesPlayed / 5, 1)
-
-  // Degradación temporal: partidos recientes pesan más
-  // 0 días → 1.0, 180 días → ~0.5, 365 días → ~0.25
-  const timeDecay = Math.pow(0.5, matchAgeInDays / 180)
-
-  return formatWeight * competitiveness * reliability * timeDecay
+function average(values: number[]): number {
+  if (values.length === 0) return 0
+  return values.reduce((sum, value) => sum + value, 0) / values.length
 }
 
-/**
- * Recalcula la valoración Score Padel de un jugador.
- * Promedio ponderado de hasta 30 valoraciones de partido más recientes (últimos 12 meses).
- * Incorpora factor 8b.iii: mejor resultado reciente influye en la valoración final.
- */
-export async function recalculatePlayerRating(db: D1Database, playerId: string): Promise<number> {
-  const cutoffDate = new Date()
-  cutoffDate.setMonth(cutoffDate.getMonth() - MONTHS_WINDOW)
+function getSportsCount(racquetSports: string): number {
+  return racquetSports
+    .split(',')
+    .map((sport) => sport.trim())
+    .filter(Boolean).length
+}
 
-  // Obtener historial reciente con datos del partido
+function getSelfEvaluationSeed(score: number): number {
+  const seeds: Record<number, number> = {
+    10: 1.25,
+    15: 1.75,
+    25: 2.5,
+    35: 3.5,
+    45: 4.5,
+    55: 5.5,
+    65: 6.5,
+  }
+  return seeds[score] ?? 2.5
+}
+
+function normalize(value: number, max: number): number {
+  if (max <= 0) return 0
+  return Math.max(0, Math.min(1, value / max))
+}
+
+export function calculateQuestionnaireInitialRating(answers: QuestionnaireAnswers): number {
+  const declaredSeed = getSelfEvaluationSeed(answers.selfEvaluationScore)
+  const objectiveScore =
+    normalize(answers.experienceScore, 15) * 0.18 +
+    normalize(answers.frequencyScore, 6) * 0.12 +
+    normalize(answers.technicalScore, 10) * 0.24 +
+    normalize(answers.competitiveScore, 10) * 0.18 +
+    normalize(answers.tacticalScore, 6) * 0.18 +
+    normalize(answers.racquetScore, 4) * 0.1
+
+  const objectiveSeed = 1.0 + objectiveScore * 5.5
+  const gap = objectiveSeed - declaredSeed
+
+  let provisional = declaredSeed * 0.55 + objectiveSeed * 0.45
+  if (Math.abs(gap) > 1.0) {
+    const lower = Math.min(declaredSeed, objectiveSeed)
+    provisional = lower + Math.abs(gap) * 0.35
+  }
+
+  return clampProvisionalRating(provisional)
+}
+
+export function calculateInitialRating(experienceYears: number, racquetSports: string): number {
+  let seed = 1.5
+
+  if (experienceYears >= 10) seed = 5.5
+  else if (experienceYears >= 5) seed = 4.5
+  else if (experienceYears >= 3) seed = 3.5
+  else if (experienceYears >= 1) seed = 2.5
+
+  const sportsCount = getSportsCount(racquetSports)
+  if (sportsCount >= 2) seed += 0.5
+  else if (sportsCount >= 1) seed += 0.25
+
+  return clampProvisionalRating(seed)
+}
+
+async function getSeedRatings(db: D1Database): Promise<Map<string, number>> {
+  const seeds = new Map<string, number>()
+  const earliestSeedLoaded = new Set<string>()
+
+  const profiles = await db
+    .prepare('SELECT user_id, rating FROM profiles')
+    .all<{ user_id: string; rating: number }>()
+
+  for (const row of profiles.results ?? []) {
+    seeds.set(row.user_id, clampRating(row.rating ?? MIN_RATING))
+  }
+
   const history = await db
+    .prepare('SELECT user_id, old_rating FROM rating_history ORDER BY created_at ASC, id ASC')
+    .all<{ user_id: string; old_rating: number }>()
+
+  for (const row of history.results ?? []) {
+    if (earliestSeedLoaded.has(row.user_id)) continue
+    seeds.set(row.user_id, clampRating(row.old_rating ?? MIN_RATING))
+    earliestSeedLoaded.add(row.user_id)
+  }
+
+  return seeds
+}
+
+async function getMatchesForRebuild(db: D1Database): Promise<MatchForRebuild[]> {
+  const rows = await db
     .prepare(
       `
-    SELECT rh.old_rating, rh.new_rating, rh.match_id, rh.created_at,
-           m.team1_player1, m.team2_player1, m.team1_games, m.team2_games
-    FROM rating_history rh
-    JOIN matches m ON rh.match_id = m.id
-    WHERE rh.user_id = ? AND rh.created_at > ?
-    ORDER BY rh.created_at DESC
-    LIMIT ?
+      SELECT
+        m.id,
+        m.tournament_id,
+        m.team1_player1,
+        m.team1_player2,
+        m.team2_player1,
+        m.team2_player2,
+        m.team1_games,
+        m.team2_games,
+        m.set_scores,
+        m.created_at,
+        COUNT(mc.user_id) AS confirmation_total,
+        SUM(CASE WHEN mc.confirmed = 1 THEN 1 ELSE 0 END) AS confirmed_count
+      FROM matches m
+      LEFT JOIN match_confirmations mc ON mc.match_id = m.id
+      WHERE m.status = 'completed'
+      GROUP BY m.id
+      ORDER BY m.created_at ASC, m.id ASC
     `,
     )
-    .bind(playerId, cutoffDate.toISOString(), MAX_MATCHES_FOR_AVERAGE)
-    .all()
+    .all<MatchForRebuild>()
 
-  if (!history.results || history.results.length === 0) {
-    // Sin partidos recientes: usar rating de perfil o calcular desde perfil
-    const profile = await db
-      .prepare('SELECT rating, experience_years, racquet_sports FROM profiles WHERE user_id = ?')
-      .bind(playerId)
-      .first<{ rating: number; experience_years: number; racquet_sports: string }>()
-    if (!profile) return MIN_RATING
-    // Si no tiene partidos, mantener rating actual (puede ser el inicial por perfil)
-    return profile.rating
+  return (rows.results ?? []) as MatchForRebuild[]
+}
+
+export async function rebuildRatingsFromMatches(db: D1Database): Promise<void> {
+  const seedRatings = await getSeedRatings(db)
+  const matches = await getMatchesForRebuild(db)
+
+  const currentRatings = new Map<string, number>()
+  const matchesPlayed = new Map<string, number>()
+  const matchesWon = new Map<string, number>()
+
+  for (const [userId, seed] of seedRatings.entries()) {
+    currentRatings.set(userId, clampRating(seed))
+    matchesPlayed.set(userId, 0)
+    matchesWon.set(userId, 0)
   }
 
-  let weightedSum = 0
-  let totalWeight = 0
-  let bestMatchRating = MIN_RATING
+  await db.prepare('DELETE FROM rating_history').run()
+  await db.prepare('UPDATE profiles SET matches_played = 0, matches_won = 0').run()
 
-  for (const h of history.results as any[]) {
-    const isTeam1 = h.team1_player1 === playerId
-    const gamesWon = isTeam1 ? h.team1_games : h.team2_games
-    const totalGames = h.team1_games + h.team2_games
-    const opponentId = isTeam1 ? h.team2_player1 : h.team1_player1
+  for (const match of matches) {
+    const team1Players = [match.team1_player1, match.team1_player2].filter(Boolean) as string[]
+    const team2Players = [match.team2_player1, match.team2_player2].filter(Boolean) as string[]
+    const allPlayers = [...team1Players, ...team2Players]
 
-    // Obtener datos del oponente
-    const opponent = await db
-      .prepare('SELECT rating, matches_played FROM profiles WHERE user_id = ?')
-      .bind(opponentId)
-      .first<{ rating: number; matches_played: number }>()
+    if (allPlayers.length === 0) continue
 
-    const opponentRating = opponent?.rating ?? MIN_RATING
-    const opponentMatches = opponent?.matches_played ?? 0
-    const playerRatingAtTime = h.old_rating as number
+    for (const playerId of allPlayers) {
+      if (!currentRatings.has(playerId)) {
+        currentRatings.set(playerId, MIN_RATING)
+        matchesPlayed.set(playerId, 0)
+        matchesWon.set(playerId, 0)
+      }
+    }
 
-    // Valoración de partido
-    const matchRating = calculateMatchRating(
-      playerRatingAtTime,
-      opponentRating,
-      gamesWon,
-      totalGames,
+    const totalGames = Number(match.team1_games ?? 0) + Number(match.team2_games ?? 0)
+    const setCount = getSetCount(match.set_scores)
+    const playerCount = allPlayers.length
+    const confirmedCount = Number(match.confirmed_count ?? 0)
+    const confirmationTotal = Number(match.confirmation_total ?? 0)
+    const eventWeight = getEventWeight(
+      match.tournament_id,
+      confirmedCount,
+      confirmationTotal,
+      playerCount,
     )
 
-    // Rastrear mejor resultado reciente (punto 8b.iii)
-    if (matchRating > bestMatchRating) bestMatchRating = matchRating
+    if (eventWeight > 0) {
+      const team1Won = Number(match.team1_games ?? 0) > Number(match.team2_games ?? 0)
+      for (const playerId of allPlayers) {
+        matchesPlayed.set(playerId, (matchesPlayed.get(playerId) ?? 0) + 1)
+      }
+      for (const playerId of team1Won ? team1Players : team2Players) {
+        matchesWon.set(playerId, (matchesWon.get(playerId) ?? 0) + 1)
+      }
+    }
 
-    // Antiguedad del partido en días
-    const matchDate = new Date(h.created_at as string)
-    const ageInDays = Math.max(0, (Date.now() - matchDate.getTime()) / (1000 * 60 * 60 * 24))
+    if (totalGames <= 0 || eventWeight <= 0) continue
 
-    // Peso del partido (incluye formato/duración - punto 8c)
-    const ratingDiff = playerRatingAtTime - opponentRating
-    const weight = calculateMatchWeight(ratingDiff, opponentMatches, ageInDays, totalGames)
+    const ageInDays = Math.max(
+      0,
+      (Date.now() - parseSqliteDate(match.created_at).getTime()) / (1000 * 60 * 60 * 24),
+    )
+    const recencyWeight = getRecencyWeight(ageInDays)
+    if (recencyWeight <= 0) continue
 
-    weightedSum += matchRating * weight
-    totalWeight += weight
+    const team1Rating = average(
+      team1Players.map((playerId) => currentRatings.get(playerId) ?? MIN_RATING),
+    )
+    const team2Rating = average(
+      team2Players.map((playerId) => currentRatings.get(playerId) ?? MIN_RATING),
+    )
+    const expectedTeam1 = expectedGamePercentage(team1Rating, team2Rating)
+    const actualTeam1 = Number(match.team1_games ?? 0) / totalGames
+    const competitivenessWeight = getCompetitivenessWeight(team1Rating - team2Rating)
+    const priorMatchAverage = Math.max(
+      0,
+      Math.round(average(allPlayers.map((playerId) => matchesPlayed.get(playerId) ?? 0)) - 1),
+    )
+    const reliabilityWeight = getReliabilityWeight(priorMatchAverage)
+    const formatWeight = getFormatWeight(setCount, totalGames)
+    const totalWeight =
+      formatWeight * competitivenessWeight * reliabilityWeight * recencyWeight * eventWeight
+    const delta = K_FACTOR * totalWeight * (actualTeam1 - expectedTeam1)
+
+    if (Math.abs(delta) < 0.0001) continue
+
+    const team1Changes = team1Players.map((playerId) => {
+      const oldRating = currentRatings.get(playerId) ?? MIN_RATING
+      const newRating = clampRating(oldRating + delta)
+      return { playerId, oldRating, newRating }
+    })
+
+    const team2Changes = team2Players.map((playerId) => {
+      const oldRating = currentRatings.get(playerId) ?? MIN_RATING
+      const newRating = clampRating(oldRating - delta)
+      return { playerId, oldRating, newRating }
+    })
+
+    for (const change of [...team1Changes, ...team2Changes]) {
+      currentRatings.set(change.playerId, change.newRating)
+      await db
+        .prepare(
+          'INSERT INTO rating_history (id, user_id, old_rating, new_rating, match_id, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+        )
+        .bind(
+          generateId(),
+          change.playerId,
+          change.oldRating,
+          change.newRating,
+          match.id,
+          match.created_at,
+        )
+        .run()
+    }
   }
 
-  if (totalWeight === 0) return MIN_RATING
-
-  const weightedAvg = weightedSum / totalWeight
-
-  // Punto 8b.iii: resultados recientes comparados con mejor resultado reciente
-  // Mezcla promedio ponderado (80%) con mejor resultado reciente (20%)
-  // Esto reconoce el potencial demostrado del jugador, no solo su promedio
-  const peakBlend = 0.8 * weightedAvg + 0.2 * bestMatchRating
-
-  return clampRating(peakBlend)
-}
-
-/**
- * Calcula el rating inicial basado en el perfil del jugador.
- * Considera: años de experiencia en pádel y otros deportes de raqueta.
- */
-export function calculateInitialRating(experienceYears: number, racquetSports: string): number {
-  let base = 1.0
-
-  // Años de experiencia en pádel: hasta +1.5 puntos
-  if (experienceYears >= 10) base += 1.5
-  else if (experienceYears >= 5) base += 1.0
-  else if (experienceYears >= 3) base += 0.7
-  else if (experienceYears >= 1) base += 0.3
-
-  // Otros deportes de raqueta: hasta +0.5 puntos
-  if (racquetSports && racquetSports.trim().length > 0) {
-    const sports = racquetSports
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean)
-    base += Math.min(sports.length * 0.2, 0.5)
+  for (const [userId, rating] of currentRatings.entries()) {
+    await db
+      .prepare(
+        "UPDATE profiles SET rating = ?, matches_played = ?, matches_won = ?, updated_at = datetime('now') WHERE user_id = ?",
+      )
+      .bind(
+        clampRating(rating),
+        matchesPlayed.get(userId) ?? 0,
+        matchesWon.get(userId) ?? 0,
+        userId,
+      )
+      .run()
   }
-
-  return clampRating(base)
 }
 
-/**
- * Procesa un nuevo partido:
- * 1. Registra la valoración de partido en el historial
- * 2. Recalcula la valoración Score Padel de cada jugador (promedio ponderado)
- */
+export async function recalculatePlayerRating(db: D1Database, playerId: string): Promise<number> {
+  await rebuildRatingsFromMatches(db)
+  const profile = await db
+    .prepare('SELECT rating FROM profiles WHERE user_id = ?')
+    .bind(playerId)
+    .first<{ rating: number }>()
+  return clampRating(profile?.rating ?? MIN_RATING)
+}
+
 export async function calculateAndUpdateRatings(
   db: D1Database,
-  matchId: string,
-  team1Players: string[],
-  team2Players: string[],
-  team1Games: number,
-  team2Games: number,
+  _matchId: string,
+  _team1Players: string[],
+  _team2Players: string[],
+  _team1Games: number,
+  _team2Games: number,
 ) {
-  const totalGames = team1Games + team2Games
-  if (totalGames === 0) return
-
-  const allPlayers = [...team1Players, ...team2Players]
-  const ratings: Record<string, number> = {}
-
-  for (const pid of allPlayers) {
-    const p = await db
-      .prepare('SELECT rating FROM profiles WHERE user_id = ?')
-      .bind(pid)
-      .first<{ rating: number }>()
-    ratings[pid] = p?.rating ?? 1.0
-  }
-
-  const team1Avg = team1Players.reduce((s, p) => s + ratings[p], 0) / team1Players.length
-  const team2Avg = team2Players.reduce((s, p) => s + ratings[p], 0) / team2Players.length
-  const team1Won = team1Games > team2Games
-
-  // Calcular y guardar valoración de partido para cada jugador del equipo 1
-  for (const pid of team1Players) {
-    const oldRating = ratings[pid]
-    const matchRating = calculateMatchRating(oldRating, team2Avg, team1Games, totalGames)
-
-    // Guardar en historial (new_rating = valoración de este partido)
-    await db
-      .prepare(
-        'INSERT INTO rating_history (id, user_id, old_rating, new_rating, match_id) VALUES (?, ?, ?, ?, ?)',
-      )
-      .bind(generateId(), pid, oldRating, matchRating, matchId)
-      .run()
-
-    // Actualizar contador de partidos
-    await db
-      .prepare(
-        'UPDATE profiles SET matches_played = matches_played + 1, matches_won = matches_won + ? WHERE user_id = ?',
-      )
-      .bind(team1Won ? 1 : 0, pid)
-      .run()
-
-    // Recalcular valoración Score Padel (promedio ponderado)
-    const newRating = await recalculatePlayerRating(db, pid)
-    await db
-      .prepare("UPDATE profiles SET rating = ?, updated_at = datetime('now') WHERE user_id = ?")
-      .bind(newRating, pid)
-      .run()
-  }
-
-  // Igual para equipo 2
-  for (const pid of team2Players) {
-    const oldRating = ratings[pid]
-    const matchRating = calculateMatchRating(oldRating, team1Avg, team2Games, totalGames)
-
-    await db
-      .prepare(
-        'INSERT INTO rating_history (id, user_id, old_rating, new_rating, match_id) VALUES (?, ?, ?, ?, ?)',
-      )
-      .bind(generateId(), pid, oldRating, matchRating, matchId)
-      .run()
-
-    await db
-      .prepare(
-        'UPDATE profiles SET matches_played = matches_played + 1, matches_won = matches_won + ? WHERE user_id = ?',
-      )
-      .bind(team1Won ? 0 : 1, pid)
-      .run()
-
-    const newRating = await recalculatePlayerRating(db, pid)
-    await db
-      .prepare("UPDATE profiles SET rating = ?, updated_at = datetime('now') WHERE user_id = ?")
-      .bind(newRating, pid)
-      .run()
-  }
+  await rebuildRatingsFromMatches(db)
 }

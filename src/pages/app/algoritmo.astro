@@ -29,6 +29,41 @@ if (user.role !== 'admin') return Astro.redirect('/app')
       </div>
     </div>
 
+    <div class="rounded-2xl border border-coral/20 bg-coral/5 px-5 py-4 text-sm text-navy/80">
+      La implementación vigente sigue un modelo SPR: media de rating por equipo, resultado esperado
+      frente a resultado real y un delta ponderado por formato, competitividad, fiabilidad,
+      recencia, validación del partido y factor K 0.60.
+    </div>
+
+    <div class="card p-6 space-y-3">
+      <h2
+        class="font-display text-sm font-bold text-navy uppercase tracking-wider flex items-center gap-2"
+      >
+        <svg
+          class="w-4 h-4 text-coral"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          stroke-width="2"
+          ><path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z"></path></svg
+        >
+        Colocación Inicial
+      </h2>
+      <p class="text-sm text-navy/80 leading-relaxed">
+        Todo jugador nuevo debe pasar por una colocación inicial antes de usar la app con
+        normalidad. El registro público y la verificación por email ya redirigen al cuestionario, y
+        los jugadores creados desde administración también quedan forzados a completarlo en su
+        primer acceso si aún no tienen una semilla válida de rating.
+      </p>
+      <p class="text-sm text-navy/80 leading-relaxed">
+        Ese cuestionario combina autoevaluación y señales objetivas para ubicar al jugador en la
+        escala 1.00-6.50 antes de que los partidos empiecen a mover su rating competitivo.
+      </p>
+    </div>
+
     <!-- Qué es Score Padel -->
     <div class="card p-6 space-y-3">
       <h2
@@ -122,8 +157,8 @@ if (user.role !== 'admin') return Astro.redirect('/app')
                 >iii</span
               >
               <span
-                >Los <strong class="text-navy">resultados de partidos recientes</strong> comparados con
-                el mejor resultado reciente.</span
+                >El <strong class="text-navy">peso del partido</strong> según formato, nivel del rival,
+                fiabilidad previa, recencia y validación del resultado.</span
               >
             </li>
           </ul>
@@ -134,7 +169,10 @@ if (user.role !== 'admin') return Astro.redirect('/app')
             Score Padel contabiliza todos los <strong class="text-navy">formatos de juego</strong>,
             la <strong class="text-navy">competitividad</strong> y la <strong class="text-navy"
               >fiabilidad de la clasificación</strong
-            > de los rivales.
+            > de los rivales, además de la <strong class="text-navy"
+              >validación del resultado</strong
+            >
+            y del tipo de evento en el que se jugó el partido.
           </p>
         </div>
       </div>
@@ -161,8 +199,10 @@ if (user.role !== 'admin') return Astro.redirect('/app')
       <p class="text-sm text-navy/80 leading-relaxed">
         Para cada partido, el algoritmo calcula una <strong>valoración de partido</strong> y un <strong
           >peso de partido</strong
-        > para cada jugador. La valoración Score Padel es el promedio ponderado de hasta 30 de sus valoraciones
-        de partido más recientes. Solo los partidos de los <strong>últimos 12 meses</strong> cuentan.
+        > para cada jugador. El rating vigente se reconstruye desde el historial válido aplicando un delta
+        sobre cada equipo según la diferencia entre el resultado real y el esperado. Ese delta usa un
+        <strong>factor K de 0.60</strong>. Los partidos de más de <strong>12 meses</strong> dejan de empujar
+        el rating principal.
       </p>
 
       <div class="space-y-4">
@@ -263,6 +303,14 @@ if (user.role !== 'admin') return Astro.redirect('/app')
                   ><strong class="text-navy">Fiabilidad:</strong> A medida que aumenta la fiabilidad de
                   la clasificación del oponente, se le da más peso. Un oponente que compite con frecuencia
                   tiene una clasificación más fiable.</span
+                >
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="w-1.5 h-1.5 rounded-full bg-teal mt-1.5 shrink-0"></span>
+                <span
+                  ><strong class="text-navy">Validación y evento:</strong> un torneo oficial tiene peso
+                  máximo; un amistoso confirmado por los 4 jugadores aporta peso medio; un resultado sin
+                  validar todavía no empuja el rating.</span
                 >
               </li>
               <li class="flex items-start gap-2">
